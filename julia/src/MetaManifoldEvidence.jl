@@ -20,7 +20,10 @@ export CountWorld, latent, observed, count_case, fibre, count_verdict,
        CountsTable, read_tsv, table_from_rows, evaluate, as_count,
        receipt, verify_receipt, canonical_tsv, verdict_name, MODEL, PROOF_PINS,
        fetch_counts, router, serve, DEFAULT_PORT,
-       CERTIFICATE_BOUND, certificate_rows, certificate_agda
+       CERTIFICATE_BOUND, certificate_rows, certificate_agda,
+       SrcNode, SourceTree, Placement, PQuery, TreeIndex,
+       parse_newick, parse_jplace, parse_jplace_doc, parse_tree,
+       hash_name, split_hex, index_tree, split_ids, split_difference
 
 include("counts.jl")
 include("table.jl")
@@ -28,5 +31,6 @@ include("receipt.jl")
 include("client.jl")
 include("server.jl")
 include("certificate.jl")
+include("splitid.jl")
 
 end
