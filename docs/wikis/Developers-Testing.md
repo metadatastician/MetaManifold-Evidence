@@ -40,6 +40,14 @@ bash scripts/julia-mutants.sh     # table is current; each Julia mutant changes 
 
 You need Agda **2.6.4.3**, which is what CI uses. Other versions are unchecked.
 
+The tree-identifier tests (`julia/test/splitid.jl`) read a committed table that the
+viewer's own code produced. After `frontend/src/tree/model.ts` changes upstream, regenerate it
+from a checkout of MetaManifold-WebUI and commit the result; the table records the commit:
+
+```bash
+bun julia/gen/splitid_kat.ts /path/to/MetaManifold-WebUI > julia/test/fixtures/splitid_kat.json
+```
+
 ### Why the negative tests matter
 
 A passing proof suite only means something if it can fail. That is why there are three kinds of negative test:

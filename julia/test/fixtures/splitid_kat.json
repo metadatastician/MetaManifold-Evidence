@@ -1,0 +1,6001 @@
+{
+ "generator": "julia/gen/splitid_kat.ts",
+ "source": "frontend/src/tree/model.ts",
+ "webui_commit": "bcf52af76214dfd033287920d3022d00f2023d7c",
+ "cases": [
+  {
+   "name": "frontend-split-identity",
+   "format": "newick",
+   "text": "((A:1,B:2)90:0.5,(C:1,(D:1,E:4)70:1)80:0.2,F:3);",
+   "note": "the tree model.test.ts uses for split identity",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      4,
+      9
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      797977827,
+      931339224
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": 0.5,
+     "edgeNum": null,
+     "support": "90",
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "00f14eedddefe7a5",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "1a99b49b7b3620e3",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": 2,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.2,
+     "edgeNum": null,
+     "support": "80",
+     "children": [
+      5,
+      6
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      1849136521,
+      2255829848
+     ],
+     "split": "6e37958986753b58",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "C",
+     "side": [
+      2880726779,
+      3944726770
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 1,
+     "edgeNum": null,
+     "support": "70",
+     "children": [
+      7,
+      8
+     ],
+     "parent": 4,
+     "tipKey": "",
+     "side": [
+      3313759090,
+      1835727786
+     ],
+     "split": "c583f3726d6afbaa",
+     "childIsCanonical": true
+    },
+    {
+     "name": "D",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 6,
+     "tipKey": "D",
+     "side": [
+      4162547167,
+      322164700
+     ],
+     "split": "f81b6ddf1333d7dc",
+     "childIsCanonical": true
+    },
+    {
+     "name": "E",
+     "length": 4,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 6,
+     "tipKey": "E",
+     "side": [
+      1033412269,
+      2119773302
+     ],
+     "split": "3d989ead7e592c76",
+     "childIsCanonical": true
+    },
+    {
+     "name": "F",
+     "length": 3,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "F",
+     "side": [
+      1858526052,
+      1536875773
+     ],
+     "split": "6ec6db645b9adcfd",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    797977827,
+    931339224
+   ],
+   "tipCount": 6,
+   "splitEdge": [
+    [
+     "00f14eedddefe7a5",
+     1
+    ],
+    [
+     "1a99b49b7b3620e3",
+     2
+    ],
+    [
+     "1a68fa76a6d9c746",
+     3
+    ],
+    [
+     "6e37958986753b58",
+     4
+    ],
+    [
+     "abb466fbeb1fc0f2",
+     5
+    ],
+    [
+     "c583f3726d6afbaa",
+     6
+    ],
+    [
+     "f81b6ddf1333d7dc",
+     7
+    ],
+    [
+     "3d989ead7e592c76",
+     8
+    ],
+    [
+     "6ec6db645b9adcfd",
+     9
+    ]
+   ],
+   "sides": [
+    "00f14eedddefe7a5",
+    "1208b24e49da37ae",
+    "1a68fa76a6d9c746",
+    "1a99b49b7b3620e3",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "35f8d695915adc9e",
+    "3d989ead7e592c76",
+    "4156f7876c19c725",
+    "41a7b96ab1f62080",
+    "6e37958986753b58",
+    "6ec6db645b9adcfd",
+    "84244a18dc9cdb2a",
+    "abb466fbeb1fc0f2",
+    "c583f3726d6afbaa",
+    "d78b413c24b0cc04",
+    "ea13df915ae9e072",
+    "f81b6ddf1333d7dc"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [
+    [
+     "00f14eedddefe7a5",
+     "90"
+    ],
+    [
+     "6e37958986753b58",
+     "80"
+    ],
+    [
+     "c583f3726d6afbaa",
+     "70"
+    ]
+   ],
+   "pqueries": []
+  },
+  {
+   "name": "jplace-fixture",
+   "format": "jplace",
+   "text": "{\"version\":3,\"fields\":[\"edge_num\",\"like_weight_ratio\",\"distal_length\",\"pendant_length\"],\"tree\":\"((A:1{0},B:1{1}):1{2},C:1{3}){4};\",\"placements\":[{\"p\":[[1,0.2,0.1,0.01],[0,0.8,0.5,0.02]],\"n\":[\"q1\"]},{\"p\":[[3,1,0.3,0.1]],\"nm\":[[\"q2\",3],[\"q3\",2]]}]}",
+   "note": "the jplace document model.test.ts and test_trees.jl use",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": 4,
+     "support": null,
+     "children": [
+      1,
+      4
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      2228552949,
+      24329359
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": 1,
+     "edgeNum": 2,
+     "support": null,
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": 1,
+     "edgeNum": 0,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "b1dc9c8d4dc607b4",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": 1,
+     "edgeNum": 1,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C",
+     "length": 1,
+     "edgeNum": 3,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "C",
+     "side": [
+      2880726779,
+      3944726770
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    2228552949,
+    24329359
+   ],
+   "tipCount": 3,
+   "splitEdge": [
+    [
+     "abb466fbeb1fc0f2",
+     1
+    ],
+    [
+     "b1dc9c8d4dc607b4",
+     2
+    ],
+    [
+     "1a68fa76a6d9c746",
+     3
+    ]
+   ],
+   "sides": [
+    "1a68fa76a6d9c746",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "9ebdfe83a7aafbc9",
+    "abb466fbeb1fc0f2",
+    "b1dc9c8d4dc607b4"
+   ],
+   "edgeByNum": [
+    [
+     2,
+     1
+    ],
+    [
+     0,
+     2
+    ],
+    [
+     1,
+     3
+    ],
+    [
+     3,
+     4
+    ]
+   ],
+   "supportBySplit": [],
+   "pqueries": [
+    {
+     "names": [
+      "q1"
+     ],
+     "mult": 1,
+     "places": [
+      {
+       "edgeNum": 0,
+       "lwr": 0.8,
+       "distal": 0.5,
+       "pendant": 0.02,
+       "logLik": null
+      },
+      {
+       "edgeNum": 1,
+       "lwr": 0.2,
+       "distal": 0.1,
+       "pendant": 0.01,
+       "logLik": null
+      }
+     ]
+    },
+    {
+     "names": [
+      "q2",
+      "q3"
+     ],
+     "mult": 5,
+     "places": [
+      {
+       "edgeNum": 3,
+       "lwr": 1,
+       "distal": 0.3,
+       "pendant": 0.1,
+       "logLik": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "reference-newick",
+   "format": "newick",
+   "text": "((a:1,b:1)90:1,c:1,d:1);",
+   "note": "test_phylogeny.jl reference.treefile",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      4,
+      5
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      3593195007,
+      1142626458
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": 1,
+     "edgeNum": null,
+     "support": "90",
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      879409001,
+      621103430
+     ],
+     "split": "e2417a96611e51dc",
+     "childIsCanonical": false
+    },
+    {
+     "name": "a",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "a",
+     "side": [
+      2426549645,
+      2713689070
+     ],
+     "split": "4689f872e5a48374",
+     "childIsCanonical": false
+    },
+    {
+     "name": "b",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "b",
+     "side": [
+      2764604132,
+      2226836136
+     ],
+     "split": "a4c882e484bad2a8",
+     "childIsCanonical": true
+    },
+    {
+     "name": "c",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "c",
+     "side": [
+      1287015399,
+      2312414814
+     ],
+     "split": "4cb64be789d4a65e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "d",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "d",
+     "side": [
+      2935435633,
+      3905615746
+     ],
+     "split": "aef73171e8caf782",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    3593195007,
+    1142626458
+   ],
+   "tipCount": 4,
+   "splitEdge": [
+    [
+     "e2417a96611e51dc",
+     1
+    ],
+    [
+     "4689f872e5a48374",
+     2
+    ],
+    [
+     "a4c882e484bad2a8",
+     3
+    ],
+    [
+     "4cb64be789d4a65e",
+     4
+    ],
+    [
+     "aef73171e8caf782",
+     5
+    ]
+   ],
+   "sides": [
+    "346ab76925054946",
+    "4689f872e5a48374",
+    "4cb64be789d4a65e",
+    "72e34f1bc0a1ca32",
+    "78dcfc8eacd1ef18",
+    "90a2358da1bf9bee",
+    "9a9d8618cdcfbec4",
+    "a4c882e484bad2a8",
+    "aef73171e8caf782",
+    "e2417a96611e51dc"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [
+    [
+     "e2417a96611e51dc",
+     "90"
+    ]
+   ],
+   "pqueries": []
+  },
+  {
+   "name": "placement-on-reference",
+   "format": "jplace",
+   "text": "{\"version\":3,\"fields\":[\"edge_num\",\"like_weight_ratio\",\"distal_length\",\"pendant_length\"],\"tree\":\"(((a:1{0},b:1{1}):1{2},c:1{3}):0.0{5},d:1{4});\",\"placements\":[{\"p\":[[2,1,0.5,0.1]],\"n\":[\"q\"]}]}",
+   "note": "the same tips as reference-newick, rooted elsewhere: the split sets must agree",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      6
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      3593195007,
+      1142626458
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": 0,
+     "edgeNum": 5,
+     "support": null,
+     "children": [
+      2,
+      5
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      2027748494,
+      2899439384
+     ],
+     "split": "aef73171e8caf782",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": 1,
+     "edgeNum": 2,
+     "support": null,
+     "children": [
+      3,
+      4
+     ],
+     "parent": 1,
+     "tipKey": "",
+     "side": [
+      879409001,
+      621103430
+     ],
+     "split": "e2417a96611e51dc",
+     "childIsCanonical": false
+    },
+    {
+     "name": "a",
+     "length": 1,
+     "edgeNum": 0,
+     "support": null,
+     "children": [],
+     "parent": 2,
+     "tipKey": "a",
+     "side": [
+      2426549645,
+      2713689070
+     ],
+     "split": "4689f872e5a48374",
+     "childIsCanonical": false
+    },
+    {
+     "name": "b",
+     "length": 1,
+     "edgeNum": 1,
+     "support": null,
+     "children": [],
+     "parent": 2,
+     "tipKey": "b",
+     "side": [
+      2764604132,
+      2226836136
+     ],
+     "split": "a4c882e484bad2a8",
+     "childIsCanonical": true
+    },
+    {
+     "name": "c",
+     "length": 1,
+     "edgeNum": 3,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "c",
+     "side": [
+      1287015399,
+      2312414814
+     ],
+     "split": "4cb64be789d4a65e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "d",
+     "length": 1,
+     "edgeNum": 4,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "d",
+     "side": [
+      2935435633,
+      3905615746
+     ],
+     "split": "aef73171e8caf782",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    3593195007,
+    1142626458
+   ],
+   "tipCount": 4,
+   "splitEdge": [
+    [
+     "aef73171e8caf782",
+     1
+    ],
+    [
+     "e2417a96611e51dc",
+     2
+    ],
+    [
+     "4689f872e5a48374",
+     3
+    ],
+    [
+     "a4c882e484bad2a8",
+     4
+    ],
+    [
+     "4cb64be789d4a65e",
+     5
+    ]
+   ],
+   "sides": [
+    "346ab76925054946",
+    "4689f872e5a48374",
+    "4cb64be789d4a65e",
+    "72e34f1bc0a1ca32",
+    "78dcfc8eacd1ef18",
+    "90a2358da1bf9bee",
+    "9a9d8618cdcfbec4",
+    "a4c882e484bad2a8",
+    "aef73171e8caf782",
+    "e2417a96611e51dc"
+   ],
+   "edgeByNum": [
+    [
+     5,
+     1
+    ],
+    [
+     2,
+     2
+    ],
+    [
+     0,
+     3
+    ],
+    [
+     1,
+     4
+    ],
+    [
+     3,
+     5
+    ],
+    [
+     4,
+     6
+    ]
+   ],
+   "supportBySplit": [],
+   "pqueries": [
+    {
+     "names": [
+      "q"
+     ],
+     "mult": 1,
+     "places": [
+      {
+       "edgeNum": 2,
+       "lwr": 1,
+       "distal": 0.5,
+       "pendant": 0.1,
+       "logLik": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "duplicates",
+   "format": "newick",
+   "text": "((A,A),(A,B));",
+   "note": "repeated names get #2, #3 in the viewer traversal order",
+   "root": 0,
+   "hasLengths": false,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      4
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      933046627,
+      4235310072
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      419187565,
+      371019653
+     ],
+     "split": "18fc4b6d161d4f85",
+     "childIsCanonical": true
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A#3",
+     "side": [
+      2515419305,
+      2453717695
+     ],
+     "split": "95ee40a99240c2bf",
+     "childIsCanonical": true
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A#2",
+     "side": [
+      2366770116,
+      2220723514
+     ],
+     "split": "8d120bc4845d8d3a",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      5,
+      6
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "18fc4b6d161d4f85",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "0294b11bb0c488c3",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    933046627,
+    4235310072
+   ],
+   "tipCount": 4,
+   "splitEdge": [
+    [
+     "18fc4b6d161d4f85",
+     1
+    ],
+    [
+     "95ee40a99240c2bf",
+     2
+    ],
+    [
+     "8d120bc4845d8d3a",
+     3
+    ],
+    [
+     "0294b11bb0c488c3",
+     5
+    ],
+    [
+     "1a68fa76a6d9c746",
+     6
+    ]
+   ],
+   "sides": [
+    "0294b11bb0c488c3",
+    "18fc4b6d161d4f85",
+    "1a68fa76a6d9c746",
+    "2df5d3155aa874be",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "8d120bc4845d8d3a",
+    "95ee40a99240c2bf",
+    "a27369ca6e317147",
+    "ba8f22a7782c3ec2"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "quoted",
+   "format": "newick",
+   "text": "('A b':1,'it''s':2,\"C d\":3);",
+   "note": "",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      2,
+      3
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      2247735892,
+      655824805
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A b",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "A b",
+     "side": [
+      2150490117,
+      2874719029
+     ],
+     "split": "05d45a518c4fac90",
+     "childIsCanonical": false
+    },
+    {
+     "name": "it's",
+     "length": 2,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "it's",
+     "side": [
+      1560809663,
+      3874636829
+     ],
+     "split": "5d0810bfe6f2441d",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C d",
+     "length": 3,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "C d",
+     "side": [
+      1490832110,
+      1790830733
+     ],
+     "split": "58dc4aee6abde88d",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    2247735892,
+    655824805
+   ],
+   "tipCount": 3,
+   "splitEdge": [
+    [
+     "05d45a518c4fac90",
+     1
+    ],
+    [
+     "5d0810bfe6f2441d",
+     2
+    ],
+    [
+     "58dc4aee6abde88d",
+     3
+    ]
+   ],
+   "sides": [
+    "05d45a518c4fac90",
+    "58dc4aee6abde88d",
+    "5d0810bfe6f2441d",
+    "802de005ab58bb35",
+    "d8f1aaebc1e553b8",
+    "dd25f0ba4daaff28"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "unicode-bmp",
+   "format": "newick",
+   "text": "(é:1,日本:1,'🦠':1,Ａ:1);",
+   "note": "names outside ASCII; the reference tip is still the smallest",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      2,
+      3,
+      4
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      302090974,
+      3979218366
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "é",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "é",
+     "side": [
+      3160554135,
+      2289807430
+     ],
+     "split": "ae63b0496555bdf8",
+     "childIsCanonical": false
+    },
+    {
+     "name": "日本",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "日本",
+     "side": [
+      1785592390,
+      1899305948
+     ],
+     "split": "6a6dfa4671351bdc",
+     "childIsCanonical": true
+    },
+    {
+     "name": "🦠",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "🦠",
+     "side": [
+      3543530671,
+      2767660074
+     ],
+     "split": "d335fcafa4f7242a",
+     "childIsCanonical": true
+    },
+    {
+     "name": "Ａ",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "Ａ",
+     "side": [
+      389789344,
+      2962719246
+     ],
+     "split": "173bb6a0b097820e",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    302090974,
+    3979218366
+   ],
+   "tipCount": 4,
+   "splitEdge": [
+    [
+     "ae63b0496555bdf8",
+     1
+    ],
+    [
+     "6a6dfa4671351bdc",
+     2
+    ],
+    [
+     "d335fcafa4f7242a",
+     3
+    ],
+    [
+     "173bb6a0b097820e",
+     4
+    ]
+   ],
+   "sides": [
+    "053a3c7e5db98fb0",
+    "173bb6a0b097820e",
+    "6a6dfa4671351bdc",
+    "786c70989c1b1662",
+    "ae63b0496555bdf8",
+    "bc623a97887bb046",
+    "c134767149d92994",
+    "d335fcafa4f7242a"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "unicode-surrogate-order",
+   "format": "newick",
+   "text": "(Ａ:1,'🦠':1,Ｂ:1);",
+   "note": "UTF-16 code units order the reference tip: U+D83E (the emoji) sorts before U+FF21, code points would not",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      2,
+      3
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      3456480844,
+      2190375326
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "Ａ",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "Ａ",
+     "side": [
+      389789344,
+      2962719246
+     ],
+     "split": "173bb6a0b097820e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "🦠",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "🦠",
+     "side": [
+      3543530671,
+      2767660074
+     ],
+     "split": "1d304ae326795db4",
+     "childIsCanonical": false
+    },
+    {
+     "name": "Ｂ",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "Ｂ",
+     "side": [
+      168557635,
+      2532237242
+     ],
+     "split": "0a0bfc4396eedfba",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    3456480844,
+    2190375326
+   ],
+   "tipCount": 3,
+   "splitEdge": [
+    [
+     "173bb6a0b097820e",
+     1
+    ],
+    [
+     "1d304ae326795db4",
+     2
+    ],
+    [
+     "0a0bfc4396eedfba",
+     3
+    ]
+   ],
+   "sides": [
+    "0a0bfc4396eedfba",
+    "173bb6a0b097820e",
+    "1d304ae326795db4",
+    "c40e4a0f1460a624",
+    "d335fcafa4f7242a",
+    "d93e00ec3219fb90"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "comments-support",
+   "format": "newick",
+   "text": "[&R] ((A,B):1[&&NHX:B=88],(C,D):1[70],E);",
+   "note": "",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      4,
+      7
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      1096218503,
+      1813628709
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": 1,
+     "edgeNum": null,
+     "support": "88",
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "6e37958986753b58",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "745f6fff20acfc1e",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 1,
+     "edgeNum": null,
+     "support": "70",
+     "children": [
+      5,
+      6
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      1403980580,
+      4163639086
+     ],
+     "split": "53af0b24f82c172e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "C",
+     "side": [
+      2880726779,
+      3944726770
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": true
+    },
+    {
+     "name": "D",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "D",
+     "side": [
+      4162547167,
+      322164700
+     ],
+     "split": "f81b6ddf1333d7dc",
+     "childIsCanonical": true
+    },
+    {
+     "name": "E",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "E",
+     "side": [
+      1033412269,
+      2119773302
+     ],
+     "split": "3d989ead7e592c76",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    1096218503,
+    1813628709
+   ],
+   "tipCount": 5,
+   "splitEdge": [
+    [
+     "6e37958986753b58",
+     1
+    ],
+    [
+     "745f6fff20acfc1e",
+     2
+    ],
+    [
+     "1a68fa76a6d9c746",
+     3
+    ],
+    [
+     "53af0b24f82c172e",
+     4
+    ],
+    [
+     "abb466fbeb1fc0f2",
+     5
+    ],
+    [
+     "f81b6ddf1333d7dc",
+     6
+    ],
+    [
+     "3d989ead7e592c76",
+     7
+    ]
+   ],
+   "sides": [
+    "12f9fca39435d00b",
+    "1a68fa76a6d9c746",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "3d989ead7e592c76",
+    "53af0b24f82c172e",
+    "5b3e0df1cac00063",
+    "6e37958986753b58",
+    "745f6fff20acfc1e",
+    "7cce692a1240eb53",
+    "abb466fbeb1fc0f2",
+    "b94d9a587f2a10f9",
+    "eae2917c870607d7",
+    "f81b6ddf1333d7dc"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [
+    [
+     "6e37958986753b58",
+     "88"
+    ],
+    [
+     "53af0b24f82c172e",
+     "70"
+    ]
+   ],
+   "pqueries": []
+  },
+  {
+   "name": "support-labels",
+   "format": "newick",
+   "text": "((A,B)95:1,(C,D)Clade:1,E);",
+   "note": "",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      4,
+      7
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      1096218503,
+      1813628709
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": 1,
+     "edgeNum": null,
+     "support": "95",
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "6e37958986753b58",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "745f6fff20acfc1e",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    },
+    {
+     "name": "Clade",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      5,
+      6
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      1403980580,
+      4163639086
+     ],
+     "split": "53af0b24f82c172e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "C",
+     "side": [
+      2880726779,
+      3944726770
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": true
+    },
+    {
+     "name": "D",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "D",
+     "side": [
+      4162547167,
+      322164700
+     ],
+     "split": "f81b6ddf1333d7dc",
+     "childIsCanonical": true
+    },
+    {
+     "name": "E",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "E",
+     "side": [
+      1033412269,
+      2119773302
+     ],
+     "split": "3d989ead7e592c76",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    1096218503,
+    1813628709
+   ],
+   "tipCount": 5,
+   "splitEdge": [
+    [
+     "6e37958986753b58",
+     1
+    ],
+    [
+     "745f6fff20acfc1e",
+     2
+    ],
+    [
+     "1a68fa76a6d9c746",
+     3
+    ],
+    [
+     "53af0b24f82c172e",
+     4
+    ],
+    [
+     "abb466fbeb1fc0f2",
+     5
+    ],
+    [
+     "f81b6ddf1333d7dc",
+     6
+    ],
+    [
+     "3d989ead7e592c76",
+     7
+    ]
+   ],
+   "sides": [
+    "12f9fca39435d00b",
+    "1a68fa76a6d9c746",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "3d989ead7e592c76",
+    "53af0b24f82c172e",
+    "5b3e0df1cac00063",
+    "6e37958986753b58",
+    "745f6fff20acfc1e",
+    "7cce692a1240eb53",
+    "abb466fbeb1fc0f2",
+    "b94d9a587f2a10f9",
+    "eae2917c870607d7",
+    "f81b6ddf1333d7dc"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [
+    [
+     "6e37958986753b58",
+     "95"
+    ]
+   ],
+   "pqueries": []
+  },
+  {
+   "name": "edge-numbers-in-newick",
+   "format": "newick",
+   "text": "((A:1{0},B:1{1}):1{2},C:1{3}){4};",
+   "note": "",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": 4,
+     "support": null,
+     "children": [
+      1,
+      4
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      2228552949,
+      24329359
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": 1,
+     "edgeNum": 2,
+     "support": null,
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": 1,
+     "edgeNum": 0,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "b1dc9c8d4dc607b4",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": 1,
+     "edgeNum": 1,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C",
+     "length": 1,
+     "edgeNum": 3,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "C",
+     "side": [
+      2880726779,
+      3944726770
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    2228552949,
+    24329359
+   ],
+   "tipCount": 3,
+   "splitEdge": [
+    [
+     "abb466fbeb1fc0f2",
+     1
+    ],
+    [
+     "b1dc9c8d4dc607b4",
+     2
+    ],
+    [
+     "1a68fa76a6d9c746",
+     3
+    ]
+   ],
+   "sides": [
+    "1a68fa76a6d9c746",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "9ebdfe83a7aafbc9",
+    "abb466fbeb1fc0f2",
+    "b1dc9c8d4dc607b4"
+   ],
+   "edgeByNum": [
+    [
+     2,
+     1
+    ],
+    [
+     0,
+     2
+    ],
+    [
+     1,
+     3
+    ],
+    [
+     3,
+     4
+    ]
+   ],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "degree-two-root",
+   "format": "newick",
+   "text": "((A,B),(C,D));",
+   "note": "both root branches carry the same bipartition; the first keeps the splitEdge entry",
+   "root": 0,
+   "hasLengths": false,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      4
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      2093902122,
+      306244435
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "53af0b24f82c172e",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "49c7f1525ef5d068",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      5,
+      6
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      1403980580,
+      4163639086
+     ],
+     "split": "53af0b24f82c172e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "C",
+     "side": [
+      2880726779,
+      3944726770
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": true
+    },
+    {
+     "name": "D",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "D",
+     "side": [
+      4162547167,
+      322164700
+     ],
+     "split": "f81b6ddf1333d7dc",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    2093902122,
+    306244435
+   ],
+   "tipCount": 4,
+   "splitEdge": [
+    [
+     "53af0b24f82c172e",
+     1
+    ],
+    [
+     "49c7f1525ef5d068",
+     2
+    ],
+    [
+     "1a68fa76a6d9c746",
+     3
+    ],
+    [
+     "abb466fbeb1fc0f2",
+     5
+    ],
+    [
+     "f81b6ddf1333d7dc",
+     6
+    ]
+   ],
+   "sides": [
+    "1a68fa76a6d9c746",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "49c7f1525ef5d068",
+    "53af0b24f82c172e",
+    "66a6935cb4992c15",
+    "84d504f501733c8f",
+    "abb466fbeb1fc0f2",
+    "d77a0fd1f95f2ba1",
+    "f81b6ddf1333d7dc"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "two-tips",
+   "format": "newick",
+   "text": "(A,B);",
+   "note": "",
+   "root": 0,
+   "hasLengths": false,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      2
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    794911246,
+    3933011069
+   ],
+   "tipCount": 2,
+   "splitEdge": [
+    [
+     "1a68fa76a6d9c746",
+     1
+    ]
+   ],
+   "sides": [
+    "1a68fa76a6d9c746",
+    "350998784cb53b3b"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "one-tip",
+   "format": "newick",
+   "text": "A;",
+   "note": "",
+   "root": 0,
+   "hasLengths": false,
+   "nodes": [
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": -1,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "",
+     "childIsCanonical": false
+    }
+   ],
+   "total": [
+    889821304,
+    1286945595
+   ],
+   "tipCount": 1,
+   "splitEdge": [],
+   "sides": [],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "nested-single",
+   "format": "newick",
+   "text": "((((A:1,B:1)ab:1)u1:2)u2:3,C:1,D:1);",
+   "note": "",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      6,
+      7
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      2093902122,
+      306244435
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "u2",
+     "length": 3,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      2
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "53af0b24f82c172e",
+     "childIsCanonical": false
+    },
+    {
+     "name": "u1",
+     "length": 2,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      3
+     ],
+     "parent": 1,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "53af0b24f82c172e",
+     "childIsCanonical": false
+    },
+    {
+     "name": "ab",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      4,
+      5
+     ],
+     "parent": 2,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "53af0b24f82c172e",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 3,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "49c7f1525ef5d068",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 3,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "C",
+     "side": [
+      2880726779,
+      3944726770
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": true
+    },
+    {
+     "name": "D",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "D",
+     "side": [
+      4162547167,
+      322164700
+     ],
+     "split": "f81b6ddf1333d7dc",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    2093902122,
+    306244435
+   ],
+   "tipCount": 4,
+   "splitEdge": [
+    [
+     "53af0b24f82c172e",
+     1
+    ],
+    [
+     "49c7f1525ef5d068",
+     4
+    ],
+    [
+     "1a68fa76a6d9c746",
+     5
+    ],
+    [
+     "abb466fbeb1fc0f2",
+     6
+    ],
+    [
+     "f81b6ddf1333d7dc",
+     7
+    ]
+   ],
+   "sides": [
+    "1a68fa76a6d9c746",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "49c7f1525ef5d068",
+    "53af0b24f82c172e",
+    "66a6935cb4992c15",
+    "84d504f501733c8f",
+    "abb466fbeb1fc0f2",
+    "d77a0fd1f95f2ba1",
+    "f81b6ddf1333d7dc"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "hash-in-name",
+   "format": "newick",
+   "text": "((A,'A#2'),A);",
+   "note": "a name that is literally A#2 collides with the key the second A is given",
+   "root": 0,
+   "hasLengths": false,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      4
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      0,
+      0
+     ],
+     "split": "0000000000000000",
+     "childIsCanonical": true
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A#2",
+     "side": [
+      2366770116,
+      2220723514
+     ],
+     "split": "8d120bc4845d8d3a",
+     "childIsCanonical": true
+    },
+    {
+     "name": "A#2",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A#2",
+     "side": [
+      2366770116,
+      2220723514
+     ],
+     "split": "8d120bc4845d8d3a",
+     "childIsCanonical": true
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "0000000000000000",
+     "childIsCanonical": false
+    }
+   ],
+   "total": [
+    889821304,
+    1286945595
+   ],
+   "tipCount": 3,
+   "splitEdge": [
+    [
+     "0000000000000000",
+     1
+    ],
+    [
+     "8d120bc4845d8d3a",
+     2
+    ]
+   ],
+   "sides": [
+    "0000000000000000",
+    "350998784cb53b3b",
+    "8d120bc4845d8d3a",
+    "b81b93bcc8e8b601"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "bom-prefixed",
+   "format": "newick",
+   "text": "﻿((A:1,B:1):1,C:1);",
+   "note": "a UTF-8 byte-order mark is whitespace to trim(); the tree behind it is still read",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      4
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      2228552949,
+      24329359
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "b1dc9c8d4dc607b4",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "C",
+     "side": [
+      2880726779,
+      3944726770
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    2228552949,
+    24329359
+   ],
+   "tipCount": 3,
+   "splitEdge": [
+    [
+     "abb466fbeb1fc0f2",
+     1
+    ],
+    [
+     "b1dc9c8d4dc607b4",
+     2
+    ],
+    [
+     "1a68fa76a6d9c746",
+     3
+    ]
+   ],
+   "sides": [
+    "1a68fa76a6d9c746",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "9ebdfe83a7aafbc9",
+    "abb466fbeb1fc0f2",
+    "b1dc9c8d4dc607b4"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "js-whitespace",
+   "format": "newick",
+   "text": "(A , B　,  C﻿);",
+   "note": "U+2028, U+2029 and U+FEFF are JavaScript whitespace, as every Zs character is",
+   "root": 0,
+   "hasLengths": false,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      2,
+      3
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      2228552949,
+      24329359
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "b1dc9c8d4dc607b4",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "C",
+     "side": [
+      2880726779,
+      3944726770
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    2228552949,
+    24329359
+   ],
+   "tipCount": 3,
+   "splitEdge": [
+    [
+     "b1dc9c8d4dc607b4",
+     1
+    ],
+    [
+     "1a68fa76a6d9c746",
+     2
+    ],
+    [
+     "abb466fbeb1fc0f2",
+     3
+    ]
+   ],
+   "sides": [
+    "1a68fa76a6d9c746",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "9ebdfe83a7aafbc9",
+    "abb466fbeb1fc0f2",
+    "b1dc9c8d4dc607b4"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "nel-is-not-space",
+   "format": "newick",
+   "text": "(A,B);",
+   "note": "U+0085 is whitespace to Julia isspace but not to JavaScript: the label keeps it",
+   "root": 0,
+   "hasLengths": false,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      2
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      1448013002,
+      3461783692
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "A",
+     "side": [
+      1277564604,
+      1754228682
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    1448013002,
+    3461783692
+   ],
+   "tipCount": 2,
+   "splitEdge": [
+    [
+     "1a68fa76a6d9c746",
+     1
+    ]
+   ],
+   "sides": [
+    "1a68fa76a6d9c746",
+    "4c2616bc688f67ca"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "non-ascii-digit-labels",
+   "format": "newick",
+   "text": "((A,B)٩٠:1,(C,D)９５:1,E);",
+   "note": "JavaScript \\d is ASCII only, so these internal labels are names, not support",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      4,
+      7
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      1096218503,
+      1813628709
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "٩٠",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "6e37958986753b58",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "745f6fff20acfc1e",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    },
+    {
+     "name": "９５",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      5,
+      6
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      1403980580,
+      4163639086
+     ],
+     "split": "53af0b24f82c172e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "C",
+     "side": [
+      2880726779,
+      3944726770
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": true
+    },
+    {
+     "name": "D",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "D",
+     "side": [
+      4162547167,
+      322164700
+     ],
+     "split": "f81b6ddf1333d7dc",
+     "childIsCanonical": true
+    },
+    {
+     "name": "E",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "E",
+     "side": [
+      1033412269,
+      2119773302
+     ],
+     "split": "3d989ead7e592c76",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    1096218503,
+    1813628709
+   ],
+   "tipCount": 5,
+   "splitEdge": [
+    [
+     "6e37958986753b58",
+     1
+    ],
+    [
+     "745f6fff20acfc1e",
+     2
+    ],
+    [
+     "1a68fa76a6d9c746",
+     3
+    ],
+    [
+     "53af0b24f82c172e",
+     4
+    ],
+    [
+     "abb466fbeb1fc0f2",
+     5
+    ],
+    [
+     "f81b6ddf1333d7dc",
+     6
+    ],
+    [
+     "3d989ead7e592c76",
+     7
+    ]
+   ],
+   "sides": [
+    "12f9fca39435d00b",
+    "1a68fa76a6d9c746",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "3d989ead7e592c76",
+    "53af0b24f82c172e",
+    "5b3e0df1cac00063",
+    "6e37958986753b58",
+    "745f6fff20acfc1e",
+    "7cce692a1240eb53",
+    "abb466fbeb1fc0f2",
+    "b94d9a587f2a10f9",
+    "eae2917c870607d7",
+    "f81b6ddf1333d7dc"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "random-64",
+   "format": "newick",
+   "text": "((t00:0.251,t59:0.954)55:0.136,(((t01:0.755,t22:0.514)89:0.448,((t34:0.647,(t51:0.19,t60:0.437)58:0.719)62:0.897,(t53:0.28,t61:0.231)86:0.693)70:0.383)80:0.785,t42:0.192)73:0.734,((t02:0.361,(t03:0.608,(t04:0.151,((((t05:0.826,(((t06:0.753,(((t15:0.444,(t16:0.775,t29:0.338)99:0.612)51:0.858,t24:0.481)76:0.179,t32:0.838)59:0.956)57:0.534,t17:0.677)52:0.847,t57:0.582)81:0.828)71:0.914,((((t07:0.465,(t08:0.296,t37:0.835)98:0.961)66:0.795,((((t09:0.898,(t10:0.125,((t13:0.212,t14:0.831)84:0.525,(t26:0.656,(t27:0.687,t58:0.614)83:0.988)57:0.982)79:0.452)95:0.682)55:0.46,(((t23:0.491,t40:0.39)95:0.648,t52:0.455)78:0.817,t56:0.2)59:0.642)61:0.836,(t38:0.311,t45:0.234)51:0.328)57:0.842,(t43:0.845,t50:0.788)71:0.19)65:0.876)59:0.958,(((t12:0.241,((t19:0.416,((t20:0.131,(t31:0.13,t48:0.385)94:0.447)88:0.369,t41:0.78)51:0.714)61:0.244,t30:0.935)54:0.305)50:0.787,((t21:0.682,t49:0.705)54:0.719,t62:0.474)63:0.232)75:0.33,t35:0.121)84:0.139)54:0.137,t47:0.14)91:0.79)55:0.348,t18:0.623)66:0.729,(t33:0.536,t55:0.343)62:0.325)74:0.491)82:0.381)62:0.227)62:0.333,((((((t11:0.348,(t25:0.419,t46:0.146)87:0.448)89:0.314,t28:0.281)54:0.147,(t36:0.218,t63:0.953)96:0.363)54:0.433,t39:0.896)71:0.318,t44:0.821)60:0.679,t54:0.39)73:0.872)51:0.426):0.333;",
+   "note": "",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": 0.333,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      4,
+      19
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      458783128,
+      1416121380
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": 0.136,
+     "edgeNum": null,
+     "support": "55",
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      3091318539,
+      604357728
+     ],
+     "split": "a319be93706d8844",
+     "childIsCanonical": false
+    },
+    {
+     "name": "t00",
+     "length": 0.251,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "t00",
+     "side": [
+      2915129111,
+      3565084299
+     ],
+     "split": "b6992e8f801692af",
+     "childIsCanonical": false
+    },
+    {
+     "name": "t59",
+     "length": 0.954,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "t59",
+     "side": [
+      360747036,
+      4034599659
+     ],
+     "split": "1580901cf07b1aeb",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.734,
+     "edgeNum": null,
+     "support": "73",
+     "children": [
+      5,
+      18
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      4156180698,
+      1360132018
+     ],
+     "split": "f7ba48da5111f7b2",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.785,
+     "edgeNum": null,
+     "support": "80",
+     "children": [
+      6,
+      9
+     ],
+     "parent": 4,
+     "tipKey": "",
+     "side": [
+      1344327990,
+      753708153
+     ],
+     "split": "5020d1362cecac79",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.448,
+     "edgeNum": null,
+     "support": "89",
+     "children": [
+      7,
+      8
+     ],
+     "parent": 5,
+     "tipKey": "",
+     "side": [
+      3295484612,
+      649279782
+     ],
+     "split": "c46d1ac426b33926",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t01",
+     "length": 0.755,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 6,
+     "tipKey": "t01",
+     "side": [
+      1873269052,
+      3726446891
+     ],
+     "split": "6fa7d13cde1d112b",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t22",
+     "length": 0.514,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 6,
+     "tipKey": "t22",
+     "side": [
+      2882194424,
+      4172163085
+     ],
+     "split": "abcacbf8f8ae280d",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.383,
+     "edgeNum": null,
+     "support": "70",
+     "children": [
+      10,
+      15
+     ],
+     "parent": 5,
+     "tipKey": "",
+     "side": [
+      2488126450,
+      174036319
+     ],
+     "split": "944dcbf20a5f955f",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.897,
+     "edgeNum": null,
+     "support": "62",
+     "children": [
+      11,
+      12
+     ],
+     "parent": 9,
+     "tipKey": "",
+     "side": [
+      352611395,
+      3299046929
+     ],
+     "split": "15046c43c4a37611",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t34",
+     "length": 0.647,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 10,
+     "tipKey": "t34",
+     "side": [
+      1714917255,
+      1723471059
+     ],
+     "split": "66378f8766ba14d3",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.719,
+     "edgeNum": null,
+     "support": "58",
+     "children": [
+      13,
+      14
+     ],
+     "parent": 10,
+     "tipKey": "",
+     "side": [
+      1932780484,
+      2719572674
+     ],
+     "split": "7333e3c4a21962c2",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t51",
+     "length": 0.19,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 12,
+     "tipKey": "t51",
+     "side": [
+      1585265385,
+      1744150971
+     ],
+     "split": "5e7d3ae967f5a1bb",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t60",
+     "length": 0.437,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 12,
+     "tipKey": "t60",
+     "side": [
+      760142125,
+      3320628089
+     ],
+     "split": "2d4ed92dc5ecc379",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.693,
+     "edgeNum": null,
+     "support": "86",
+     "children": [
+      16,
+      17
+     ],
+     "parent": 9,
+     "tipKey": "",
+     "side": [
+      2169087921,
+      3472679758
+     ],
+     "split": "8149a7b1cefce34e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t53",
+     "length": 0.28,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 15,
+     "tipKey": "t53",
+     "side": [
+      2244622968,
+      3577339957
+     ],
+     "split": "85ca3a78d539e035",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t61",
+     "length": 0.231,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 15,
+     "tipKey": "t61",
+     "side": [
+      75734473,
+      465896315
+     ],
+     "split": "04839dc91bc5037b",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t42",
+     "length": 0.192,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "t42",
+     "side": [
+      2811927020,
+      2113756107
+     ],
+     "split": "a79a99ec7dfd5bcb",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.426,
+     "edgeNum": null,
+     "support": "51",
+     "children": [
+      20,
+      109
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      1420031561,
+      561807350
+     ],
+     "split": "54a3f649217c7ff6",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.333,
+     "edgeNum": null,
+     "support": "62",
+     "children": [
+      21,
+      22
+     ],
+     "parent": 19,
+     "tipKey": "",
+     "side": [
+      1116790238,
+      3237421133
+     ],
+     "split": "4290dddec0f7204d",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t02",
+     "length": 0.361,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 20,
+     "tipKey": "t02",
+     "side": [
+      3858957771,
+      3733239486
+     ],
+     "split": "e60305cbde84b6be",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.227,
+     "edgeNum": null,
+     "support": "62",
+     "children": [
+      23,
+      24
+     ],
+     "parent": 20,
+     "tipKey": "",
+     "side": [
+      2761152533,
+      510891763
+     ],
+     "split": "a493d8151e7396f3",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t03",
+     "length": 0.608,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 22,
+     "tipKey": "t03",
+     "side": [
+      311806440,
+      2793448253
+     ],
+     "split": "1295c9e8a680a33d",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.381,
+     "edgeNum": null,
+     "support": "82",
+     "children": [
+      25,
+      26
+     ],
+     "parent": 22,
+     "tipKey": "",
+     "side": [
+      3053851133,
+      3102946766
+     ],
+     "split": "b60611fdb8f335ce",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t04",
+     "length": 0.151,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 24,
+     "tipKey": "t04",
+     "side": [
+      1164537283,
+      1934770578
+     ],
+     "split": "45696dc373524192",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.491,
+     "edgeNum": null,
+     "support": "74",
+     "children": [
+      27,
+      106
+     ],
+     "parent": 24,
+     "tipKey": "",
+     "side": [
+      4084169790,
+      3416355932
+     ],
+     "split": "f36f7c3ecba1745c",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.729,
+     "edgeNum": null,
+     "support": "66",
+     "children": [
+      28,
+      105
+     ],
+     "parent": 26,
+     "tipKey": "",
+     "side": [
+      1740602489,
+      2256079759
+     ],
+     "split": "67bf7c7986790b8f",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.348,
+     "edgeNum": null,
+     "support": "55",
+     "children": [
+      29,
+      46
+     ],
+     "parent": 27,
+     "tipKey": "",
+     "side": [
+      3523284360,
+      2896892210
+     ],
+     "split": "d2010d88acab1132",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.914,
+     "edgeNum": null,
+     "support": "71",
+     "children": [
+      30,
+      31
+     ],
+     "parent": 28,
+     "tipKey": "",
+     "side": [
+      1971376801,
+      1528617421
+     ],
+     "split": "7580d2a15b1cd9cd",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t05",
+     "length": 0.826,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 29,
+     "tipKey": "t05",
+     "side": [
+      322857617,
+      3736832994
+     ],
+     "split": "133e6a91debb8be2",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.828,
+     "edgeNum": null,
+     "support": "81",
+     "children": [
+      32,
+      45
+     ],
+     "parent": 29,
+     "tipKey": "",
+     "side": [
+      1723775024,
+      2242335279
+     ],
+     "split": "66beb83085a7522f",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.847,
+     "edgeNum": null,
+     "support": "52",
+     "children": [
+      33,
+      44
+     ],
+     "parent": 31,
+     "tipKey": "",
+     "side": [
+      1839372466,
+      1483128604
+     ],
+     "split": "6da298b25866bf1c",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.534,
+     "edgeNum": null,
+     "support": "57",
+     "children": [
+      34,
+      35
+     ],
+     "parent": 32,
+     "tipKey": "",
+     "side": [
+      3668485124,
+      2486615700
+     ],
+     "split": "daa8a4049436be94",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t06",
+     "length": 0.753,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 33,
+     "tipKey": "t06",
+     "side": [
+      2758130361,
+      2607014992
+     ],
+     "split": "a465bab99b63e450",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.956,
+     "edgeNum": null,
+     "support": "59",
+     "children": [
+      36,
+      43
+     ],
+     "parent": 33,
+     "tipKey": "",
+     "side": [
+      2127371965,
+      257252036
+     ],
+     "split": "7ecd1ebd0f555ac4",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.179,
+     "edgeNum": null,
+     "support": "76",
+     "children": [
+      37,
+      42
+     ],
+     "parent": 35,
+     "tipKey": "",
+     "side": [
+      1531013583,
+      3537597486
+     ],
+     "split": "5b4169cfd2db742e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.858,
+     "edgeNum": null,
+     "support": "51",
+     "children": [
+      38,
+      39
+     ],
+     "parent": 36,
+     "tipKey": "",
+     "side": [
+      581597124,
+      2187848512
+     ],
+     "split": "22aa77c48267eb40",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t15",
+     "length": 0.444,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 37,
+     "tipKey": "t15",
+     "side": [
+      2808937766,
+      3228071595
+     ],
+     "split": "a76cfd26c06876ab",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.612,
+     "edgeNum": null,
+     "support": "99",
+     "children": [
+      40,
+      41
+     ],
+     "parent": 37,
+     "tipKey": "",
+     "side": [
+      2244381410,
+      1108319723
+     ],
+     "split": "85c68ae2420f9deb",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t16",
+     "length": 0.775,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 39,
+     "tipKey": "t16",
+     "side": [
+      1057912003,
+      4064892827
+     ],
+     "split": "3f0e74c3f249579b",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t29",
+     "length": 0.338,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 39,
+     "tipKey": "t29",
+     "side": [
+      3133734433,
+      2957429360
+     ],
+     "split": "bac8fe21b046ca70",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t24",
+     "length": 0.481,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 36,
+     "tipKey": "t24",
+     "side": [
+      2045451787,
+      1354538862
+     ],
+     "split": "79eb1e0b50bc9f6e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t32",
+     "length": 0.838,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 35,
+     "tipKey": "t32",
+     "side": [
+      629962610,
+      3717082858
+     ],
+     "split": "258c7772dd8e2eea",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t17",
+     "length": 0.677,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 32,
+     "tipKey": "t17",
+     "side": [
+      3070901430,
+      3427795336
+     ],
+     "split": "b70a3cb6cc500188",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t57",
+     "length": 0.582,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 31,
+     "tipKey": "t57",
+     "side": [
+      186392706,
+      3720473907
+     ],
+     "split": "0b1c2082ddc1ed33",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.79,
+     "edgeNum": null,
+     "support": "91",
+     "children": [
+      47,
+      104
+     ],
+     "parent": 28,
+     "tipKey": "",
+     "side": [
+      2810306345,
+      4156016895
+     ],
+     "split": "a781df29f7b7c8ff",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.137,
+     "edgeNum": null,
+     "support": "54",
+     "children": [
+      48,
+      83
+     ],
+     "parent": 46,
+     "tipKey": "",
+     "side": [
+      1627627264,
+      1626297513
+     ],
+     "split": "61039f0060ef54a9",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.958,
+     "edgeNum": null,
+     "support": "59",
+     "children": [
+      49,
+      54
+     ],
+     "parent": 47,
+     "tipKey": "",
+     "side": [
+      3100771834,
+      2717583375
+     ],
+     "split": "b8d205faa1fb080f",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.795,
+     "edgeNum": null,
+     "support": "66",
+     "children": [
+      50,
+      51
+     ],
+     "parent": 48,
+     "tipKey": "",
+     "side": [
+      765522476,
+      628520852
+     ],
+     "split": "2da0f22c25767794",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t07",
+     "length": 0.465,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 49,
+     "tipKey": "t07",
+     "side": [
+      333906950,
+      1805529047
+     ],
+     "split": "13e704066b9e2fd7",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.961,
+     "edgeNum": null,
+     "support": "98",
+     "children": [
+      52,
+      53
+     ],
+     "parent": 49,
+     "tipKey": "",
+     "side": [
+      1044903466,
+      1323849795
+     ],
+     "split": "3e47f62a4ee85843",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t08",
+     "length": 0.296,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 51,
+     "tipKey": "t08",
+     "side": [
+      1278418797,
+      2834505820
+     ],
+     "split": "4c331f6da8f3205c",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t37",
+     "length": 0.835,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 51,
+     "tipKey": "t37",
+     "side": [
+      1920264519,
+      3860559903
+     ],
+     "split": "7274e947e61b781f",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.876,
+     "edgeNum": null,
+     "support": "65",
+     "children": [
+      55,
+      80
+     ],
+     "parent": 48,
+     "tipKey": "",
+     "side": [
+      2507339734,
+      2223865755
+     ],
+     "split": "9572f7d6848d7f9b",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.842,
+     "edgeNum": null,
+     "support": "57",
+     "children": [
+      56,
+      77
+     ],
+     "parent": 54,
+     "tipKey": "",
+     "side": [
+      1771165491,
+      2999342718
+     ],
+     "split": "6991d733b2c6567e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.836,
+     "edgeNum": null,
+     "support": "61",
+     "children": [
+      57,
+      70
+     ],
+     "parent": 55,
+     "tipKey": "",
+     "side": [
+      3354397320,
+      1885816270
+     ],
+     "split": "c7f00a88706745ce",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.46,
+     "edgeNum": null,
+     "support": "55",
+     "children": [
+      58,
+      59
+     ],
+     "parent": 56,
+     "tipKey": "",
+     "side": [
+      2362310206,
+      934581751
+     ],
+     "split": "8ccdfe3e37b495f7",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t09",
+     "length": 0.898,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 57,
+     "tipKey": "t09",
+     "side": [
+      2921343555,
+      4055558860
+     ],
+     "split": "ae202a43f1baeacc",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.682,
+     "edgeNum": null,
+     "support": "95",
+     "children": [
+      60,
+      61
+     ],
+     "parent": 57,
+     "tipKey": "",
+     "side": [
+      586011773,
+      3322838843
+     ],
+     "split": "22edd47dc60e7f3b",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t10",
+     "length": 0.125,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 59,
+     "tipKey": "t10",
+     "side": [
+      3654713617,
+      3941431497
+     ],
+     "split": "d9d68111eaed78c9",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.452,
+     "edgeNum": null,
+     "support": "79",
+     "children": [
+      62,
+      65
+     ],
+     "parent": 59,
+     "tipKey": "",
+     "side": [
+      4214969708,
+      753076210
+     ],
+     "split": "fb3b556c2ce307f2",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.525,
+     "edgeNum": null,
+     "support": "84",
+     "children": [
+      63,
+      64
+     ],
+     "parent": 61,
+     "tipKey": "",
+     "side": [
+      1768972531,
+      3079775805
+     ],
+     "split": "697060f3b791a63d",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t13",
+     "length": 0.212,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 62,
+     "tipKey": "t13",
+     "side": [
+      1182172254,
+      2612394586
+     ],
+     "split": "4676845e9bb5fa5a",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t14",
+     "length": 0.831,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 62,
+     "tipKey": "t14",
+     "side": [
+      788980909,
+      740580455
+     ],
+     "split": "2f06e4ad2c245c67",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.982,
+     "edgeNum": null,
+     "support": "57",
+     "children": [
+      66,
+      67
+     ],
+     "parent": 61,
+     "tipKey": "",
+     "side": [
+      2454402463,
+      2607981007
+     ],
+     "split": "924b359f9b72a1cf",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t26",
+     "length": 0.656,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 65,
+     "tipKey": "t26",
+     "side": [
+      2971733055,
+      2403929677
+     ],
+     "split": "b1210c3f8f490e4d",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.988,
+     "edgeNum": null,
+     "support": "83",
+     "children": [
+      68,
+      69
+     ],
+     "parent": 65,
+     "tipKey": "",
+     "side": [
+      594164128,
+      339455874
+     ],
+     "split": "236a39a0143baf82",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t27",
+     "length": 0.687,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 67,
+     "tipKey": "t27",
+     "side": [
+      1140574744,
+      666632772
+     ],
+     "split": "43fbca1827bc0244",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t58",
+     "length": 0.614,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 67,
+     "tipKey": "t58",
+     "side": [
+      1620177848,
+      864529862
+     ],
+     "split": "6091f3b83387adc6",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.642,
+     "edgeNum": null,
+     "support": "59",
+     "children": [
+      71,
+      76
+     ],
+     "parent": 56,
+     "tipKey": "",
+     "side": [
+      1262351542,
+      1205063737
+     ],
+     "split": "4b3df4b647d3d039",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.817,
+     "edgeNum": null,
+     "support": "78",
+     "children": [
+      72,
+      75
+     ],
+     "parent": 70,
+     "tipKey": "",
+     "side": [
+      3481640749,
+      4255263685
+     ],
+     "split": "cf859f2dfda22bc5",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.648,
+     "edgeNum": null,
+     "support": "95",
+     "children": [
+      73,
+      74
+     ],
+     "parent": 71,
+     "tipKey": "",
+     "side": [
+      3775827857,
+      1542327242
+     ],
+     "split": "e10e8f915bee0bca",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t23",
+     "length": 0.491,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 72,
+     "tipKey": "t23",
+     "side": [
+      2633439232,
+      2451718855
+     ],
+     "split": "9cf71800922242c7",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t40",
+     "length": 0.39,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 72,
+     "tipKey": "t40",
+     "side": [
+      2113509265,
+      3385608461
+     ],
+     "split": "7df99791c9cc490d",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t52",
+     "length": 0.455,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 71,
+     "tipKey": "t52",
+     "side": [
+      780865724,
+      2790006799
+     ],
+     "split": "2e8b10bca64c200f",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t56",
+     "length": 0.2,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 70,
+     "tipKey": "t56",
+     "side": [
+      2226678683,
+      3128032252
+     ],
+     "split": "84b86b9bba71fbfc",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.328,
+     "edgeNum": null,
+     "support": "51",
+     "children": [
+      78,
+      79
+     ],
+     "parent": 55,
+     "tipKey": "",
+     "side": [
+      2925649339,
+      3265336240
+     ],
+     "split": "ae61ddbbc2a113b0",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t38",
+     "length": 0.311,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 77,
+     "tipKey": "t38",
+     "side": [
+      202098268,
+      230913320
+     ],
+     "split": "0c0bc65c0dc37528",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t45",
+     "length": 0.234,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 77,
+     "tipKey": "t45",
+     "side": [
+      2724862951,
+      3479332504
+     ],
+     "split": "a26a1be7cf626698",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.19,
+     "edgeNum": null,
+     "support": "71",
+     "children": [
+      81,
+      82
+     ],
+     "parent": 54,
+     "tipKey": "",
+     "side": [
+      4242743525,
+      910895589
+     ],
+     "split": "fce320e5364b29e5",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t43",
+     "length": 0.845,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 80,
+     "tipKey": "t43",
+     "side": [
+      488217438,
+      1707576646
+     ],
+     "split": "1d199b5e65c78d46",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t50",
+     "length": 0.788,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 80,
+     "tipKey": "t50",
+     "side": [
+      3791305659,
+      1401726115
+     ],
+     "split": "e1fabbbb538ca4a3",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.139,
+     "edgeNum": null,
+     "support": "84",
+     "children": [
+      84,
+      103
+     ],
+     "parent": 47,
+     "tipKey": "",
+     "side": [
+      3654392570,
+      3239337126
+     ],
+     "split": "d9d19afac1145ca6",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.33,
+     "edgeNum": null,
+     "support": "75",
+     "children": [
+      85,
+      98
+     ],
+     "parent": 83,
+     "tipKey": "",
+     "side": [
+      4217289140,
+      2261610245
+     ],
+     "split": "fb5eb9b486cd6f05",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.787,
+     "edgeNum": null,
+     "support": "50",
+     "children": [
+      86,
+      87
+     ],
+     "parent": 84,
+     "tipKey": "",
+     "side": [
+      2427504475,
+      4196733045
+     ],
+     "split": "90b0c75bfa251075",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t12",
+     "length": 0.241,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 85,
+     "tipKey": "t12",
+     "side": [
+      3916718925,
+      2111803832
+     ],
+     "split": "e974634d7ddf91b8",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.305,
+     "edgeNum": null,
+     "support": "54",
+     "children": [
+      88,
+      97
+     ],
+     "parent": 85,
+     "tipKey": "",
+     "side": [
+      2042930198,
+      2281341389
+     ],
+     "split": "79c4a41687fa81cd",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.244,
+     "edgeNum": null,
+     "support": "61",
+     "children": [
+      89,
+      90
+     ],
+     "parent": 87,
+     "tipKey": "",
+     "side": [
+      2349111970,
+      944418938
+     ],
+     "split": "8c049aa2384ab07a",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t19",
+     "length": 0.416,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 88,
+     "tipKey": "t19",
+     "side": [
+      314633982,
+      4094352870
+     ],
+     "split": "12c0eefef40adde6",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.714,
+     "edgeNum": null,
+     "support": "51",
+     "children": [
+      91,
+      96
+     ],
+     "parent": 88,
+     "tipKey": "",
+     "side": [
+      2663674972,
+      3426774428
+     ],
+     "split": "9ec4745ccc406d9c",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.369,
+     "edgeNum": null,
+     "support": "88",
+     "children": [
+      92,
+      93
+     ],
+     "parent": 90,
+     "tipKey": "",
+     "side": [
+      75627616,
+      299168597
+     ],
+     "split": "0481fc6011d4f355",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t20",
+     "length": 0.131,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 91,
+     "tipKey": "t20",
+     "side": [
+      1289196675,
+      2947175911
+     ],
+     "split": "4cd79483afaa55e7",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.447,
+     "edgeNum": null,
+     "support": "94",
+     "children": [
+      94,
+      95
+     ],
+     "parent": 91,
+     "tipKey": "",
+     "side": [
+      1213622499,
+      3195971250
+     ],
+     "split": "485668e3be7ea6b2",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t31",
+     "length": 0.13,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 93,
+     "tipKey": "t31",
+     "side": [
+      275459054,
+      3285028776
+     ],
+     "split": "106b2beec3cd8fa8",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t48",
+     "length": 0.385,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 93,
+     "tipKey": "t48",
+     "side": [
+      1480409869,
+      2108893466
+     ],
+     "split": "583d430d7db3291a",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t41",
+     "length": 0.78,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 90,
+     "tipKey": "t41",
+     "side": [
+      2588248124,
+      3717504713
+     ],
+     "split": "9a45883cdd949ec9",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t30",
+     "length": 0.935,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 87,
+     "tipKey": "t30",
+     "side": [
+      4123016884,
+      3215995319
+     ],
+     "split": "f5c03eb4bfb031b7",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.232,
+     "edgeNum": null,
+     "support": "63",
+     "children": [
+      99,
+      102
+     ],
+     "parent": 84,
+     "tipKey": "",
+     "side": [
+      1810792175,
+      2095611760
+     ],
+     "split": "6bee7eef7ce87f70",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.719,
+     "edgeNum": null,
+     "support": "54",
+     "children": [
+      100,
+      101
+     ],
+     "parent": 98,
+     "tipKey": "",
+     "side": [
+      2644934438,
+      1266116737
+     ],
+     "split": "9da67f264b776881",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t21",
+     "length": 0.682,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 99,
+     "tipKey": "t21",
+     "side": [
+      21063808,
+      1000402494
+     ],
+     "split": "014168803ba0ee3e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t49",
+     "length": 0.705,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 99,
+     "tipKey": "t49",
+     "side": [
+      2632390566,
+      1893172927
+     ],
+     "split": "9ce717a670d786bf",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t62",
+     "length": 0.474,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 98,
+     "tipKey": "t62",
+     "side": [
+      4131914185,
+      933173233
+     ],
+     "split": "f64801c9379f17f1",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t35",
+     "length": 0.121,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 83,
+     "tipKey": "t35",
+     "side": [
+      579806030,
+      1205416867
+     ],
+     "split": "228f234e47d933a3",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t47",
+     "length": 0.14,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 46,
+     "tipKey": "t47",
+     "side": [
+      3330424873,
+      2539166806
+     ],
+     "split": "c682402997589c56",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t18",
+     "length": 0.623,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 27,
+     "tipKey": "t18",
+     "side": [
+      3049157105,
+      718412477
+     ],
+     "split": "b5be71f12ad21abd",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.325,
+     "edgeNum": null,
+     "support": "62",
+     "children": [
+      107,
+      108
+     ],
+     "parent": 26,
+     "tipKey": "",
+     "side": [
+      2496659527,
+      1306034131
+     ],
+     "split": "94d000474dd87fd3",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t33",
+     "length": 0.536,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 106,
+     "tipKey": "t33",
+     "side": [
+      2995103026,
+      1378097262
+     ],
+     "split": "b285a5325224186e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t55",
+     "length": 0.343,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 106,
+     "tipKey": "t55",
+     "side": [
+      643147125,
+      536635325
+     ],
+     "split": "2655a5751ffc67bd",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.872,
+     "edgeNum": null,
+     "support": "73",
+     "children": [
+      110,
+      125
+     ],
+     "parent": 19,
+     "tipKey": "",
+     "side": [
+      372452247,
+      3784007611
+     ],
+     "split": "16332b97e18b5fbb",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.679,
+     "edgeNum": null,
+     "support": "60",
+     "children": [
+      111,
+      124
+     ],
+     "parent": 109,
+     "tipKey": "",
+     "side": [
+      2286450641,
+      940092436
+     ],
+     "split": "884877d13808ac14",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.318,
+     "edgeNum": null,
+     "support": "71",
+     "children": [
+      112,
+      123
+     ],
+     "parent": 110,
+     "tipKey": "",
+     "side": [
+      2944690529,
+      3894437712
+     ],
+     "split": "af846961e8206750",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.433,
+     "edgeNum": null,
+     "support": "54",
+     "children": [
+      113,
+      120
+     ],
+     "parent": 111,
+     "tipKey": "",
+     "side": [
+      978697442,
+      820831763
+     ],
+     "split": "3a55bce230ece613",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.147,
+     "edgeNum": null,
+     "support": "54",
+     "children": [
+      114,
+      119
+     ],
+     "parent": 112,
+     "tipKey": "",
+     "side": [
+      2182718980,
+      351651817
+     ],
+     "split": "8219a60414f5c7e9",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.314,
+     "edgeNum": null,
+     "support": "89",
+     "children": [
+      115,
+      116
+     ],
+     "parent": 113,
+     "tipKey": "",
+     "side": [
+      1076601386,
+      197371028
+     ],
+     "split": "402ba22a0bc3a494",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t11",
+     "length": 0.348,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 114,
+     "tipKey": "t11",
+     "side": [
+      2502655389,
+      4058927573
+     ],
+     "split": "952b7d9df1ee51d5",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.448,
+     "edgeNum": null,
+     "support": "87",
+     "children": [
+      117,
+      118
+     ],
+     "parent": 114,
+     "tipKey": "",
+     "side": [
+      3573604279,
+      4197315905
+     ],
+     "split": "d500dfb7fa2df541",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t25",
+     "length": 0.419,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 116,
+     "tipKey": "t25",
+     "side": [
+      2363661087,
+      3356298833
+     ],
+     "split": "8ce29b1fc80d0e51",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t46",
+     "length": 0.146,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 116,
+     "tipKey": "t46",
+     "side": [
+      1508000936,
+      841022224
+     ],
+     "split": "59e244a83220fb10",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t28",
+     "length": 0.281,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 113,
+     "tipKey": "t28",
+     "side": [
+      3258057774,
+      523658109
+     ],
+     "split": "c232042e1f36637d",
+     "childIsCanonical": true
+    },
+    {
+     "name": "",
+     "length": 0.363,
+     "edgeNum": null,
+     "support": "96",
+     "children": [
+      121,
+      122
+     ],
+     "parent": 112,
+     "tipKey": "",
+     "side": [
+      3091995366,
+      605626874
+     ],
+     "split": "b84c1ae6241921fa",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t36",
+     "length": 0.218,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 120,
+     "tipKey": "t36",
+     "side": [
+      3200350203,
+      2849190992
+     ],
+     "split": "bec177fba9d33450",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t63",
+     "length": 0.953,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 120,
+     "tipKey": "t63",
+     "side": [
+      109931805,
+      2378831274
+     ],
+     "split": "068d6d1d8dca15aa",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t39",
+     "length": 0.896,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 111,
+     "tipKey": "t39",
+     "side": [
+      2513556867,
+      3637281091
+     ],
+     "split": "95d1d583d8cc8143",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t44",
+     "length": 0.821,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 110,
+     "tipKey": "t44",
+     "side": [
+      667688624,
+      3492334404
+     ],
+     "split": "27cc1eb0d028cb44",
+     "childIsCanonical": true
+    },
+    {
+     "name": "t54",
+     "length": 0.39,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 109,
+     "tipKey": "t54",
+     "side": [
+      2658884678,
+      3649303471
+     ],
+     "split": "9e7b5c46d983f3af",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    458783128,
+    1416121380
+   ],
+   "tipCount": 64,
+   "splitEdge": [
+    [
+     "a319be93706d8844",
+     1
+    ],
+    [
+     "b6992e8f801692af",
+     2
+    ],
+    [
+     "1580901cf07b1aeb",
+     3
+    ],
+    [
+     "f7ba48da5111f7b2",
+     4
+    ],
+    [
+     "5020d1362cecac79",
+     5
+    ],
+    [
+     "c46d1ac426b33926",
+     6
+    ],
+    [
+     "6fa7d13cde1d112b",
+     7
+    ],
+    [
+     "abcacbf8f8ae280d",
+     8
+    ],
+    [
+     "944dcbf20a5f955f",
+     9
+    ],
+    [
+     "15046c43c4a37611",
+     10
+    ],
+    [
+     "66378f8766ba14d3",
+     11
+    ],
+    [
+     "7333e3c4a21962c2",
+     12
+    ],
+    [
+     "5e7d3ae967f5a1bb",
+     13
+    ],
+    [
+     "2d4ed92dc5ecc379",
+     14
+    ],
+    [
+     "8149a7b1cefce34e",
+     15
+    ],
+    [
+     "85ca3a78d539e035",
+     16
+    ],
+    [
+     "04839dc91bc5037b",
+     17
+    ],
+    [
+     "a79a99ec7dfd5bcb",
+     18
+    ],
+    [
+     "54a3f649217c7ff6",
+     19
+    ],
+    [
+     "4290dddec0f7204d",
+     20
+    ],
+    [
+     "e60305cbde84b6be",
+     21
+    ],
+    [
+     "a493d8151e7396f3",
+     22
+    ],
+    [
+     "1295c9e8a680a33d",
+     23
+    ],
+    [
+     "b60611fdb8f335ce",
+     24
+    ],
+    [
+     "45696dc373524192",
+     25
+    ],
+    [
+     "f36f7c3ecba1745c",
+     26
+    ],
+    [
+     "67bf7c7986790b8f",
+     27
+    ],
+    [
+     "d2010d88acab1132",
+     28
+    ],
+    [
+     "7580d2a15b1cd9cd",
+     29
+    ],
+    [
+     "133e6a91debb8be2",
+     30
+    ],
+    [
+     "66beb83085a7522f",
+     31
+    ],
+    [
+     "6da298b25866bf1c",
+     32
+    ],
+    [
+     "daa8a4049436be94",
+     33
+    ],
+    [
+     "a465bab99b63e450",
+     34
+    ],
+    [
+     "7ecd1ebd0f555ac4",
+     35
+    ],
+    [
+     "5b4169cfd2db742e",
+     36
+    ],
+    [
+     "22aa77c48267eb40",
+     37
+    ],
+    [
+     "a76cfd26c06876ab",
+     38
+    ],
+    [
+     "85c68ae2420f9deb",
+     39
+    ],
+    [
+     "3f0e74c3f249579b",
+     40
+    ],
+    [
+     "bac8fe21b046ca70",
+     41
+    ],
+    [
+     "79eb1e0b50bc9f6e",
+     42
+    ],
+    [
+     "258c7772dd8e2eea",
+     43
+    ],
+    [
+     "b70a3cb6cc500188",
+     44
+    ],
+    [
+     "0b1c2082ddc1ed33",
+     45
+    ],
+    [
+     "a781df29f7b7c8ff",
+     46
+    ],
+    [
+     "61039f0060ef54a9",
+     47
+    ],
+    [
+     "b8d205faa1fb080f",
+     48
+    ],
+    [
+     "2da0f22c25767794",
+     49
+    ],
+    [
+     "13e704066b9e2fd7",
+     50
+    ],
+    [
+     "3e47f62a4ee85843",
+     51
+    ],
+    [
+     "4c331f6da8f3205c",
+     52
+    ],
+    [
+     "7274e947e61b781f",
+     53
+    ],
+    [
+     "9572f7d6848d7f9b",
+     54
+    ],
+    [
+     "6991d733b2c6567e",
+     55
+    ],
+    [
+     "c7f00a88706745ce",
+     56
+    ],
+    [
+     "8ccdfe3e37b495f7",
+     57
+    ],
+    [
+     "ae202a43f1baeacc",
+     58
+    ],
+    [
+     "22edd47dc60e7f3b",
+     59
+    ],
+    [
+     "d9d68111eaed78c9",
+     60
+    ],
+    [
+     "fb3b556c2ce307f2",
+     61
+    ],
+    [
+     "697060f3b791a63d",
+     62
+    ],
+    [
+     "4676845e9bb5fa5a",
+     63
+    ],
+    [
+     "2f06e4ad2c245c67",
+     64
+    ],
+    [
+     "924b359f9b72a1cf",
+     65
+    ],
+    [
+     "b1210c3f8f490e4d",
+     66
+    ],
+    [
+     "236a39a0143baf82",
+     67
+    ],
+    [
+     "43fbca1827bc0244",
+     68
+    ],
+    [
+     "6091f3b83387adc6",
+     69
+    ],
+    [
+     "4b3df4b647d3d039",
+     70
+    ],
+    [
+     "cf859f2dfda22bc5",
+     71
+    ],
+    [
+     "e10e8f915bee0bca",
+     72
+    ],
+    [
+     "9cf71800922242c7",
+     73
+    ],
+    [
+     "7df99791c9cc490d",
+     74
+    ],
+    [
+     "2e8b10bca64c200f",
+     75
+    ],
+    [
+     "84b86b9bba71fbfc",
+     76
+    ],
+    [
+     "ae61ddbbc2a113b0",
+     77
+    ],
+    [
+     "0c0bc65c0dc37528",
+     78
+    ],
+    [
+     "a26a1be7cf626698",
+     79
+    ],
+    [
+     "fce320e5364b29e5",
+     80
+    ],
+    [
+     "1d199b5e65c78d46",
+     81
+    ],
+    [
+     "e1fabbbb538ca4a3",
+     82
+    ],
+    [
+     "d9d19afac1145ca6",
+     83
+    ],
+    [
+     "fb5eb9b486cd6f05",
+     84
+    ],
+    [
+     "90b0c75bfa251075",
+     85
+    ],
+    [
+     "e974634d7ddf91b8",
+     86
+    ],
+    [
+     "79c4a41687fa81cd",
+     87
+    ],
+    [
+     "8c049aa2384ab07a",
+     88
+    ],
+    [
+     "12c0eefef40adde6",
+     89
+    ],
+    [
+     "9ec4745ccc406d9c",
+     90
+    ],
+    [
+     "0481fc6011d4f355",
+     91
+    ],
+    [
+     "4cd79483afaa55e7",
+     92
+    ],
+    [
+     "485668e3be7ea6b2",
+     93
+    ],
+    [
+     "106b2beec3cd8fa8",
+     94
+    ],
+    [
+     "583d430d7db3291a",
+     95
+    ],
+    [
+     "9a45883cdd949ec9",
+     96
+    ],
+    [
+     "f5c03eb4bfb031b7",
+     97
+    ],
+    [
+     "6bee7eef7ce87f70",
+     98
+    ],
+    [
+     "9da67f264b776881",
+     99
+    ],
+    [
+     "014168803ba0ee3e",
+     100
+    ],
+    [
+     "9ce717a670d786bf",
+     101
+    ],
+    [
+     "f64801c9379f17f1",
+     102
+    ],
+    [
+     "228f234e47d933a3",
+     103
+    ],
+    [
+     "c682402997589c56",
+     104
+    ],
+    [
+     "b5be71f12ad21abd",
+     105
+    ],
+    [
+     "94d000474dd87fd3",
+     106
+    ],
+    [
+     "b285a5325224186e",
+     107
+    ],
+    [
+     "2655a5751ffc67bd",
+     108
+    ],
+    [
+     "16332b97e18b5fbb",
+     109
+    ],
+    [
+     "884877d13808ac14",
+     110
+    ],
+    [
+     "af846961e8206750",
+     111
+    ],
+    [
+     "3a55bce230ece613",
+     112
+    ],
+    [
+     "8219a60414f5c7e9",
+     113
+    ],
+    [
+     "402ba22a0bc3a494",
+     114
+    ],
+    [
+     "952b7d9df1ee51d5",
+     115
+    ],
+    [
+     "d500dfb7fa2df541",
+     116
+    ],
+    [
+     "8ce29b1fc80d0e51",
+     117
+    ],
+    [
+     "59e244a83220fb10",
+     118
+    ],
+    [
+     "c232042e1f36637d",
+     119
+    ],
+    [
+     "b84c1ae6241921fa",
+     120
+    ],
+    [
+     "bec177fba9d33450",
+     121
+    ],
+    [
+     "068d6d1d8dca15aa",
+     122
+    ],
+    [
+     "95d1d583d8cc8143",
+     123
+    ],
+    [
+     "27cc1eb0d028cb44",
+     124
+    ],
+    [
+     "9e7b5c46d983f3af",
+     125
+    ]
+   ],
+   "sides": [
+    "014168803ba0ee3e",
+    "0481fc6011d4f355",
+    "04839dc91bc5037b",
+    "0641e2c631afc162",
+    "068d6d1d8dca15aa",
+    "086613098ad3c7c6",
+    "08bf7d9e3ff663f3",
+    "09989766a06291c2",
+    "09cdb070f2e8ef19",
+    "0b1c2082ddc1ed33",
+    "0b33527697a5c38c",
+    "0c0bc65c0dc37528",
+    "0d6b520fb5e3139f",
+    "0e5c15db90cb3a35",
+    "0ed8e984a41356cf",
+    "1044591a89a9a117",
+    "106b2beec3cd8fa8",
+    "1295c9e8a680a33d",
+    "12c0eefef40adde6",
+    "133e6a91debb8be2",
+    "13e704066b9e2fd7",
+    "15046c43c4a37611",
+    "1580901cf07b1aeb",
+    "16332b97e18b5fbb",
+    "1753bfc459ab390c",
+    "1a1911186fc8a21a",
+    "1d199b5e65c78d46",
+    "1dd51485d9a2598e",
+    "1fd985f845bcbf71",
+    "1fdbe4514fad4f5f",
+    "210dc57a6484aa37",
+    "228f234e47d933a3",
+    "22aa77c48267eb40",
+    "22edd47dc60e7f3b",
+    "236a39a0143baf82",
+    "24560d5ba6211bbf",
+    "251f8fb21a801467",
+    "258c7772dd8e2eea",
+    "2655a5751ffc67bd",
+    "27cc1eb0d028cb44",
+    "2d4ed92dc5ecc379",
+    "2da0f22c25767794",
+    "2e8b10bca64c200f",
+    "2f06e4ad2c245c67",
+    "345e9d35784c1043",
+    "35d36924f2246c2b",
+    "3616a0b591848f5d",
+    "36f88bb4711e3bb0",
+    "383240384053e3a6",
+    "39b5ade59266331f",
+    "39d75ad613b17f87",
+    "39f20e5cd60fa764",
+    "3a55bce230ece613",
+    "3c94672884408760",
+    "3d0ddced4b942b99",
+    "3e47f62a4ee85843",
+    "3ed40eea89e662ce",
+    "3f0e74c3f249579b",
+    "4019105786b3380a",
+    "402ba22a0bc3a494",
+    "4290dddec0f7204d",
+    "42ba3d306648b734",
+    "43653a9529db653e",
+    "43fbca1827bc0244",
+    "45254371339ded9f",
+    "45696dc373524192",
+    "4676845e9bb5fa5a",
+    "485668e3be7ea6b2",
+    "4b3df4b647d3d039",
+    "4b78a8ae7884e05d",
+    "4c331f6da8f3205c",
+    "4cd79483afaa55e7",
+    "4ffb8fd1751433d2",
+    "5020d1362cecac79",
+    "50658d2e13bb9c1d",
+    "530e117bea16ea96",
+    "54a3f649217c7ff6",
+    "576b66f5fc9b6c78",
+    "578fed1bfbc219c3",
+    "583d430d7db3291a",
+    "58a3b38073d44e60",
+    "59c8a446949f6c69",
+    "59e244a83220fb10",
+    "5b4169cfd2db742e",
+    "5b73dbb25fabe8b0",
+    "5d2efdc6cfddb67e",
+    "5e31145b273a0db6",
+    "5e7d3ae967f5a1bb",
+    "6091f3b83387adc6",
+    "61039f0060ef54a9",
+    "629cdd8ed392cde9",
+    "62b3679304d4d34a",
+    "659567255b3d16e0",
+    "66378f8766ba14d3",
+    "66a1ee099da40529",
+    "66beb83085a7522f",
+    "67bf7c7986790b8f",
+    "686b9a5cf6712ee6",
+    "692c90dfb273343b",
+    "697060f3b791a63d",
+    "6991d733b2c6567e",
+    "6bee7eef7ce87f70",
+    "6da298b25866bf1c",
+    "6ed8ab390f7495e9",
+    "6fa7d13cde1d112b",
+    "70b6077728803354",
+    "7228196be3f9ea19",
+    "7274e947e61b781f",
+    "72c9aeabe6ae1a5a",
+    "7333e3c4a21962c2",
+    "74ffa8a48a755d0f",
+    "7580d2a15b1cd9cd",
+    "76fae12a0c0ef338",
+    "79c4a41687fa81cd",
+    "79eb1e0b50bc9f6e",
+    "7a5be6983487188d",
+    "7bc98a2067efe1e2",
+    "7ce705e1d21147ab",
+    "7d6ff61f32d258f7",
+    "7de6c1a8d1cf1e0b",
+    "7df99791c9cc490d",
+    "7ecd1ebd0f555ac4",
+    "811df1a489fcd2ed",
+    "8149a7b1cefce34e",
+    "8219a60414f5c7e9",
+    "84b86b9bba71fbfc",
+    "852325de8debbf8b",
+    "859c0dc4982821b8",
+    "85c68ae2420f9deb",
+    "85ca3a78d539e035",
+    "86fe06be1f1f24a5",
+    "87af6198c64a0ee3",
+    "87bf6e3e24bfca9b",
+    "884877d13808ac14",
+    "89134c07cf1aedeb",
+    "8be8bec3ae4d5c51",
+    "8c049aa2384ab07a",
+    "8ccdfe3e37b495f7",
+    "8ce29b1fc80d0e51",
+    "8e2a8e4ed0e533bf",
+    "8e730405a5861df1",
+    "8e89ac1b8ca4cd67",
+    "8f15b26a5e37d97b",
+    "8f8879df19b033f7",
+    "90b0c75bfa251075",
+    "924b359f9b72a1cf",
+    "93100e496c60e030",
+    "944dcbf20a5f955f",
+    "94d000474dd87fd3",
+    "952b7d9df1ee51d5",
+    "9572f7d6848d7f9b",
+    "95d1d583d8cc8143",
+    "975ce33a6c22fc5e",
+    "979587a663dcd9d3",
+    "97bae2879c654275",
+    "9941df9c409d8bcd",
+    "9a11de299a94af6a",
+    "9a45883cdd949ec9",
+    "9ce717a670d786bf",
+    "9cf71800922242c7",
+    "9da67f264b776881",
+    "9e7b5c46d983f3af",
+    "9e9243e08151ac11",
+    "9e9ef37a1667d1cf",
+    "9ec4745ccc406d9c",
+    "9fe01203ee19b7d8",
+    "a19087b9e42e8654",
+    "a26a1be7cf626698",
+    "a314637e70716dde",
+    "a319be93706d8844",
+    "a38a7c62f593442b",
+    "a465bab99b63e450",
+    "a493d8151e7396f3",
+    "a5990e63fdbb7874",
+    "a76cfd26c06876ab",
+    "a781df29f7b7c8ff",
+    "a79a99ec7dfd5bcb",
+    "a9dddcaa064c544a",
+    "aa7975a7db214269",
+    "abcacbf8f8ae280d",
+    "ac52452e98384dac",
+    "ad5e6865ec9b79ea",
+    "adc15717d47ede8b",
+    "ae202a43f1baeacc",
+    "ae61ddbbc2a113b0",
+    "aee608697eba5699",
+    "af846961e8206750",
+    "b092b260acc66429",
+    "b1210c3f8f490e4d",
+    "b285a5325224186e",
+    "b4dc10f9bc482b74",
+    "b539a42396c95f94",
+    "b57853dba5d2a6e8",
+    "b5be71f12ad21abd",
+    "b60611fdb8f335ce",
+    "b6992e8f801692af",
+    "b70a3cb6cc500188",
+    "b841c70b2405c460",
+    "b84c1ae6241921fa",
+    "b8d205faa1fb080f",
+    "b932627f9b0a2abc",
+    "bac8fe21b046ca70",
+    "bc3484be94003a8f",
+    "bcc2e074299517ef",
+    "bcd9a6b1a3df84db",
+    "bec177fba9d33450",
+    "bf3dc321cf0ba874",
+    "bfcba18d4a1bdad7",
+    "c1f0dd9cc05ef2b0",
+    "c232042e1f36637d",
+    "c289e362957c1082",
+    "c28ef889be8534ed",
+    "c46d1ac426b33926",
+    "c682402997589c56",
+    "c7f00a88706745ce",
+    "c9597410f8c35d16",
+    "ce58a62fae45b965",
+    "cf859f2dfda22bc5",
+    "d2010d88acab1132",
+    "d4dde6b5a9ca67e1",
+    "d500dfb7fa2df541",
+    "d96a7db64b5e2f59",
+    "d9d19afac1145ca6",
+    "d9d68111eaed78c9",
+    "daa8a4049436be94",
+    "dca87310240f09ea",
+    "ddda39b1c330d072",
+    "df35635c72db7502",
+    "e006c02cd2a52321",
+    "e0632cf4788b4bd6",
+    "e10e8f915bee0bca",
+    "e1fabbbb538ca4a3",
+    "e60305cbde84b6be",
+    "e7bb597d622365c1",
+    "e83705a69fc93878",
+    "e974634d7ddf91b8",
+    "ece231420579bb96",
+    "ed10785163f75bd5",
+    "ee98472cebd87d93",
+    "f22c1ad529b7dd9c",
+    "f36f7c3ecba1745c",
+    "f5c03eb4bfb031b7",
+    "f64801c9379f17f1",
+    "f7ba48da5111f7b2",
+    "fa56f6090f8647ee",
+    "faa2c22307e4e887",
+    "fb3b556c2ce307f2",
+    "fb5eb9b486cd6f05",
+    "fce320e5364b29e5",
+    "fd5b7c538aecfa9a"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [
+    [
+     "a319be93706d8844",
+     "55"
+    ],
+    [
+     "f7ba48da5111f7b2",
+     "73"
+    ],
+    [
+     "5020d1362cecac79",
+     "80"
+    ],
+    [
+     "c46d1ac426b33926",
+     "89"
+    ],
+    [
+     "944dcbf20a5f955f",
+     "70"
+    ],
+    [
+     "15046c43c4a37611",
+     "62"
+    ],
+    [
+     "7333e3c4a21962c2",
+     "58"
+    ],
+    [
+     "8149a7b1cefce34e",
+     "86"
+    ],
+    [
+     "54a3f649217c7ff6",
+     "51"
+    ],
+    [
+     "4290dddec0f7204d",
+     "62"
+    ],
+    [
+     "a493d8151e7396f3",
+     "62"
+    ],
+    [
+     "b60611fdb8f335ce",
+     "82"
+    ],
+    [
+     "f36f7c3ecba1745c",
+     "74"
+    ],
+    [
+     "67bf7c7986790b8f",
+     "66"
+    ],
+    [
+     "d2010d88acab1132",
+     "55"
+    ],
+    [
+     "7580d2a15b1cd9cd",
+     "71"
+    ],
+    [
+     "66beb83085a7522f",
+     "81"
+    ],
+    [
+     "6da298b25866bf1c",
+     "52"
+    ],
+    [
+     "daa8a4049436be94",
+     "57"
+    ],
+    [
+     "7ecd1ebd0f555ac4",
+     "59"
+    ],
+    [
+     "5b4169cfd2db742e",
+     "76"
+    ],
+    [
+     "22aa77c48267eb40",
+     "51"
+    ],
+    [
+     "85c68ae2420f9deb",
+     "99"
+    ],
+    [
+     "a781df29f7b7c8ff",
+     "91"
+    ],
+    [
+     "61039f0060ef54a9",
+     "54"
+    ],
+    [
+     "b8d205faa1fb080f",
+     "59"
+    ],
+    [
+     "2da0f22c25767794",
+     "66"
+    ],
+    [
+     "3e47f62a4ee85843",
+     "98"
+    ],
+    [
+     "9572f7d6848d7f9b",
+     "65"
+    ],
+    [
+     "6991d733b2c6567e",
+     "57"
+    ],
+    [
+     "c7f00a88706745ce",
+     "61"
+    ],
+    [
+     "8ccdfe3e37b495f7",
+     "55"
+    ],
+    [
+     "22edd47dc60e7f3b",
+     "95"
+    ],
+    [
+     "fb3b556c2ce307f2",
+     "79"
+    ],
+    [
+     "697060f3b791a63d",
+     "84"
+    ],
+    [
+     "924b359f9b72a1cf",
+     "57"
+    ],
+    [
+     "236a39a0143baf82",
+     "83"
+    ],
+    [
+     "4b3df4b647d3d039",
+     "59"
+    ],
+    [
+     "cf859f2dfda22bc5",
+     "78"
+    ],
+    [
+     "e10e8f915bee0bca",
+     "95"
+    ],
+    [
+     "ae61ddbbc2a113b0",
+     "51"
+    ],
+    [
+     "fce320e5364b29e5",
+     "71"
+    ],
+    [
+     "d9d19afac1145ca6",
+     "84"
+    ],
+    [
+     "fb5eb9b486cd6f05",
+     "75"
+    ],
+    [
+     "90b0c75bfa251075",
+     "50"
+    ],
+    [
+     "79c4a41687fa81cd",
+     "54"
+    ],
+    [
+     "8c049aa2384ab07a",
+     "61"
+    ],
+    [
+     "9ec4745ccc406d9c",
+     "51"
+    ],
+    [
+     "0481fc6011d4f355",
+     "88"
+    ],
+    [
+     "485668e3be7ea6b2",
+     "94"
+    ],
+    [
+     "6bee7eef7ce87f70",
+     "63"
+    ],
+    [
+     "9da67f264b776881",
+     "54"
+    ],
+    [
+     "94d000474dd87fd3",
+     "62"
+    ],
+    [
+     "16332b97e18b5fbb",
+     "73"
+    ],
+    [
+     "884877d13808ac14",
+     "60"
+    ],
+    [
+     "af846961e8206750",
+     "71"
+    ],
+    [
+     "3a55bce230ece613",
+     "54"
+    ],
+    [
+     "8219a60414f5c7e9",
+     "54"
+    ],
+    [
+     "402ba22a0bc3a494",
+     "89"
+    ],
+    [
+     "d500dfb7fa2df541",
+     "87"
+    ],
+    [
+     "b84c1ae6241921fa",
+     "96"
+    ]
+   ],
+   "pqueries": []
+  }
+ ]
+}

@@ -167,6 +167,8 @@ end
 end
 
 
+include("splitid.jl")
+
 @testset "grid certificate" begin
     rows = certificate_rows()
     @test length(rows) == 169                   # 13 × 13

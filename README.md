@@ -23,6 +23,7 @@ and runs beside it.
 | Agreement with the generic finite checker (`agda/src/MetaManifold/Evidence/CheckerBridge.agda`) | **proved** on the whole domain the two models share (reads and noise bound 0..6). The checker only exists on −6..6 |
 | Julia verdict code (`count_verdict`, `fibre` in `julia/src/counts.jl`) | **certified on the grid** reads, noise ∈ 0..12 (169 rows): Agda proves `grid 12 ≡ expected` by `refl` against a table this code generates. Outside the grid it is **tested**, not proved. The closed forms it implements are proved for all naturals |
 | Julia server, input contract, receipts, client for the app's query route | **tested** (`julia/test`), against a stub of the route, not yet against a running app |
+| Tree identifiers (`tip:` keys, `split:` ids) the viewer keys its view state by (`julia/src/splitid.jl`) | **tested** against a table the viewer's own `model.ts` produced (21 trees, every field of `indexTree`, WebUI `bcf52af`). Groundwork for the evidence overlay (`MetaManifold-WebUI#27`); no sidecar, overlay or route yet |
 | Web UI | **not yet built**. Planned increment E0.4 |
 | End-to-end run on MiSeq_SOP | **not yet done**. Planned increment E0.5 |
 
@@ -100,6 +101,19 @@ The two directions are both guarded:
   committed one. `julia-mutants.sh` requires the committed table to be
   current, and requires a non-strict threshold and a missing clamp each to
   change it.
+
+### What the tree identifiers are
+
+MetaManifold's tree viewer names tips `tip:<name>` (repeats get `#2`, `#3`)
+and branches `split:<hex>`, a 64-bit hash of the tip set on the side of the
+bipartition that lacks the reference tip, so a branch keeps its id when the
+tree is rerooted. Evidence drawn on the tree has to be keyed the same way
+(`MetaManifold-WebUI#27`). `julia/src/splitid.jl` ports the viewer's parsers
+and `indexTree` one to one; `julia/gen/splitid_kat.ts` runs the viewer's own
+`model.ts` with bun to write `julia/test/fixtures/splitid_kat.json`, and the
+tests compare every field on every node. `split_difference(ref, jplace)` lists
+the branches one tree has and the other lacks, the check to run before an
+overlay keyed on one is drawn on the other.
 
 ### How the proofs are checked
 

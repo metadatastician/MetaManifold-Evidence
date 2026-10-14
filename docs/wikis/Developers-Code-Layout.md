@@ -47,9 +47,11 @@ agda/
   (also All.agda, CountsGrid.agda)
 julia/
   src/                         counts.jl (count_verdict, fibre), server.jl, client.jl, table.jl,
-                               receipt.jl, certificate.jl, MetaManifoldEvidence.jl
+                               receipt.jl, certificate.jl, splitid.jl (the viewer's tip:/split: ids),
+                               MetaManifoldEvidence.jl
   gen/emit_table.jl            Writes the 169-row grid table the Agda certificate checks
-  test/                        Pkg.test() suite
+  gen/splitid_kat.ts           Runs the viewer's model.ts (bun) to write test/fixtures/splitid_kat.json
+  test/                        Pkg.test() suite; splitid.jl compares the port with that table
 scripts/                       fetch-layer-a.sh, check.sh, mutants.sh, julia-mutants.sh
 docs/wikis/                    This wiki
 ```
