@@ -1,3 +1,11 @@
+# Notes
+
+| file | what it is |
+| --- | --- |
+| `pr33-reply.md` | the reply to post on `MetaManifold-WebUI#33` after the rebase and README commit pushed to the fork (2026-10-14) |
+| `webui-issues.md` | the five open WebUI issues: what each waits on, what moved here, and draft comments |
+| the rest | the PR #25 rework, below |
+
 # PR #25 rework — handoff
 
 Everything here is about `MetaManifold-WebUI` PR #25 ("Add a CLR linear-model method for
