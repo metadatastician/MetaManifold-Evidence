@@ -56,7 +56,17 @@ struct SourceTree
     meta::Dict{String,Any}
 end
 
-const _SUPPORT_RE = r"^\d+(\.\d+)?(/\d+(\.\d+)?)*$"
+# ASCII digits only: JavaScript's \d is, and Julia's \d is not (PCRE UCP is on).
+const _SUPPORT_RE = r"^[0-9]+(\.[0-9]+)?(/[0-9]+(\.[0-9]+)?)*$"
+
+"""
+JavaScript's whitespace, as `trim()` and `\\s` see it: ECMAScript WhiteSpace
+(tab, VT, FF, space, U+FEFF and every Zs character) and LineTerminator (LF,
+CR, U+2028, U+2029). Not U+0085, which Julia's `isspace` includes; a byte-order
+mark at the start of a file is the case that matters.
+"""
+_jsspace(c::Char) = c in ('\t', '\n', '\v', '\f', '\r', '\u2028', '\u2029', '\ufeff') ||
+                    (isspace(c) && c != '\u0085')
 
 """
     parse_newick(text) -> SourceTree
@@ -68,13 +78,13 @@ comments (a bare number, an NHX `B=` or a `support=` is bootstrap support),
 """
 function parse_newick(text::AbstractString)
     nodes = SrcNode[]
-    chars = collect(strip(String(text)))
+    chars = collect(strip(_jsspace, String(text)))
     L = length(chars)
     i = 1
     at(k) = k <= L ? chars[k] : '\0'
     mk(parent) = (push!(nodes, SrcNode("", nothing, nothing, nothing, Int[], parent)); length(nodes))
     fail(msg) = throw(ArgumentError("Newick, character $(i - 1): $msg"))
-    skipspace() = (while i <= L && isspace(chars[i]); i += 1; end)
+    skipspace() = (while i <= L && _jsspace(chars[i]); i += 1; end)
 
     function readcomment()
         e = findnext(==(']'), chars, i)
@@ -104,7 +114,7 @@ function parse_newick(text::AbstractString)
         end
         start = i
         while i <= L && !(chars[i] in ('(', ')', ':', ',', ';', '[', '{')); i += 1; end
-        String(strip(String(chars[start:i-1])))
+        String(strip(_jsspace, String(chars[start:i-1])))
     end
 
     function readtail(n)
@@ -125,11 +135,11 @@ function parse_newick(text::AbstractString)
             elseif c == '{'
                 e = findnext(==('}'), chars, i)
                 isnothing(e) && fail("unclosed {")
-                num = strip(String(chars[i+1:e-1]))
+                num = strip(_jsspace, String(chars[i+1:e-1]))
                 node.edge_num = isempty(num) ? 0 : tryparse(Int, num)   # JS Number(): 0 for '', NaN for junk
                 i = e + 1
             elseif c == '['
-                cmt = String(strip(readcomment()))
+                cmt = String(strip(_jsspace, readcomment()))
                 v = if occursin(_SUPPORT_RE, cmt)
                     cmt
                 elseif startswith(cmt, "&&NHX")

@@ -80,6 +80,14 @@ const cases: { name: string; format: 'newick' | 'jplace'; text: string; note?: s
   { name: 'nested-single', format: 'newick', text: '((((A:1,B:1)ab:1)u1:2)u2:3,C:1,D:1);' },
   { name: 'hash-in-name', format: 'newick', text: "((A,'A#2'),A);",
     note: 'a name that is literally A#2 collides with the key the second A is given' },
+  { name: 'bom-prefixed', format: 'newick', text: '\ufeff((A:1,B:1):1,C:1);',
+    note: 'a UTF-8 byte-order mark is whitespace to trim(); the tree behind it is still read' },
+  { name: 'js-whitespace', format: 'newick', text: '(A\u00a0,\u2028B\u3000,\u2029 C\ufeff);',
+    note: 'U+2028, U+2029 and U+FEFF are JavaScript whitespace, as every Zs character is' },
+  { name: 'nel-is-not-space', format: 'newick', text: '(A\u0085,B);',
+    note: 'U+0085 is whitespace to Julia isspace but not to JavaScript: the label keeps it' },
+  { name: 'non-ascii-digit-labels', format: 'newick', text: '((A,B)\u0669\u0660:1,(C,D)\uff19\uff15:1,E);',
+    note: 'JavaScript \\d is ASCII only, so these internal labels are names, not support' },
   { name: 'random-64', format: 'newick', text: randomTree(64, 20261014) },
 ]
 

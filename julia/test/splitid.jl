@@ -12,7 +12,7 @@ _h64(a) = (UInt32(a[1]), UInt32(a[2]))
 _opt(x) = x === nothing ? nothing : x
 
 @testset "tree identifiers agree with model.ts at $(SPLITID_KAT.webui_commit[1:7])" begin
-    @test length(SPLITID_KAT.cases) == 17
+    @test length(SPLITID_KAT.cases) == 21
     for c in SPLITID_KAT.cases
         @testset "$(c.name)" begin
             src = parse_tree(String(c.format), String(c.text))
@@ -87,6 +87,19 @@ end
     ix = index_tree(parse_newick(_kat_case("hash-in-name").text))
     @test count(==("0000000000000000"), ix.split) == 2
     @test ix.tip_key[[k for k in eachindex(ix.src.nodes) if isempty(ix.src.nodes[k].children)]] == ["A#2", "A#2", "A"]
+end
+
+@testset "whitespace and digits are JavaScript's, not Julia's" begin
+    # A byte-order mark is whitespace to trim(), so the tree behind it is read.
+    @test length(parse_newick(_kat_case("bom-prefixed").text).nodes) == 5
+    @test length(parse_newick("\ufeffA;").nodes) == 1 && parse_newick("\ufeffA;").nodes[1].name == "A"
+    # U+0085 is not JavaScript whitespace, so a label keeps it.
+    @test [n.name for n in parse_newick("(A\u0085,B);").nodes if isempty(n.children)] == ["A\u0085", "B"]
+    # \d is ASCII only there, so a label in other digits is a name.
+    t = parse_newick(_kat_case("non-ascii-digit-labels").text)
+    @test [(n.name, n.support) for n in t.nodes if !isempty(n.children) && n.parent != 0] ==
+          [("\u0669\u0660", nothing), ("\uff19\uff15", nothing)]
+    @test parse_newick("((A,B)95,C);").nodes[2].support == "95"
 end
 
 @testset "parsers refuse what the viewer refuses" begin

@@ -2409,6 +2409,501 @@
    "pqueries": []
   },
   {
+   "name": "bom-prefixed",
+   "format": "newick",
+   "text": "﻿((A:1,B:1):1,C:1);",
+   "note": "a UTF-8 byte-order mark is whitespace to trim(); the tree behind it is still read",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      4
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      2228552949,
+      24329359
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "b1dc9c8d4dc607b4",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "C",
+     "side": [
+      2880726779,
+      3944726770
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    2228552949,
+    24329359
+   ],
+   "tipCount": 3,
+   "splitEdge": [
+    [
+     "abb466fbeb1fc0f2",
+     1
+    ],
+    [
+     "b1dc9c8d4dc607b4",
+     2
+    ],
+    [
+     "1a68fa76a6d9c746",
+     3
+    ]
+   ],
+   "sides": [
+    "1a68fa76a6d9c746",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "9ebdfe83a7aafbc9",
+    "abb466fbeb1fc0f2",
+    "b1dc9c8d4dc607b4"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "js-whitespace",
+   "format": "newick",
+   "text": "(A , B　,  C﻿);",
+   "note": "U+2028, U+2029 and U+FEFF are JavaScript whitespace, as every Zs character is",
+   "root": 0,
+   "hasLengths": false,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      2,
+      3
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      2228552949,
+      24329359
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "b1dc9c8d4dc607b4",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "C",
+     "side": [
+      2880726779,
+      3944726770
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    2228552949,
+    24329359
+   ],
+   "tipCount": 3,
+   "splitEdge": [
+    [
+     "b1dc9c8d4dc607b4",
+     1
+    ],
+    [
+     "1a68fa76a6d9c746",
+     2
+    ],
+    [
+     "abb466fbeb1fc0f2",
+     3
+    ]
+   ],
+   "sides": [
+    "1a68fa76a6d9c746",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "9ebdfe83a7aafbc9",
+    "abb466fbeb1fc0f2",
+    "b1dc9c8d4dc607b4"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "nel-is-not-space",
+   "format": "newick",
+   "text": "(A,B);",
+   "note": "U+0085 is whitespace to Julia isspace but not to JavaScript: the label keeps it",
+   "root": 0,
+   "hasLengths": false,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      2
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      1448013002,
+      3461783692
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "A",
+     "side": [
+      1277564604,
+      1754228682
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    1448013002,
+    3461783692
+   ],
+   "tipCount": 2,
+   "splitEdge": [
+    [
+     "1a68fa76a6d9c746",
+     1
+    ]
+   ],
+   "sides": [
+    "1a68fa76a6d9c746",
+    "4c2616bc688f67ca"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
+   "name": "non-ascii-digit-labels",
+   "format": "newick",
+   "text": "((A,B)٩٠:1,(C,D)９５:1,E);",
+   "note": "JavaScript \\d is ASCII only, so these internal labels are names, not support",
+   "root": 0,
+   "hasLengths": true,
+   "nodes": [
+    {
+     "name": "",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      1,
+      4,
+      7
+     ],
+     "parent": -1,
+     "tipKey": "",
+     "side": [
+      1096218503,
+      1813628709
+     ],
+     "split": "",
+     "childIsCanonical": false
+    },
+    {
+     "name": "٩٠",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      2,
+      3
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      794911246,
+      3933011069
+     ],
+     "split": "6e37958986753b58",
+     "childIsCanonical": false
+    },
+    {
+     "name": "A",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "A",
+     "side": [
+      889821304,
+      1286945595
+     ],
+     "split": "745f6fff20acfc1e",
+     "childIsCanonical": false
+    },
+    {
+     "name": "B",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 1,
+     "tipKey": "B",
+     "side": [
+      443087478,
+      2799290182
+     ],
+     "split": "1a68fa76a6d9c746",
+     "childIsCanonical": true
+    },
+    {
+     "name": "９５",
+     "length": 1,
+     "edgeNum": null,
+     "support": null,
+     "children": [
+      5,
+      6
+     ],
+     "parent": 0,
+     "tipKey": "",
+     "side": [
+      1403980580,
+      4163639086
+     ],
+     "split": "53af0b24f82c172e",
+     "childIsCanonical": true
+    },
+    {
+     "name": "C",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "C",
+     "side": [
+      2880726779,
+      3944726770
+     ],
+     "split": "abb466fbeb1fc0f2",
+     "childIsCanonical": true
+    },
+    {
+     "name": "D",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 4,
+     "tipKey": "D",
+     "side": [
+      4162547167,
+      322164700
+     ],
+     "split": "f81b6ddf1333d7dc",
+     "childIsCanonical": true
+    },
+    {
+     "name": "E",
+     "length": null,
+     "edgeNum": null,
+     "support": null,
+     "children": [],
+     "parent": 0,
+     "tipKey": "E",
+     "side": [
+      1033412269,
+      2119773302
+     ],
+     "split": "3d989ead7e592c76",
+     "childIsCanonical": true
+    }
+   ],
+   "total": [
+    1096218503,
+    1813628709
+   ],
+   "tipCount": 5,
+   "splitEdge": [
+    [
+     "6e37958986753b58",
+     1
+    ],
+    [
+     "745f6fff20acfc1e",
+     2
+    ],
+    [
+     "1a68fa76a6d9c746",
+     3
+    ],
+    [
+     "53af0b24f82c172e",
+     4
+    ],
+    [
+     "abb466fbeb1fc0f2",
+     5
+    ],
+    [
+     "f81b6ddf1333d7dc",
+     6
+    ],
+    [
+     "3d989ead7e592c76",
+     7
+    ]
+   ],
+   "sides": [
+    "12f9fca39435d00b",
+    "1a68fa76a6d9c746",
+    "2f61620eea6cfc7d",
+    "350998784cb53b3b",
+    "3d989ead7e592c76",
+    "53af0b24f82c172e",
+    "5b3e0df1cac00063",
+    "6e37958986753b58",
+    "745f6fff20acfc1e",
+    "7cce692a1240eb53",
+    "abb466fbeb1fc0f2",
+    "b94d9a587f2a10f9",
+    "eae2917c870607d7",
+    "f81b6ddf1333d7dc"
+   ],
+   "edgeByNum": [],
+   "supportBySplit": [],
+   "pqueries": []
+  },
+  {
    "name": "random-64",
    "format": "newick",
    "text": "((t00:0.251,t59:0.954)55:0.136,(((t01:0.755,t22:0.514)89:0.448,((t34:0.647,(t51:0.19,t60:0.437)58:0.719)62:0.897,(t53:0.28,t61:0.231)86:0.693)70:0.383)80:0.785,t42:0.192)73:0.734,((t02:0.361,(t03:0.608,(t04:0.151,((((t05:0.826,(((t06:0.753,(((t15:0.444,(t16:0.775,t29:0.338)99:0.612)51:0.858,t24:0.481)76:0.179,t32:0.838)59:0.956)57:0.534,t17:0.677)52:0.847,t57:0.582)81:0.828)71:0.914,((((t07:0.465,(t08:0.296,t37:0.835)98:0.961)66:0.795,((((t09:0.898,(t10:0.125,((t13:0.212,t14:0.831)84:0.525,(t26:0.656,(t27:0.687,t58:0.614)83:0.988)57:0.982)79:0.452)95:0.682)55:0.46,(((t23:0.491,t40:0.39)95:0.648,t52:0.455)78:0.817,t56:0.2)59:0.642)61:0.836,(t38:0.311,t45:0.234)51:0.328)57:0.842,(t43:0.845,t50:0.788)71:0.19)65:0.876)59:0.958,(((t12:0.241,((t19:0.416,((t20:0.131,(t31:0.13,t48:0.385)94:0.447)88:0.369,t41:0.78)51:0.714)61:0.244,t30:0.935)54:0.305)50:0.787,((t21:0.682,t49:0.705)54:0.719,t62:0.474)63:0.232)75:0.33,t35:0.121)84:0.139)54:0.137,t47:0.14)91:0.79)55:0.348,t18:0.623)66:0.729,(t33:0.536,t55:0.343)62:0.325)74:0.491)82:0.381)62:0.227)62:0.333,((((((t11:0.348,(t25:0.419,t46:0.146)87:0.448)89:0.314,t28:0.281)54:0.147,(t36:0.218,t63:0.953)96:0.363)54:0.433,t39:0.896)71:0.318,t44:0.821)60:0.679,t54:0.39)73:0.872)51:0.426):0.333;",

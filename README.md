@@ -23,7 +23,7 @@ and runs beside it.
 | Agreement with the generic finite checker (`agda/src/MetaManifold/Evidence/CheckerBridge.agda`) | **proved** on the whole domain the two models share (reads and noise bound 0..6). The checker only exists on −6..6 |
 | Julia verdict code (`count_verdict`, `fibre` in `julia/src/counts.jl`) | **certified on the grid** reads, noise ∈ 0..12 (169 rows): Agda proves `grid 12 ≡ expected` by `refl` against a table this code generates. Outside the grid it is **tested**, not proved. The closed forms it implements are proved for all naturals |
 | Julia server, input contract, receipts, client for the app's query route | **tested** (`julia/test`), against a stub of the route, not yet against a running app |
-| Tree identifiers (`tip:` keys, `split:` ids) the viewer keys its view state by (`julia/src/splitid.jl`) | **tested** against a table the viewer's own `model.ts` produced (17 trees, every field of `indexTree`, WebUI `bcf52af`). Groundwork for the evidence overlay (`MetaManifold-WebUI#27`); no sidecar, overlay or route yet |
+| Tree identifiers (`tip:` keys, `split:` ids) the viewer keys its view state by (`julia/src/splitid.jl`) | **tested** against a table the viewer's own `model.ts` produced (21 trees, every field of `indexTree`, WebUI `bcf52af`). Groundwork for the evidence overlay (`MetaManifold-WebUI#27`); no sidecar, overlay or route yet |
 | Web UI | **not yet built**. Planned increment E0.4 |
 | End-to-end run on MiSeq_SOP | **not yet done**. Planned increment E0.5 |
 

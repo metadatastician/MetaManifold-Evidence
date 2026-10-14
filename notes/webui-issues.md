@@ -20,7 +20,7 @@ The issue asked for a Julia port of the split-id hash with a known-answer test
 against `model.ts`, and named two details that must match exactly. Both are in
 `julia/src/splitid.jl`, and the known answers are not a reading of the
 TypeScript: `julia/gen/splitid_kat.ts` runs `frontend/src/tree/model.ts`
-itself, with bun, over seventeen trees and records every field `indexTree`
+itself, with bun, over twenty-one trees and records every field `indexTree`
 exposes (`julia/test/fixtures/splitid_kat.json`, WebUI commit `bcf52af`).
 `julia/test/splitid.jl` compares every node of every case.
 
@@ -35,9 +35,10 @@ Three of the eight questions have measured answers now:
   one step that can lose a sequence is trimAl with `-resoverlap/-seqoverlap`
   on the combined alignment; a reference sequence dropped there is a tree
   taxon missing from the alignment, which RAxML refuses rather than prunes.
-  So the ids agree unless the run fails, and `split_difference(ref, jplace)`
-  is the runtime check that turns the assumption into an assertion before an
-  overlay is drawn.
+  So the ids agree unless the run fails. `split_difference(ref, jplace)`
+  returns the ids each tree has that the other lacks; nothing calls it yet,
+  and the overlay, once it exists, is where an empty result should be
+  required before anything is drawn.
 - **Question 3 (attach to `placement.jplace`, `-accumulated`, or both?)** Not
   decided here, but the two files have the same reference tree and therefore
   the same `split:` ids, so a sidecar keyed by split works for either; what
@@ -64,7 +65,7 @@ Not done, on purpose: the sidecar file, the overlay, and any route. Questions
 > The Julia side the issue promised exists now, in MetaManifold-Evidence
 > (`julia/src/splitid.jl`): `parseNewick`, `parseJplace`, `hashName` and
 > `indexTree` ported one to one, tested against a table that
-> `frontend/src/tree/model.ts` itself produced at `bcf52af` (seventeen trees,
+> `frontend/src/tree/model.ts` itself produced at `bcf52af` (twenty-one trees,
 > every field of `indexTree`, every node). Three things that came out of it
 > bear on the questions above.
 >
