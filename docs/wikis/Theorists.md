@@ -23,3 +23,4 @@ The rule on these pages is that **the strength of a claim is part of the claim**
 | [[Theorists-BH-and-Size-Factors]] | Benjamini–Hochberg and TSS/RLE size factors in MetaManifold-WebUI | **proposed** (proofs in open PR #26) |
 | [[Theorists-Compositional-Methods]] | NB GLM vs CLR + Welch, zero replacement, what each tests | **validated** at best; not proved |
 | [[Theorists-Validated-vs-Proved]] | Why "agrees with R" and "proved correct" are different claims | — |
+| [[Theorists-Theory-Path]] | The whole arc in one walk: the R pathway, the iteration, the typed augmentation, what is next, where it all lives | **drafted**, open for edits |
