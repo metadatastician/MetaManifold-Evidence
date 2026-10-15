@@ -111,9 +111,9 @@ What is **proved** on the fork (facts measured against its `main` at
 - [[Theorists-BH-and-Size-Factors]] — BH's output length, non-negativity,
   domination, monotonicity in ties and family size, the ≤ 1 envelope, and
   TSS's proportions summing to 1. The same theorems now also exist on the
-  fork's `main` in `proofs/agda/`, and are proposed upstream as
-  [PR #26](https://github.com/JoshuaJewell/MetaManifold-WebUI/pull/26) and
-  [PR #55](https://github.com/JoshuaJewell/MetaManifold-WebUI/pull/55).
+  fork's `main` in `proofs/agda/`, and landed upstream as
+  [PR #26](https://github.com/JoshuaJewell/MetaManifold-WebUI/pull/26)
+  (merged 2026-10-07).
 - **PERMANOVA's floor and withholding** (fork `proofs/agda/Permanova.agda`,
   proposed upstream as
   [PR #55](https://github.com/JoshuaJewell/MetaManifold-WebUI/pull/55)):
@@ -168,6 +168,20 @@ The augmentation is not proofs-for-their-own-sake. It is what makes the
   rationals (fork issues #1, #3): the label this layer aims at is *proved
   on ℚ from the start*, with R kept as the oracle rather than the authority.
   **not yet built**.
+- **The tree-viewer evidence overlay** — verdicts drawn on the tree: each
+  branch and each placement carries *holds*, *fails* or *undecided*,
+  reached from the exact statistics above and keyed by the viewer's own
+  `tip:`/`split:` identifiers, so rerooting and collapsing leave every
+  verdict where it was. Each verdict carries its evidence (the exact
+  value as a fraction, and the proof or test behind it) and a warrant —
+  the run, the config hash, the tree's `sha256` — that withdraws it when
+  the tree changes rather than leaving it stale. Proposed to upstream as
+  [issue #27](https://github.com/JoshuaJewell/MetaManifold-WebUI/issues/27);
+  the design discussion is public, and nothing is built upstream until it
+  is answered. The first increment — the Julia port of the viewer's
+  identifiers, checked against the viewer's own code over twenty-one
+  trees — is **tested** in this repository (`julia/src/splitid.jl`);
+  the overlay itself is **not yet built**.
 
 **Why Julia is the right home for this.** Exact rationals are first-class
 (`Rational{BigInt}`), so the proved arithmetic and the runtime arithmetic can
@@ -198,6 +212,7 @@ and this page:
 | Dispersion shrinkage | quasi-likelihood information sharing across taxa; when per-taxon θ is unstable | [upstream #37](https://github.com/JoshuaJewell/MetaManifold-WebUI/issues/37) | **proposed** (pre-built, unmerged) |
 | R→Julia, one method at a time | the oracle discipline itself: validated agreement before any default switches | [upstream #36](https://github.com/JoshuaJewell/MetaManifold-WebUI/issues/36) | **validated** (first slice **proposed**) |
 | Exact statistics layer | Fisher's exact, exact counts/ratios; distribution-free bounds on ℚ | [fork #1](https://github.com/hyperpolymath/MetaManifold-WebUI/issues/1), [#3](https://github.com/hyperpolymath/MetaManifold-WebUI/issues/3) | **not yet built** |
+| Tree-viewer evidence overlay | the three-valued verdict algebra (**proved**); warrants and view-change no-op lemmas, small — a verdict survives rerooting because split IDs do; echo-types instances for raw↔accumulated placements, small; a general residual checker for read-count ranges (**open** — the real proof gap on this path); the reference/study noninterference statement (**open**) | [upstream #27](https://github.com/JoshuaJewell/MetaManifold-WebUI/issues/27) | first increment **tested**; overlay **not yet built** |
 | Symbolic formula layer | exact manipulation of model formulas before any data is seen | [fork #4](https://github.com/hyperpolymath/MetaManifold-WebUI/issues/4) (see also [#2](https://github.com/hyperpolymath/MetaManifold-WebUI/issues/2)) | **not yet built** |
 | Occupancy models | presence/absence with imperfect detection; the typed-count machinery above is the natural substrate | [fork #18](https://github.com/hyperpolymath/MetaManifold-WebUI/issues/18) | **not yet built** |
 | Constrained ordinations | RDA/CCA/CAP/dbRDA as projections with provable invariance properties | [fork #19](https://github.com/hyperpolymath/MetaManifold-WebUI/issues/19) | **not yet built** |
@@ -217,10 +232,10 @@ anything rather than trust this page:
 |---|---|
 | The pipeline, the analysis methods, the decision rules | [`JoshuaJewell/MetaManifold-WebUI`](https://github.com/JoshuaJewell/MetaManifold-WebUI) (`main` at `52feb60`, 2026-10-15) |
 | The proofs and the graded occupancy reading, as landed | [`hyperpolymath/MetaManifold-WebUI`](https://github.com/hyperpolymath/MetaManifold-WebUI) — `proofs/agda/`, `docs/occupancy/` (`main` at `69e9558`, 2026-10-15) |
-| The BH/size-factor proofs as proposed upstream | [PR #26](https://github.com/JoshuaJewell/MetaManifold-WebUI/pull/26); the PERMANOVA proofs as [PR #55](https://github.com/JoshuaJewell/MetaManifold-WebUI/pull/55) |
+| The BH/size-factor proofs, landed upstream | [PR #26](https://github.com/JoshuaJewell/MetaManifold-WebUI/pull/26) (merged 2026-10-07); the PERMANOVA proofs as [PR #55](https://github.com/JoshuaJewell/MetaManifold-WebUI/pull/55), open |
 | Native compositional DA (ALDEx2, ANCOM-BC) | [`hyperpolymath/CompositionalDA.jl`](https://github.com/hyperpolymath/CompositionalDA.jl) — see its `proofs/PROOF-STATUS.md` |
 | Multinomial / Dirichlet-Multinomial regression | [`hyperpolymath/CompositionalCounts.jl`](https://github.com/hyperpolymath/CompositionalCounts.jl) |
-| Evidence Mode: proofs, grid certificates, the Julia server | this repository, and [[Theorists]] |
+| Evidence Mode: proofs, grid certificates, the Julia server, the identifier port | this repository (`julia/src/splitid.jl`, `notes/webui-issues.md`) and [[Theorists]]; the overlay design as upstream [issue #27](https://github.com/JoshuaJewell/MetaManifold-WebUI/issues/27) |
 | The work queue across both sides | [MetaManifold Work Board](https://github.com/users/hyperpolymath/projects/46) |
 
 **Contribute here.** The map goes stale the way every citation does — when
