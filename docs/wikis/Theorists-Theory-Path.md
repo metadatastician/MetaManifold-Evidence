@@ -86,8 +86,9 @@ The foundational work — the fork
 [hyperpolymath/MetaManifold-WebUI](https://github.com/hyperpolymath/MetaManifold-WebUI),
 [CompositionalDA.jl](https://github.com/hyperpolymath/CompositionalDA.jl) and
 [CompositionalCounts.jl](https://github.com/hyperpolymath/CompositionalCounts.jl),
-and this repository — extends the theory in one specific way: **it makes the
-program's arithmetic the theorem's arithmetic**, and then checks the theorem.
+and this repository — extends the theory in one specific way: **it gives
+selected program arithmetic an exact-rational model and checks properties of
+that model as theorems**.
 
 Two moves, each necessary for the other:
 
