@@ -25,6 +25,12 @@ It is a [BerryWiki](https://github.com/metadatastician/berrywiki) notebook: plai
 | A developer changing code | [[Developers]] | Code layout, how to run the tests, the Evidence server API |
 | Someone checking the mathematics | [[Theorists]] | What is proved, what is certified on a grid, what is only tested, and the assumptions |
 
+If you want the whole arc in one walk — from the R statistics the project
+started with, through the iteration Joshua built, to the machine-checked type
+augmentation, the mathematics of what is being built next, and the areas
+waiting to be minted — there is a path:
+[[Theorists-Theory-Path]].
+
 ## Two repositories, two owners
 
 | Repository | Owner | Licence | What it is |
