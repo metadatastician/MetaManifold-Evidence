@@ -95,9 +95,10 @@ Two moves, each necessary for the other:
 1. **Exact rationals instead of floating point.** Properties like "adjusted
    values are ≥ their own p-value" or "size factors are positive" are
    statements about *arithmetic*, not about the statistics. Over `Float64`
-   they can be tested but never proved — rounding is always there to spoil
-   a proof. Over `ℚ` (Agda's exact rationals) they become theorems about all
-   inputs, no tolerance anywhere.
+   they can be tested, but this proof does not establish the corresponding
+   runtime properties: floating-point rounding is outside the model. Over
+   `ℚ` (Agda's exact rationals) they become theorems about all inputs, no
+   tolerance anywhere.
 2. **Machine-checked proofs over that arithmetic**, under a discipline that
    keeps them honest: Agda 2.6.4.3 + stdlib 2.1, every module
    `--safe --without-K`, no postulates, no holes, no termination or
