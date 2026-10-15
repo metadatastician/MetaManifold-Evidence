@@ -150,8 +150,10 @@ The augmentation is not proofs-for-their-own-sake. It is what makes the
   composition *is* the model; the centred effects sum to zero across taxa
   by construction. Proposed to upstream as
   [issue #22](https://github.com/JoshuaJewell/MetaManifold-WebUI/issues/22).
-  Status of the package: **tested**; its CLR core carries **proved** lemmas
-  under `--safe`. **not yet built** in MetaManifold itself.
+  Status of the MN fit: **implemented and tested**; the DM fit is **planned**.
+  CLR proof sources are present under Agda `--safe --without-K`; resolve their
+  status before describing the lemmas as **proved**. **not yet built** in
+  MetaManifold itself.
 - **Native ALDEx2 and ANCOM-BC**
   ([CompositionalDA.jl](https://github.com/hyperpolymath/CompositionalDA.jl))
   — proposed as [issue #23](https://github.com/JoshuaJewell/MetaManifold-WebUI/issues/23);
