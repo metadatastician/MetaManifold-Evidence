@@ -19,4 +19,4 @@
     - [Benjamini–Hochberg and size factors](Theorists-BH-and-Size-Factors)
     - [Compositional methods: NB GLM and CLR](Theorists-Compositional-Methods)
     - [Validated vs proved](Theorists-Validated-vs-Proved)
-    - [The theory path](Theorists-Theory-Path)
+    - [The theory path: from the R statistics to the typed augmentation](Theorists-Theory-Path)
