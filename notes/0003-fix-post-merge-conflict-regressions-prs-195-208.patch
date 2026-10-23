@@ -1,0 +1,2655 @@
+From 682eb06486cb37c0756e569d87388f8a15124149 Mon Sep 17 00:00:00 2001
+From: arena-agent <297053741+arena-agent@users.noreply.github.com>
+Date: Fri, 23 Oct 2026 00:20:28 +0000
+Subject: [PATCH] fix(merge): reconcile post-merge regressions across PRs
+ #195-#208
+
+Repair all remaining merge-conflict regressions on main (c06c0d4) after
+PRs #195-#208:
+
+1. src/core/doi.jl: remove duplicate 'module DOI' header left with a
+   single closing 'end'.
+2. Differential abundance (#204 + #203 + #206 + #196): restore
+   include("analysis/compositional.jl") in src/MetaManifold.jl; unify
+   all nine methods ('nb_glm', 'clr_welch', 'ancom_bc', 'aldex2',
+   'songbird', 'multinomial', 'dirichlet_multinomial', 'zinb',
+   'hurdle_nb') across DifferentialConfig, differential_abundance,
+   exports, config/analysis routes, pipeline.yml, zero-handling docs,
+   frontend types/components/CSV provenance, and unit tests.
+3. CladeCumulus (#200 vs #207): deduplicate clade_cumulus.jl include and
+   remove superseded cladistics tab, API client stubs, and orphaned
+   cladistics route/benchmark/component files while retaining
+   docs/cladistics/ for governance compliance.
+4. test/runtests.jl: deduplicate test_clade_cumulus.jl and restore
+   test_evidence.jl and test_evidence_routes.jl (#201).
+5. Validated statistics tests (#198/#202): restore test_high_precision.jl,
+   test_exact_summaries.jl, and test_numeric_policy.jl to e313d97.
+---
+ bench/cladistics.jl                           |  37 --
+ config/defaults/pipeline.yml                  |  12 +-
+ docs/statistics/zero-handling.md              | 184 +++++++---
+ frontend/src/api/client.ts                    |  12 -
+ frontend/src/api/types.ts                     | 116 ++----
+ frontend/src/cladistics/Clade.module.css      | 239 -------------
+ frontend/src/cladistics/CladeCumulusPanel.tsx | 332 ------------------
+ frontend/src/cladistics/CumulativeTree.tsx    | 104 ------
+ .../src/cladistics/cumulativeLayout.test.ts   |  61 ----
+ frontend/src/cladistics/cumulativeLayout.ts   | 137 --------
+ frontend/src/components/DifferentialPanel.tsx |  19 +
+ .../src/components/PipelineStages.test.ts     |  35 +-
+ frontend/src/components/PipelineStages.tsx    |  26 +-
+ frontend/src/components/differentialTable.ts  |  69 ++--
+ frontend/src/views/StudyView.tsx              |  12 +-
+ src/MetaManifold.jl                           |   2 +-
+ src/analysis/differential.jl                  | 317 ++++++++++++++++-
+ src/core/doi.jl                               |   2 -
+ src/server/routes/analysis.jl                 |  15 +-
+ src/server/routes/cladistics.jl               | 330 -----------------
+ src/server/routes/config.jl                   |  31 +-
+ test/runtests.jl                              |   3 +-
+ test/unit/test_differential.jl                |   7 +-
+ test/unit/test_exact_summaries.jl             |   8 +-
+ test/unit/test_high_precision.jl              |   8 +-
+ test/unit/test_numeric_policy.jl              |   6 +-
+ 26 files changed, 616 insertions(+), 1508 deletions(-)
+ delete mode 100644 bench/cladistics.jl
+ delete mode 100644 frontend/src/cladistics/Clade.module.css
+ delete mode 100644 frontend/src/cladistics/CladeCumulusPanel.tsx
+ delete mode 100644 frontend/src/cladistics/CumulativeTree.tsx
+ delete mode 100644 frontend/src/cladistics/cumulativeLayout.test.ts
+ delete mode 100644 frontend/src/cladistics/cumulativeLayout.ts
+ delete mode 100644 src/server/routes/cladistics.jl
+
+diff --git a/bench/cladistics.jl b/bench/cladistics.jl
+deleted file mode 100644
+index 1787117..0000000
+--- a/bench/cladistics.jl
++++ /dev/null
+@@ -1,37 +0,0 @@
+-#!/usr/bin/env julia
+-# © 2026 Joshua Benjamin Jewell. All rights reserved.
+-# Licensed under the GNU Affero General Public License version 3 (AGPLv3).
+-#
+-# Lightweight regression timing for the CladeCumulus roll-up and diversity path.
+-# Run with: julia --project=. bench/cladistics.jl [tip_count] [sample_count]
+-# No benchmark artefacts are written; compare the printed seconds on the same
+-# machine before and after a change to this hot path.
+-
+-using MetaManifold, Random, Printf
+-const CC = MetaManifold.CladeCumulus
+-
+-function balanced_newick(labels::Vector{String})
+-    length(labels) == 1 && return only(labels)
+-    middle = cld(length(labels), 2)
+-    "($(balanced_newick(labels[1:middle])):0.01,$(balanced_newick(labels[middle+1:end])):0.01)"
+-end
+-
+-function main()
+-    tips = length(ARGS) >= 1 ? parse(Int, ARGS[1]) : 512
+-    samples = length(ARGS) >= 2 ? parse(Int, ARGS[2]) : 48
+-    tips >= 2 && samples >= 2 || error("Use at least two tips and two samples")
+-    labels = ["ASV_$i" for i in 1:tips]
+-    tree = CC.parse_newick(balanced_newick(labels) * ";")
+-    counts = Float64.(rand(MersenneTwister(123), 0:20, samples, tips))
+-    sample_names = ["sample_$i" for i in 1:samples]
+-
+-    CC.analyse_phylogeny(tree, counts, labels, sample_names)  # warm up compilation
+-    elapsed = @elapsed result = CC.analyse_phylogeny(tree, counts, labels, sample_names)
+-    @assert length(result.nodes) == 2 * tips - 1
+-    @assert all(isapprox.(result.sample_reads, vec(sum(counts; dims=2))))
+-    @printf("CladeCumulus: %d tips, %d samples, %d nodes, %.3f s\n",
+-            tips, samples, length(result.nodes), elapsed)
+-    println("Includes one cumulative roll-up, Faith PD, and both UniFrac matrices; no I/O.")
+-end
+-
+-abspath(PROGRAM_FILE) == @__FILE__ && main()
+diff --git a/config/defaults/pipeline.yml b/config/defaults/pipeline.yml
+index 4d235d2..7f2ba5a 100644
+--- a/config/defaults/pipeline.yml
++++ b/config/defaults/pipeline.yml
+@@ -346,10 +346,14 @@ analysis:
+   # Differential abundance: compares two conditions on the raw read counts, with
+   # mandatory Benjamini-Hochberg adjusted p-values across the fitted family.
+   differential:
+-    # Per-taxon model: nb_glm (negative-binomial GLM), clr_welch (Welch test on
+-    # zero-replaced CLR values), zinb (zero-inflated NB), or hurdle_nb (logistic
+-    # occurrence plus zero-truncated NB). Two-part models test both group effects
+-    # jointly; their count-process fold change is reported separately.
++    # Model fitted across conditions: nb_glm (negative-binomial GLM), clr_welch
++    # (Welch test on zero-replaced CLR values), ancom_bc (bias-corrected log2
++    # fold change), aldex2 (Dirichlet Monte-Carlo CLR effect size), songbird
++    # (CLR-centred multinomial differential), multinomial or
++    # dirichlet_multinomial (joint reference-taxon log-ratio models), zinb
++    # (zero-inflated NB), or hurdle_nb (logistic occurrence plus zero-truncated
++    # NB). Two-part models test both group effects jointly; their count-process
++    # fold change is reported separately.
+     method: nb_glm
+     # How library size enters each model, as a log offset: tss (total reads per
+     # sample) or rle (median-of-ratios over the taxa present in every sample).
+diff --git a/docs/statistics/zero-handling.md b/docs/statistics/zero-handling.md
+index 117d710..dbd06ed 100644
+--- a/docs/statistics/zero-handling.md
++++ b/docs/statistics/zero-handling.md
+@@ -1,60 +1,138 @@
+ <!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+ <!-- SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk> -->
+ 
+-# Zero handling in differential abundance
+-
+-**Status:** implemented for `clr_welch`; updated 2026-10-22.
+-
+-Zeros are observed values, not missing data. The `clr_welch` method requires a
+-strictly positive composition before taking logarithms, so it replaces zeros
+-with `zCompositions::cmultRepl` after filtering taxa by
+-`analysis.differential.min_prevalence`. Replaced values are imputed inputs to
+-the log-ratio calculation; they are not measurements and do not establish
+-structural absence.
+-
+-## Replacement options
+-
+-- `bayesian_multiplicative` (default) uses GBM, the geometric
+-  Bayesian-multiplicative replacement. It uses a leave-one-out taxon profile as
+-a prior mean. `bayesian_alpha: ~` uses the estimated Dirichlet concentration;
+-a finite positive value uses the same prior mean with the requested
+-concentration. Posterior parameters are recorded in result diagnostics. The
+-implementation uses posterior estimates, not posterior draws.
+-- `multiplicative_replacement` uses CZM, the count zero-multiplicative
+-  replacement. Its starting threshold depends on `replacement_delta` and the
+-sample total. Both methods preserve ratios among observed parts before
+-multiplicative closure, and both cap high imputations relative to the taxon's
+-smallest observed proportion.
+-
+-`replacement_delta` must be strictly between 0 and 1. Values below 0.01 or at
+-least 0.9 trigger a caution. It is not a tuning parameter for significance.
+-Bayesian replacement requires each retained taxon to occur in at least two
+-samples; CZM requires at least one. A composition needs at least two retained
+-taxa. Input that cannot produce a valid replacement is refused rather than
+-silently converted to a pseudocount result.
+-
+-## Interpretation and alternatives
+-
+-The `clr_welch` estimate is a contrast-minus-reference difference in centred
+-log-ratio units, not a fold change. Replacement choice and parameters are
+-returned in `config`; zero counts, imputed-mass summaries, warnings, and (for
+-GBM) concentration information are returned in `diagnostics.zero_replacement`.
+-
+-Every zero-replacement method introduces assumptions and can bias results,
+-especially when zeros are common or sample sizes are small. Do not choose a
+-replacement or `delta` to obtain a preferred p-value. Consider the negative
+-binomial methods on raw counts (`nb_glm`, `zinb`, `hurdle_nb`) when appropriate.
+-Repeated-detection occupancy is a separate, incomplete workflow; see
+-[occupancy model notes](../occupancy-models.md) and
+-[roadmap](../../ROADMAP.md).
++# Zero handling and dispersion for differential abundance
++
++## Why zeros need an explicit decision
++
++A centred log-ratio (CLR) is `log(x_ij) - mean_j(log(x_ij))`, so it is undefined
++when any part of the composition is zero. A sequencing zero can mean biological
++absence or a taxon that was present below the run's detection limit; the count
++table alone does not distinguish those explanations.
++
++**Every zero replacement is biased. A replaced zero is not a measurement.**
++Multiplicative methods avoid some of the distortion caused by adding a
++pseudocount, but they cannot recover an unobserved abundance. Do not try several
++parameters and report only the run with the desired significance. The selected
++method, delta and (when Bayesian) alpha are stored in the resolved run
++configuration, the analysis response and the CSV settings line.
++
++Count models (`nb_glm`, `zinb`, `hurdle_nb`, `multinomial`,
++`dirichlet_multinomial`) do not have this log-zero problem: their likelihoods are
++defined at zero, so they analyse the observed integer counts without a
++pseudocount or replacement.
++
++## Replacement policies for `clr_welch`
++
++The Analysis configuration expander exposes
++`analysis.differential.replacement_method`. Both policies call the pinned R
++reference implementation, `zCompositions::cmultRepl`, with `z.warning = 1` and
++`z.delete = FALSE`. Prevalence filtering is deliberately done by MetaManifold
++before replacement; cmultRepl is never allowed to drop a sparse row or taxon and
++silently change the tested family.
++
++| Setting | Reference call | Behaviour |
++| --- | --- | --- |
++| `bayesian_multiplicative` (default) | `cmultRepl(..., method = "GBM", output = "prop")` | Geometric Bayesian-multiplicative posterior replacement with a leave-one-out prior mean and an estimated Dirichlet concentration. |
++| `bayesian_multiplicative` with `bayesian_alpha > 0` | `cmultRepl(..., method = "user", t = ..., s = alpha, output = "prop")` | The same leave-one-out prior mean with an explicitly selected positive Dirichlet concentration. |
++| `multiplicative_replacement` | `cmultRepl(..., method = "CZM", output = "prop")` | Count-zero multiplicative replacement. Before adjustment, a zero receives `delta * 0.5 / sample_total`. |
++
++For both policies, cmultRepl closes each sample to a composition and scales its
++observed parts by one common factor. Consequently, each output row sums to one
++and ratios among observed parts are preserved. This is the important difference
++from adding the same pseudocount to every cell, which changes observed-part
++ratios. It does **not** make the imputed values unbiased.
++
++A taxon seen in fewer than two samples is refused for Bayesian replacement
++because its leave-one-out prior is undefined. CZM needs at least one observation
++of every included taxon. An all-zero sample, a never-observed CZM taxon, fewer
++than two taxa, or an invalid resulting composition is refused explicitly rather
++than repaired with a guessed value.
++
++### Delta
++
++`analysis.differential.replacement_delta` is cmultRepl's `frac` and must be
++strictly between 0 and 1; the default is 0.65.
++
++- For CZM it multiplies the `0.5 / sample_total` threshold.
++- With `adjust = TRUE` (the reference default used here), either policy caps an
++  imputed proportion that exceeds its taxon's smallest observed proportion at
++  `delta` times that proportion.
++- Values below 0.01 produce a numerical caution because very small replacements
++  can underflow. Values at least 0.9 produce a caution because imputed values
++  can receive substantial mass relative to observed parts. These are numerical
++  heuristics, not biologically optimal cutoffs.
++
++Delta is recorded even when a particular table has no zeros, so the configuration
++that produced a result remains reproducible.
++
++### Bayesian posterior, without pretending to sample it
++
++For a Bayesian replacement with at least one zero, `replace_zeros` also returns
++`posterior.prior_mean` and `posterior.concentration`. For sample `i`, these fully
++parameterise the pre-adjustment posterior
++
++```text
++Dirichlet(observed_counts[i, :] + concentration[i] * prior_mean[i, :])
++```
++
++The analysis diagnostics record the concentration for every sample and this
++parameterisation. cmultRepl's subsequent `frac` cap and multiplicative closure
++are deterministic adjustments, not draws from that Dirichlet distribution. The
++Web UI therefore describes the result as an **adjusted posterior estimate**, not
++as a posterior sample or an uncertainty interval.
++
++Alpha is optional (`null` by default), must be finite and strictly positive when
++set, and is ignored by CZM. A larger alpha gives the prior more weight relative
++to the observed counts.
++
++## glmGamPoi dispersion for `nb_glm`
++
++`analysis.differential.dispersion: glmGamPoi` calls the pinned R
++`glmGamPoi::glm_gp` once across all taxa passing the prevalence filter and takes
++`overdispersion_shrinkage_list.dispersion_trend`. Each taxon is then fitted with
++`MASS::negative.binomial(theta = 1 / dispersion)` and a Wald test with fixed
++scale 1. The default `ml` path remains unchanged and uses `MASS::glm.nb`.
++
++This is plug-in negative-binomial Wald inference using glmGamPoi's shrunken
++dispersion trend. It is **not** glmGamPoi's quasi-likelihood test, and it does
++not propagate uncertainty in the estimated trend. Selecting it outside `nb_glm`
++is refused. Missing R packages produce an explicit service-unavailable error;
++there is no silent fallback to another estimator.
++
++## When not to replace zeros
++
++- Use `nb_glm`, `zinb`, `hurdle_nb`, `multinomial`, or `dirichlet_multinomial`
++  when a count model answers the scientific question; raw zeros are valid
++  observations under those likelihoods.
++- Raise `min_prevalence` when rare taxa would make imputed values dominate the
++  composition. The result reports median and maximum imputed mass per sample.
++- Use `zinb` or `hurdle_nb` only when diagnostics support excess zeros beyond
++  standard negative-binomial overdispersion, and consider a repeated-detection
++  occupancy/observation model (`fit_occupancy`) when detection itself is the
++  object of inference; see [occupancy model notes](../occupancy-models.md) and
++  [roadmap](../../ROADMAP.md). Multiplicative replacement is not a substitute for
++  either workflow.
+ 
+ ## References
+ 
+ - Martín-Fernández, J. A., Barceló-Vidal, C. & Pawlowsky-Glahn, V. (2003).
+-  Dealing with zeros and missing values in compositional data sets using
+-  nonparametric imputation. *Mathematical Geology*, 35, 253–278.
+-- Martín-Fernández, J. A., Hron, K., Templ, M., Filzmoser, P. & Palarea-Albaladejo,
+-  J. (2015). Bayesian-multiplicative treatment of count zeros in compositional
+-  data sets. *Statistical Modelling*, 15(2), 134–158.
+-- The implementation uses the documented `zCompositions::cmultRepl` methods;
+-  consult that package's version-matched documentation for exact details.
++  *Dealing with zeros and missing values in compositional data sets using
++  nonparametric imputation*. Mathematical Geology 35, 253–278.
++  <https://doi.org/10.1023/A:1023866030544>
++- Martín-Fernández, J. A., Hron, K., Templ, M., Filzmoser, P. &
++  Palarea-Albaladejo, J. (2015). *Bayesian-multiplicative treatment of count
++  zeros in compositional data sets*. Statistical Modelling 15(2), 134–158.
++  <https://doi.org/10.1177/1471082X14535524>
++- Palarea-Albaladejo, J. & Martín-Fernández, J. A. (2015). *zCompositions — R
++  package for multivariate imputation of left-censored data under a
++  compositional approach*. Chemometrics and Intelligent Laboratory Systems 143,
++  85–96. <https://doi.org/10.1016/j.chemolab.2015.02.019>
++- Ahlmann-Eltze, C. & Huber, W. (2020). *glmGamPoi: fitting Gamma-Poisson
++  generalized linear models on single cell count data*. Bioinformatics 36(24),
++  5701–5702. <https://doi.org/10.1093/bioinformatics/btaa1009>
++
++Implementation and direct-reference tests live in
++`src/analysis/differential.jl` and `test/unit/test_differential.jl`. The
++opt-in 100/1,000/10,000-taxon runtime and allocation benchmark is documented in
++`bench/advanced_zero_handling/README.md`.
+diff --git a/frontend/src/api/client.ts b/frontend/src/api/client.ts
+index 5b58aaa..2a9cb8d 100644
+--- a/frontend/src/api/client.ts
++++ b/frontend/src/api/client.ts
+@@ -23,7 +23,6 @@ import type {
+   ReferenceTreeDoc, ReferenceTreeSummary, ReferenceTreeDetail, AlignmentQC, TrimSettings,
+   CladeCumulusSourcesResponse, CladeCumulusRequest, CladeCumulusResponse,
+   CladeMoveValidationRequest, CladeMoveValidationResponse,
+-  CladisticsSummary, CladisticsDetail, CladisticsCreateRequest,
+ } from './types'
+ 
+ import type { FigureDoc } from '../figure/types'
+@@ -362,17 +361,6 @@ export const api = {
+     },
+   },
+ 
+-  cladistics: {
+-    list:   (study: string) => get<CladisticsSummary[]>(`/api/v1/studies/${study}/cladistics`),
+-    get:    (study: string, id: string) => get<CladisticsDetail>(`/api/v1/studies/${study}/cladistics/${id}`),
+-    create: (study: string, body: CladisticsCreateRequest) =>
+-      post<{ id: string; job: Job }>(`/api/v1/studies/${study}/cladistics`, body),
+-    remove: (study: string, id: string) =>
+-      del<{ deleted: string }>(`/api/v1/studies/${study}/cladistics/${id}`),
+-    log:    (study: string, id: string, step: 'align' | 'trim' | 'tree') =>
+-      getText(`/api/v1/studies/${study}/cladistics/${id}/log/${step}`),
+-  },
+-
+   referenceTrees: {
+     list:    () => get<ReferenceTreeSummary[]>('/api/v1/reference-trees'),
+     get:     (id: string) => get<ReferenceTreeDetail>(`/api/v1/reference-trees/${id}`),
+diff --git a/frontend/src/api/types.ts b/frontend/src/api/types.ts
+index 593f7dc..79e4a84 100644
+--- a/frontend/src/api/types.ts
++++ b/frontend/src/api/types.ts
+@@ -424,9 +424,15 @@ export interface DifferentialRow {
+ }
+ 
+ export type DifferentialMethod =
+-  | 'nb_glm' | 'clr_welch' | 'zinb' | 'hurdle_nb'
+-  | 'multinomial' | 'dirichlet_multinomial'
+-  | 'ancom_bc' | 'aldex2' | 'songbird'
++  | 'nb_glm'
++  | 'clr_welch'
++  | 'ancom_bc'
++  | 'aldex2'
++  | 'songbird'
++  | 'multinomial'
++  | 'dirichlet_multinomial'
++  | 'zinb'
++  | 'hurdle_nb'
+ 
+ /** Which row field holds the effect size, and what to call it. */
+ export interface DifferentialEffect {
+@@ -442,7 +448,7 @@ export interface DifferentialResult {
+   groups: { reference: string; contrast: string }
+   n_samples: Record<string, number>
+   effect: DifferentialEffect
+-  /** Empty for clr_welch; count models report their size factors. */
++  /** Empty for clr_welch and compositional methods; count models report their size factors. */
+   size_factors: { sample: string; group: string; factor: number }[]
+   config: {
+     method: DifferentialMethod
+@@ -456,26 +462,23 @@ export interface DifferentialResult {
+     replacement_delta?: number
+     /** Null uses GBM's estimated concentration; positive values override it. */
+     bayesian_alpha?: number | null
++    /** aldex2 only. */
++    mc_samples?: number
++    /** aldex2 only. */
++    seed?: number
+     /** multinomial and dirichlet_multinomial only. */
+     mn_reference_taxon?: string | null
+-    /** multinomial and dirichlet_multinomial only. */
+     mn_penalty?: number
+-    /** dirichlet_multinomial only. */
+     dm_overdispersion_method?: 'mle' | 'mom'
+-    /** Multinomial optimiser settings. */
+     tolerance?: number
+     max_iter?: number
+     max_seconds?: number
+-    /** aldex2 only. */
+-    mc_samples?: number
+-    /** aldex2 only. */
+-    seed?: number
+   }
+   diagnostics: {
+     n_taxa: number; n_tested: number; n_failed: number; n_boundary: number; n_filtered: number
+     /** Safety note for two-part models. */
+     model_warning?: string
+-    /** Diagnostics returned by the joint multinomial models. */
++    /** multinomial and dirichlet_multinomial only. */
+     model?: {
+       reference_taxon: string
+       penalty: number
+@@ -486,6 +489,13 @@ export interface DifferentialResult {
+       runtime_seconds: number
+       n_taxa_fitted: number
+     }
++    /** dirichlet_multinomial only. */
++    overdispersion?: {
++      method: 'mle' | 'mom'
++      concentration: number
++      theta: number
++      at_bound: boolean
++    }
+     /** clr_welch only. */
+     zero_replacement?: {
+       method: string
+@@ -664,88 +674,6 @@ export interface TreeFile {
+   view:     unknown
+ }
+ 
+-export type CountNormalisation = 'none' | 'rarefy' | 'srs'
+-
+-export interface CladisticsCreateRequest {
+-  name: string
+-  runs: ComparisonRunSpec[]
+-  table: string
+-  min_reads: number
+-  max_asvs: number
+-  normalisation: CountNormalisation
+-  /** Zero chooses the smallest positive library size; ignored for `none`. */
+-  depth: number
+-  colFilters?: Record<string, ColFilter>
+-}
+-
+-export interface CladisticsSummary {
+-  id: string
+-  name: string
+-  created: string
+-  modified: string
+-  asv_count: number
+-  sample_count: number
+-  state: PhyloState
+-  built: boolean
+-  published?: string | null
+-}
+-
+-export interface CladisticsDoc {
+-  id: string
+-  name: string
+-  created: string
+-  modified: string
+-  source: {
+-    runs: ComparisonRunSpec[]
+-    table: string
+-    min_reads: number
+-    max_asvs: number
+-    available_asvs: number
+-    selection: string
+-  }
+-  overrides: PhyloSettings
+-  asv_count: number
+-  sample_count: number
+-  counts_sha256: string
+-  tree_sha256?: string
+-  published?: string
+-  warning: string
+-}
+-
+-export interface CumulativeCladeNode {
+-  id: string
+-  parent_id: string | null
+-  label: string
+-  branch_length: number | null
+-  is_tip: boolean
+-  tip_count: number
+-  cumulative_count: number
+-  cumulative_frequency: number
+-}
+-
+-export interface CladisticsResult {
+-  version: number
+-  generated: string
+-  tree_sha256: string
+-  counts_sha256: string
+-  nodes: CumulativeCladeNode[]
+-  samples: string[]
+-  sample_reads: number[]
+-  faith_pd: number[]
+-  unweighted_unifrac: number[][]
+-  weighted_unifrac: number[][]
+-  total_branch_length: number
+-  normalisation: { method: CountNormalisation; depth: number; seed: number }
+-  excluded_samples: string[]
+-  weighted_unifrac_definition: string
+-}
+-
+-export interface CladisticsDetail extends WorkflowDetail {
+-  doc: CladisticsDoc
+-  summary: CladisticsSummary
+-  result: CladisticsResult | null
+-}
+-
+ export const REFERENCE_STEPS = ['align', 'trim', 'tree'] as const
+ export const PLACEMENT_STEPS = ['align', 'trim', 'place', 'accumulate'] as const
+ export type PhyloStep = typeof REFERENCE_STEPS[number] | typeof PLACEMENT_STEPS[number]
+diff --git a/frontend/src/cladistics/Clade.module.css b/frontend/src/cladistics/Clade.module.css
+deleted file mode 100644
+index 4d69cfc..0000000
+--- a/frontend/src/cladistics/Clade.module.css
++++ /dev/null
+@@ -1,239 +0,0 @@
+-/* © 2026 Joshua Benjamin Jewell. All rights reserved. */
+-/* Licensed under the GNU Affero General Public License version 3 (AGPLv3). */
+-.panel {
+-  display: grid;
+-  gap: 16px;
+-}
+-
+-.buildGrid {
+-  display: grid;
+-  grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(110px, 1fr));
+-  gap: 12px;
+-  align-items: end;
+-}
+-
+-.runChips {
+-  display: flex;
+-  flex-wrap: wrap;
+-  gap: 6px;
+-  margin: 8px 0 14px;
+-}
+-
+-.runChip {
+-  border: 1px solid var(--color-border);
+-  border-radius: 999px;
+-  padding: 4px 10px;
+-  color: var(--color-muted-fg);
+-  background: var(--color-bg);
+-  cursor: pointer;
+-  font-size: .8rem;
+-}
+-
+-.runChip.on {
+-  color: var(--color-primary);
+-  border-color: var(--color-primary);
+-  background: var(--color-surface);
+-}
+-
+-.field {
+-  display: grid;
+-  gap: 4px;
+-  font-size: .8rem;
+-  color: var(--color-muted-fg);
+-}
+-
+-.field input,
+-.field select,
+-.analysisSelect,
+-.treeControls input {
+-  min-width: 0;
+-  padding: 6px 8px;
+-  border: 1px solid var(--color-border);
+-  border-radius: 4px;
+-  color: var(--color-fg);
+-  background: var(--color-bg);
+-}
+-
+-.warning {
+-  margin: 10px 0 0;
+-  padding: 8px 10px;
+-  border-left: 3px solid #f9a825;
+-  background: color-mix(in srgb, #f9a825 9%, transparent);
+-  color: var(--color-muted-fg);
+-  font-size: .82rem;
+-}
+-
+-.analysisBar {
+-  display: flex;
+-  align-items: center;
+-  flex-wrap: wrap;
+-  gap: 8px;
+-}
+-
+-.analysisSelect {
+-  flex: 1 1 260px;
+-}
+-
+-.steps {
+-  display: flex;
+-  gap: 8px;
+-  flex-wrap: wrap;
+-  margin: 10px 0;
+-}
+-
+-.step {
+-  display: inline-flex;
+-  align-items: center;
+-  gap: 5px;
+-  padding: 4px 8px;
+-  border: 1px solid var(--color-border);
+-  border-radius: 4px;
+-  font-size: .78rem;
+-  color: var(--color-muted-fg);
+-}
+-
+-.stepDone {
+-  color: #2b8a3e;
+-}
+-
+-.stepRunning {
+-  color: #1971c2;
+-}
+-
+-.stepFailed {
+-  color: var(--color-danger);
+-}
+-
+-.log {
+-  max-height: 260px;
+-  overflow: auto;
+-  white-space: pre-wrap;
+-  font: .75rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+-  background: var(--color-surface);
+-  padding: 10px;
+-}
+-
+-.section {
+-  min-width: 0;
+-}
+-
+-.sectionHeading {
+-  display: flex;
+-  justify-content: space-between;
+-  align-items: flex-start;
+-  flex-wrap: wrap;
+-  gap: 12px;
+-  margin-bottom: 8px;
+-}
+-
+-.sectionHeading h3 {
+-  margin: 0 0 4px;
+-  font-size: 1rem;
+-}
+-
+-.sectionHeading p {
+-  margin: 0;
+-  max-width: 720px;
+-  color: var(--color-muted-fg);
+-  font-size: .82rem;
+-}
+-
+-.treeControls {
+-  display: flex;
+-  flex-wrap: wrap;
+-  gap: 5px;
+-  align-items: center;
+-}
+-
+-.treeControls input {
+-  width: 160px;
+-  font-size: .8rem;
+-}
+-
+-.treeMeta {
+-  display: flex;
+-  flex-wrap: wrap;
+-  gap: 16px;
+-  align-items: center;
+-  color: var(--color-muted-fg);
+-  font-size: .76rem;
+-  margin-bottom: 6px;
+-}
+-
+-.legendDot {
+-  display: inline-block;
+-  width: 10px;
+-  height: 10px;
+-  border-radius: 50%;
+-  margin-right: 4px;
+-  background: #087f5b;
+-  opacity: .7;
+-}
+-
+-.treeScroll {
+-  max-height: 680px;
+-  overflow: auto;
+-  border: 1px solid var(--color-border);
+-  border-radius: 5px;
+-  background: var(--color-bg);
+-}
+-
+-.cladeButton {
+-  cursor: pointer;
+-  outline: none;
+-}
+-
+-.cladeButton:focus circle {
+-  stroke: #1971c2;
+-  stroke-width: 3px;
+-}
+-
+-.nodeLabel {
+-  fill: var(--color-fg);
+-  paint-order: stroke;
+-  stroke: var(--color-bg);
+-  stroke-width: 3px;
+-  stroke-linejoin: round;
+-  pointer-events: none;
+-  user-select: none;
+-}
+-
+-.metricGrid {
+-  display: grid;
+-  grid-template-columns: repeat(2, minmax(0, 1fr));
+-  gap: 16px;
+-}
+-
+-.stats {
+-  display: flex;
+-  gap: 18px;
+-  flex-wrap: wrap;
+-  color: var(--color-muted-fg);
+-  font-size: .82rem;
+-}
+-
+-.stats strong {
+-  color: var(--color-fg);
+-}
+-
+-.hash {
+-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+-  font-size: .72rem;
+-  word-break: break-all;
+-}
+-
+-@media (max-width: 900px) {
+-  .buildGrid {
+-    grid-template-columns: repeat(2, minmax(0, 1fr));
+-  }
+-
+-  .metricGrid {
+-    grid-template-columns: minmax(0, 1fr);
+-  }
+-}
+-
+-@media (max-width: 520px) {
+-  .buildGrid {
+-    grid-template-columns: minmax(0, 1fr);
+-  }
+-}
+diff --git a/frontend/src/cladistics/CladeCumulusPanel.tsx b/frontend/src/cladistics/CladeCumulusPanel.tsx
+deleted file mode 100644
+index f94f568..0000000
+--- a/frontend/src/cladistics/CladeCumulusPanel.tsx
++++ /dev/null
+@@ -1,332 +0,0 @@
+-// © 2026 Joshua Benjamin Jewell. All rights reserved.
+-// Licensed under the GNU Affero General Public License version 3 (AGPLv3).
+-import { useCallback, useEffect, useMemo, useState } from 'react'
+-import { Link } from 'react-router-dom'
+-import { api } from '../api/client'
+-import { errorMessage } from '../api/errorMessage'
+-import type {
+-  CladisticsResult, CountNormalisation, ComparisonRunSpec, PhyloStep,
+-} from '../api/types'
+-import { uniqueRuns } from '../api/types'
+-import { useSharedResultsTablesState } from '../components/annotationShared'
+-import { PlotlyChart } from '../components/PlotlyChart'
+-import { useToast } from '../components/Toast'
+-import { useApi } from '../hooks/useApi'
+-import { saveBlob } from '../utils/download'
+-import { useWorkflow } from '../phylogeny/common'
+-import { CumulativeTree } from './CumulativeTree'
+-import styles from './Clade.module.css'
+-
+-const runKey = (run: ComparisonRunSpec) => `${run.group ?? ''}/${run.run}`
+-const BUILD_STEPS = ['align', 'trim', 'tree'] as const
+-const csvCell = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`
+-
+-function FaithChart({ result }: { result: CladisticsResult }) {
+-  const figure = useMemo(() => ({
+-    data: [{
+-      type: 'bar', x: result.samples, y: result.faith_pd,
+-      marker: { color: '#087f5b' },
+-      hovertemplate: '%{x}<br>Faith PD %{y:.4f}<extra></extra>',
+-    }],
+-    layout: {
+-      title: { text: "Faith's phylogenetic diversity" },
+-      yaxis: { title: { text: 'Observed branch length' }, rangemode: 'tozero' },
+-      xaxis: { title: { text: 'Sample' }, automargin: true },
+-      showlegend: false,
+-    },
+-  }), [result])
+-  return <PlotlyChart figure={figure} heightRatio={0.42} />
+-}
+-
+-function UniFracChart({ result }: { result: CladisticsResult }) {
+-  const [weighted, setWeighted] = useState(true)
+-  const matrix = weighted ? result.weighted_unifrac : result.unweighted_unifrac
+-  const figure = useMemo(() => ({
+-    data: [{
+-      type: 'heatmap', z: matrix, x: result.samples, y: result.samples,
+-      zmin: 0, zmax: 1, colorscale: 'Viridis', reversescale: true,
+-      colorbar: { title: { text: 'Distance' } },
+-      hovertemplate: '%{y} vs %{x}<br>UniFrac %{z:.4f}<extra></extra>',
+-    }],
+-    layout: {
+-      title: { text: `${weighted ? 'Weighted' : 'Unweighted'} UniFrac` },
+-      xaxis: { automargin: true }, yaxis: { automargin: true, autorange: 'reversed' },
+-      showlegend: false,
+-    },
+-  }), [matrix, result.samples, weighted])
+-
+-  const download = () => {
+-    const lines = [
+-      ['Sample', ...result.samples].map(csvCell).join(','),
+-      ...result.samples.map((sample, i) => [sample, ...matrix[i]].map(csvCell).join(',')),
+-    ]
+-    saveBlob(new Blob([lines.join('\n') + '\n'], { type: 'text/csv;charset=utf-8' }),
+-      `${weighted ? 'weighted' : 'unweighted'}_unifrac.csv`)
+-  }
+-
+-  return (
+-    <div>
+-      <div className={styles.analysisBar} style={{ marginBottom: 8 }}>
+-        <div className="tabs" role="group" aria-label="UniFrac method">
+-          <button className={`tab ${weighted ? 'active' : ''}`} aria-pressed={weighted}
+-            onClick={() => setWeighted(true)}>Weighted</button>
+-          <button className={`tab ${!weighted ? 'active' : ''}`} aria-pressed={!weighted}
+-            onClick={() => setWeighted(false)}>Unweighted</button>
+-        </div>
+-        <span style={{ flex: 1 }} />
+-        <button className="btn btn-sm" onClick={download}>Download distances</button>
+-      </div>
+-      {result.samples.length > 1
+-        ? <PlotlyChart figure={figure} heightRatio={0.72} />
+-        : <p className="empty-state">UniFrac needs at least two retained samples; Faith PD is still available above.</p>}
+-      <p style={{ color: 'var(--color-muted-fg)', fontSize: '.78rem' }}>
+-        {weighted
+-          ? 'Normalized weighted UniFrac uses cumulative clade relative abundances and ranges from 0 (identical) to 1 (no shared branch abundance).'
+-          : 'Unweighted UniFrac is unique branch length divided by branch length observed in either sample.'}
+-      </p>
+-    </div>
+-  )
+-}
+-
+-/** Build and inspect de novo ASV phylogenies for one study. */
+-export function CladeCumulusPanel({ study, runs }: { study: string; runs: ComparisonRunSpec[] }) {
+-  const toast = useToast()
+-  const listFetcher = useCallback(() => api.cladistics.list(study), [study])
+-  const { data: analyses, loading, error, refetch } = useApi(listFetcher)
+-  const load = useCallback((id: string) => api.cladistics.get(study, id), [study])
+-  const onSettled = useCallback(() => { refetch() }, [refetch])
+-  const { detail: loadedDetail, open, running } = useWorkflow(load, onSettled)
+-  const [selectedId, setSelectedId] = useState<string | null>(null)
+-  const [excluded, setExcluded] = useState<Set<string>>(new Set())
+-  const [name, setName] = useState('ASV phylogeny')
+-  const [table, setTable] = useState<string | null>(null)
+-  const [maxAsvs, setMaxAsvs] = useState(500)
+-  const [minReads, setMinReads] = useState(1)
+-  const [normalisation, setNormalisation] = useState<CountNormalisation>('none')
+-  const [depth, setDepth] = useState(0)
+-  const [busy, setBusy] = useState(false)
+-  const [log, setLog] = useState<{ step: string; text: string } | null>(null)
+-  const detail = loadedDetail?.doc.id === selectedId ? loadedDetail : null
+-
+-  const selectedRuns = useMemo(() => uniqueRuns(
+-    runs.filter(run => !excluded.has(runKey(run))).map(run => ({ run: run.run, group: run.group ?? null })),
+-  ), [runs, excluded])
+-  const { options, error: tablesError } = useSharedResultsTablesState(study, selectedRuns)
+-
+-  useEffect(() => {
+-    setTable(current => current && options.some(o => o.table === current) ? current : options[0]?.table ?? null)
+-  }, [options])
+-  useEffect(() => {
+-    if (!analyses) return
+-    setSelectedId(current => current && analyses.some(a => a.id === current)
+-      ? current
+-      : analyses[0]?.id ?? null)
+-  }, [analyses])
+-  useEffect(() => { open(selectedId).catch(() => {}) }, [selectedId, open])
+-  useEffect(() => { setLog(null) }, [selectedId])
+-
+-  const toggleRun = (run: ComparisonRunSpec) => setExcluded(previous => {
+-    const next = new Set(previous)
+-    const key = runKey(run)
+-    if (next.has(key)) next.delete(key)
+-    else next.add(key)
+-    return next
+-  })
+-
+-  const build = async () => {
+-    if (!table || selectedRuns.length === 0) return
+-    setBusy(true)
+-    try {
+-      const response = await api.cladistics.create(study, {
+-        name: name.trim() || 'ASV phylogeny', runs: selectedRuns, table,
+-        min_reads: minReads, max_asvs: maxAsvs, normalisation, depth,
+-      })
+-      setSelectedId(response.id)
+-      toast.success('ASV phylogeny queued')
+-      refetch()
+-    } catch (e) {
+-      toast.error(`Could not build phylogeny: ${errorMessage(e)}`)
+-    } finally {
+-      setBusy(false)
+-    }
+-  }
+-
+-  const remove = async () => {
+-    if (!detail || !window.confirm(`Delete ${detail.doc.name}, its saved counts and published tree?`)) return
+-    try {
+-      await api.cladistics.remove(study, detail.doc.id)
+-      toast.success('Cladistics analysis deleted')
+-      setSelectedId(null)
+-      refetch()
+-    } catch (e) {
+-      toast.error(errorMessage(e))
+-    }
+-  }
+-
+-  const showLog = async (step: 'align' | 'trim' | 'tree') => {
+-    if (!selectedId) return
+-    try {
+-      const text = await api.cladistics.log(study, selectedId, step)
+-      setLog({ step, text: text ?? 'No log has been written for this step yet.' })
+-    } catch (e) {
+-      toast.error(errorMessage(e))
+-    }
+-  }
+-
+-  const result = detail?.result ?? null
+-  const status = detail?.status
+-  const noRuns = runs.length === 0
+-
+-  return (
+-    <div className={styles.panel}>
+-      <div className="card">
+-        <div className="card-title">CladeCumulus · de novo ASV phylogeny</div>
+-        <p style={{ marginTop: 0, color: 'var(--color-muted-fg)', fontSize: '.86rem' }}>
+-          Align ASV sequences with MAFFT, trim with trimAl and infer a tree with IQ-TREE. The finished analysis adds cumulative clade abundances, Faith&apos;s PD and UniFrac.
+-        </p>
+-        {noRuns ? (
+-          <p className="empty-state">Add a run with an ASV results table before building a phylogeny.</p>
+-        ) : (
+-          <>
+-            <span style={{ fontSize: '.8rem', color: 'var(--color-muted-fg)' }}>Runs (whole runs are pooled)</span>
+-            <div className={styles.runChips}>
+-              {uniqueRuns(runs).map(run => {
+-                const on = !excluded.has(runKey(run))
+-                return <button key={runKey(run)} className={`${styles.runChip} ${on ? styles.on : ''}`}
+-                  aria-pressed={on} onClick={() => toggleRun(run)}>
+-                  {run.group ? `${run.group}/` : ''}{run.run}
+-                </button>
+-              })}
+-            </div>
+-            <div className={styles.buildGrid}>
+-              <label className={styles.field}>Analysis name
+-                <input value={name} maxLength={100} onChange={event => setName(event.target.value)} />
+-              </label>
+-              <label className={styles.field}>Results table
+-                <select value={table ?? ''} disabled={!options.length}
+-                  onChange={event => setTable(event.target.value)}>
+-                  {!options.length && <option value="">No shared table</option>}
+-                  {options.map(option => <option key={option.key} value={option.table}>{option.label}</option>)}
+-                </select>
+-              </label>
+-              <label className={styles.field}>Maximum ASVs
+-                <input type="number" min={4} max={2000} step={100} value={maxAsvs}
+-                  onChange={event => setMaxAsvs(Number(event.target.value))} />
+-              </label>
+-              <label className={styles.field}>Minimum reads / ASV
+-                <input type="number" min={1} step={1} value={minReads}
+-                  onChange={event => setMinReads(Number(event.target.value))} />
+-              </label>
+-              <label className={styles.field}>Count normalisation
+-                <select value={normalisation} onChange={event => setNormalisation(event.target.value as CountNormalisation)}>
+-                  <option value="none">None</option>
+-                  <option value="rarefy">Rarefy</option>
+-                  <option value="srs">SRS</option>
+-                </select>
+-              </label>
+-            </div>
+-            <div style={{ display: 'flex', alignItems: 'end', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
+-              <label className={styles.field} style={{ minWidth: 180 }}>Normalisation depth (0 = auto)
+-                <input type="number" min={0} step={100} value={depth} disabled={normalisation === 'none'}
+-                  onChange={event => setDepth(Number(event.target.value))} />
+-              </label>
+-              <button className="btn btn-primary" disabled={busy || !table || !selectedRuns.length}
+-                onClick={build}>{busy ? 'Preparing…' : 'Build ASV tree'}</button>
+-              <span style={{ fontSize: '.78rem', color: 'var(--color-muted-fg)' }}>
+-                Highest-abundance ASVs are selected deterministically (4–2,000).
+-              </span>
+-            </div>
+-            {tablesError && <p className="error-msg">Could not list results tables: {tablesError}</p>}
+-          </>
+-        )}
+-        <p className={styles.warning}>
+-          Short-amplicon phylogenies are approximate, especially at deep branches. Large alignments can be expensive; keep the ASV cap appropriate for your data and compute budget.
+-        </p>
+-      </div>
+-
+-      {loading && <p className="loading">Loading Cladistics analyses…</p>}
+-      {error && <p className="error-msg">{error}</p>}
+-      {analyses && analyses.length > 0 && (
+-        <div className="card">
+-          <div className={styles.analysisBar}>
+-            <select className={styles.analysisSelect} aria-label="Cladistics analysis"
+-              value={selectedId ?? ''} onChange={event => setSelectedId(event.target.value)}>
+-              {analyses.map(analysis => <option key={analysis.id} value={analysis.id}>
+-                {analysis.name} · {analysis.asv_count} ASVs · {analysis.state}
+-              </option>)}
+-            </select>
+-            {detail?.summary.published && (
+-              <Link className="btn btn-sm" to={`/${study}/trees/${encodeURIComponent(detail.summary.published)}`}>
+-                Full tree viewer
+-              </Link>
+-            )}
+-            {detail && <button className="btn btn-sm btn-danger" disabled={running} onClick={remove}>Delete</button>}
+-          </div>
+-
+-          {detail && (
+-            <>
+-              <div className={styles.steps}>
+-                {BUILD_STEPS.map(step => {
+-                  const state = status?.steps?.[step as PhyloStep]?.state
+-                  return <span key={step} className={`${styles.step} ${state === 'done' || state === 'current' ? styles.stepDone : state === 'running' ? styles.stepRunning : state === 'failed' ? styles.stepFailed : ''}`}>
+-                    {step}: {state ?? (running ? 'pending' : detail.summary.state)}
+-                    {status?.steps?.[step as PhyloStep]?.where && <button className="btn btn-sm" onClick={() => showLog(step)}>Log</button>}
+-                  </span>
+-                })}
+-              </div>
+-              {status?.error && <pre className={styles.log} style={{ color: 'var(--color-danger)' }}>{status.error}</pre>}
+-              {log && <pre className={styles.log}><strong>{log.step} log</strong>{'\n'}{log.text}</pre>}
+-              {running && <p className="loading">Building and analysing the phylogeny…</p>}
+-            </>
+-          )}
+-        </div>
+-      )}
+-
+-      {detail && result && (
+-        <>
+-          <div className="card">
+-            <div className={styles.stats}>
+-              <span><strong>{result.nodes.filter(n => n.is_tip).length}</strong> ASVs</span>
+-              <span><strong>{result.samples.length}</strong> retained samples</span>
+-              <span><strong>{detail.doc.source.available_asvs}</strong> eligible ASVs before cap</span>
+-              <span><strong>{result.normalisation.method}</strong>{result.normalisation.method !== 'none' && ` to ${result.normalisation.depth} reads`}</span>
+-            </div>
+-            {result.excluded_samples.length > 0 && (
+-              <p style={{ color: 'var(--color-muted-fg)', fontSize: '.8rem' }}>
+-                Excluded empty/short samples: {result.excluded_samples.join(', ')}
+-              </p>
+-            )}
+-            <details style={{ marginTop: 8 }}>
+-              <summary>Provenance and method</summary>
+-              <div style={{ marginTop: 8, fontSize: '.8rem' }}>
+-                <p><strong>Source:</strong> {detail.doc.source.runs.map(run => `${run.group ? `${run.group}/` : ''}${run.run}`).join(', ')} · {detail.doc.source.table}</p>
+-                <p><strong>Selection:</strong> {detail.doc.source.selection}; minimum {detail.doc.source.min_reads.toLocaleString()} reads; cap {detail.doc.source.max_asvs.toLocaleString()} ASVs.</p>
+-                <div className={styles.hash}>Counts SHA-256: {result.counts_sha256}</div>
+-                <div className={styles.hash}>Tree SHA-256: {result.tree_sha256}</div>
+-                <p style={{ fontSize: '.8rem', color: 'var(--color-muted-fg)' }}>
+-                  MAFFT → trimAl → IQ-TREE settings, commands, tool versions and output hashes are in this analysis&apos;s attestation.yml. Counts and metrics are pinned to the hashes above.
+-                </p>
+-              </div>
+-            </details>
+-          </div>
+-          <div className="card"><CumulativeTree key={result.tree_sha256} nodes={result.nodes} /></div>
+-          <div className="card"><FaithChart result={result} /></div>
+-          <div className="card"><UniFracChart result={result} /></div>
+-          <div className="card">
+-            <details>
+-              <summary>Per-sample Faith PD and retained reads</summary>
+-              <div style={{ overflowX: 'auto', marginTop: 10 }}>
+-                <table>
+-                  <thead><tr><th>Sample</th><th>Retained reads</th><th>Faith PD</th></tr></thead>
+-                  <tbody>{result.samples.map((sample, i) => (
+-                    <tr key={sample}><td>{sample}</td><td>{result.sample_reads[i].toLocaleString()}</td><td>{result.faith_pd[i].toFixed(5)}</td></tr>
+-                  ))}</tbody>
+-                </table>
+-              </div>
+-            </details>
+-          </div>
+-        </>
+-      )}
+-    </div>
+-  )
+-}
+diff --git a/frontend/src/cladistics/CumulativeTree.tsx b/frontend/src/cladistics/CumulativeTree.tsx
+deleted file mode 100644
+index 3c8c9a8..0000000
+--- a/frontend/src/cladistics/CumulativeTree.tsx
++++ /dev/null
+@@ -1,104 +0,0 @@
+-// © 2026 Joshua Benjamin Jewell. All rights reserved.
+-// Licensed under the GNU Affero General Public License version 3 (AGPLv3).
+-import { useMemo, useState } from 'react'
+-import type { CumulativeCladeNode } from '../api/types'
+-import { cumulativeRadius, cumulativeStroke, layoutCumulativeTree } from './cumulativeLayout'
+-import styles from './Clade.module.css'
+-
+-const percent = (value: number) => `${(value * 100).toFixed(value < 0.01 && value > 0 ? 2 : 1)}%`
+-
+-/** Interactive cumulative-frequency view; the Newick source remains unchanged. */
+-export function CumulativeTree({ nodes }: { nodes: CumulativeCladeNode[] }) {
+-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+-  const [zoom, setZoom] = useState(1)
+-  const [query, setQuery] = useState('')
+-  const layout = useMemo(() => layoutCumulativeTree(nodes, collapsed, {
+-    rowHeight: 26 * zoom,
+-    levelWidth: 180 * zoom,
+-    margin: 28 * zoom,
+-  }), [nodes, collapsed, zoom])
+-  const matches = useMemo(() => {
+-    const q = query.trim().toLowerCase()
+-    if (!q) return new Set<string>()
+-    return new Set(nodes.filter(n => n.label.toLowerCase().includes(q)).map(n => n.id))
+-  }, [nodes, query])
+-
+-  const toggle = (id: string) => setCollapsed(previous => {
+-    const next = new Set(previous)
+-    if (next.has(id)) next.delete(id)
+-    else next.add(id)
+-    return next
+-  })
+-  const collapseToRoot = () => {
+-    const root = nodes.find(n => n.parent_id === null)
+-    setCollapsed(root ? new Set([root.id]) : new Set())
+-  }
+-
+-  return (
+-    <section className={styles.section} aria-label="Cumulative phylogenetic tree">
+-      <div className={styles.sectionHeading}>
+-        <div>
+-          <h3>Cumulative phylogeny</h3>
+-          <p>Circle area and branch width show the reads accumulated below each clade. Click a clade to collapse or expand it.</p>
+-        </div>
+-        <div className={styles.treeControls}>
+-          <input aria-label="Search clades" placeholder="Find ASV or clade" value={query}
+-            onChange={event => setQuery(event.target.value)} />
+-          <button className="btn btn-sm" onClick={() => setCollapsed(new Set())}>Expand all</button>
+-          <button className="btn btn-sm" onClick={collapseToRoot}>Root only</button>
+-          <button className="btn btn-sm" aria-label="Zoom out" disabled={zoom <= 0.6}
+-            onClick={() => setZoom(z => Math.max(0.6, +(z - 0.2).toFixed(1)))}>−</button>
+-          <button className="btn btn-sm" aria-label="Zoom in" disabled={zoom >= 1.8}
+-            onClick={() => setZoom(z => Math.min(1.8, +(z + 0.2).toFixed(1)))}>+</button>
+-        </div>
+-      </div>
+-      <div className={styles.treeMeta}>
+-        <span>{layout.rows} visible row{layout.rows === 1 ? '' : 's'} · {nodes.filter(n => n.is_tip).length} ASVs</span>
+-        {query && <span>{matches.size} match{matches.size === 1 ? '' : 'es'}</span>}
+-        <span><i className={styles.legendDot} /> cumulative read frequency</span>
+-      </div>
+-      <div className={styles.treeScroll}>
+-        <svg width={layout.width} height={layout.height} role="img"
+-          aria-label="Phylogenetic tree with cumulative clade abundances">
+-          {layout.links.map(link => (
+-            <path key={`${link.from}-${link.to}`} d={link.path} fill="none"
+-              stroke="#94a3b8" strokeWidth={cumulativeStroke(link.frequency)} strokeLinecap="round" />
+-          ))}
+-          {layout.nodes.map(node => {
+-            const radius = cumulativeRadius(node.cumulative_frequency)
+-            const canCollapse = node.children.length > 0
+-            const matched = matches.has(node.id)
+-            const generic = /^Clade n?\d+$/.test(node.label) || /^Tip \d+$/.test(node.label)
+-            return (
+-              <g key={node.id} transform={`translate(${node.x} ${node.y})`}
+-                role={canCollapse ? 'button' : undefined} tabIndex={canCollapse ? 0 : undefined}
+-                aria-label={canCollapse ? `${node.collapsed ? 'Expand' : 'Collapse'} ${node.label}` : undefined}
+-                className={canCollapse ? styles.cladeButton : undefined}
+-                onClick={canCollapse ? () => toggle(node.id) : undefined}
+-                onKeyDown={canCollapse ? event => {
+-                  if (event.key === 'Enter' || event.key === ' ') {
+-                    event.preventDefault()
+-                    toggle(node.id)
+-                  }
+-                } : undefined}>
+-                <title>
+-                  {`${node.label}\n${node.tip_count} ASV${node.tip_count === 1 ? '' : 's'}\n${node.cumulative_count.toLocaleString()} cumulative reads (${percent(node.cumulative_frequency)})`}
+-                </title>
+-                {node.collapsed && (
+-                  <path d={`M ${radius + 2} 0 L ${radius + 11} ${-6 * zoom} L ${radius + 11} ${6 * zoom} Z`}
+-                    fill="#087f5b" opacity={0.35} />
+-                )}
+-                <circle r={radius} fill={matched ? '#f9a825' : '#087f5b'} fillOpacity={node.is_tip ? 0.9 : 0.65}
+-                  stroke={matched ? '#9c6500' : '#ffffff'} strokeWidth={matched ? 2 : 1} />
+-                <text x={radius + 8} y={4 * zoom} fontSize={11 * zoom} className={styles.nodeLabel}>
+-                  {!generic && `${node.label} · `}{percent(node.cumulative_frequency)}
+-                  {node.collapsed && ` · ${node.tip_count} ASVs`}
+-                </text>
+-              </g>
+-            )
+-          })}
+-        </svg>
+-      </div>
+-    </section>
+-  )
+-}
+diff --git a/frontend/src/cladistics/cumulativeLayout.test.ts b/frontend/src/cladistics/cumulativeLayout.test.ts
+deleted file mode 100644
+index 42dedbc..0000000
+--- a/frontend/src/cladistics/cumulativeLayout.test.ts
++++ /dev/null
+@@ -1,61 +0,0 @@
+-// © 2026 Joshua Benjamin Jewell. All rights reserved.
+-// Licensed under the GNU Affero General Public License version 3 (AGPLv3).
+-import { describe, expect, test } from 'bun:test'
+-import type { CumulativeCladeNode } from '../api/types'
+-import { cumulativeRadius, cumulativeStroke, layoutCumulativeTree } from './cumulativeLayout'
+-
+-const node = (id: string, parent_id: string | null, frequency: number): CumulativeCladeNode => ({
+-  id, parent_id, label: id, branch_length: 1, is_tip: id > 'n2', tip_count: 1,
+-  cumulative_count: frequency * 12, cumulative_frequency: frequency,
+-})
+-
+-// root(n1) -> AB(n2) -> A(n3), B(n4); root -> CD(n5) -> C(n6), D(n7)
+-const tree = [
+-  node('n1', null, 1), node('n2', 'n1', 0.75), node('n3', 'n2', 0.5),
+-  node('n4', 'n2', 0.25), node('n5', 'n1', 0.25), node('n6', 'n5', 0.125),
+-  node('n7', 'n5', 0.125),
+-]
+-
+-describe('layoutCumulativeTree', () => {
+-  test('lays out every tip row and cumulative branch', () => {
+-    const layout = layoutCumulativeTree(tree)
+-    expect(layout.rows).toBe(4)
+-    expect(layout.nodes).toHaveLength(7)
+-    expect(layout.links).toHaveLength(6)
+-    expect(layout.byId.get('n3')?.y).toBe(28)
+-    expect(layout.byId.get('n4')?.y).toBe(54)
+-    expect(layout.byId.get('n2')?.y).toBe(41)
+-    expect(layout.byId.get('n1')?.y).toBe(67)
+-    expect(layout.byId.get('n1')?.x).toBe(28)
+-    expect(layout.byId.get('n3')?.x).toBe(388)
+-  })
+-
+-  test('collapsed descendants occupy no rows or SVG links', () => {
+-    const layout = layoutCumulativeTree(tree, new Set(['n2']))
+-    expect(layout.rows).toBe(3)
+-    expect(layout.nodes.map(n => n.id)).toEqual(['n1', 'n2', 'n5', 'n6', 'n7'])
+-    expect(layout.links).toHaveLength(4)
+-    expect(layout.byId.get('n2')?.collapsed).toBe(true)
+-    expect(layout.byId.has('n3')).toBe(false)
+-
+-    const rootOnly = layoutCumulativeTree(tree, new Set(['n1']))
+-    expect(rootOnly.rows).toBe(1)
+-    expect(rootOnly.nodes.map(n => n.id)).toEqual(['n1'])
+-    expect(rootOnly.links).toEqual([])
+-  })
+-
+-  test('rejects malformed hierarchies', () => {
+-    expect(() => layoutCumulativeTree([...tree, node('n1', null, 1)])).toThrow('Duplicate')
+-    expect(() => layoutCumulativeTree(tree.filter(n => n.id !== 'n2'))).toThrow('missing parent')
+-    const disconnected = [...tree, node('n8', 'n9', 0), node('n9', 'n8', 0)]
+-    expect(() => layoutCumulativeTree(disconnected)).toThrow('not connected')
+-    expect(() => layoutCumulativeTree([])).toThrow('one root')
+-  })
+-
+-  test('visual magnitudes are bounded', () => {
+-    expect(cumulativeRadius(0)).toBe(3)
+-    expect(cumulativeRadius(1)).toBe(12)
+-    expect(cumulativeRadius(100)).toBe(12)
+-    expect(cumulativeStroke(0.25)).toBe(3.5)
+-  })
+-})
+diff --git a/frontend/src/cladistics/cumulativeLayout.ts b/frontend/src/cladistics/cumulativeLayout.ts
+deleted file mode 100644
+index 4cc4377..0000000
+--- a/frontend/src/cladistics/cumulativeLayout.ts
++++ /dev/null
+@@ -1,137 +0,0 @@
+-// © 2026 Joshua Benjamin Jewell. All rights reserved.
+-// Licensed under the GNU Affero General Public License version 3 (AGPLv3).
+-import type { CumulativeCladeNode } from '../api/types'
+-
+-export interface PositionedClade extends CumulativeCladeNode {
+-  x: number
+-  y: number
+-  depth: number
+-  children: string[]
+-  collapsed: boolean
+-}
+-
+-export interface CladeLink {
+-  from: string
+-  to: string
+-  path: string
+-  frequency: number
+-}
+-
+-export interface CumulativeLayout {
+-  nodes: PositionedClade[]
+-  byId: Map<string, PositionedClade>
+-  links: CladeLink[]
+-  width: number
+-  height: number
+-  rows: number
+-}
+-
+-/**
+- * Rectangular layout of the visible part of a cumulative tree. Descendants of a
+- * collapsed clade occupy no rows. Parent ids must form one connected, acyclic
+- * hierarchy; malformed server data is rejected rather than partially drawn.
+- */
+-export function layoutCumulativeTree(
+-  source: CumulativeCladeNode[],
+-  collapsed: ReadonlySet<string> = new Set(),
+-  options: { rowHeight?: number; levelWidth?: number; margin?: number } = {},
+-): CumulativeLayout {
+-  const rowHeight = options.rowHeight ?? 26
+-  const levelWidth = options.levelWidth ?? 180
+-  const margin = options.margin ?? 28
+-  if (![rowHeight, levelWidth, margin].every(v => Number.isFinite(v) && v > 0)) {
+-    throw new Error('Tree layout dimensions must be positive')
+-  }
+-
+-  const bySourceId = new Map<string, CumulativeCladeNode>()
+-  const children = new Map<string, string[]>()
+-  const roots: string[] = []
+-  for (const node of source) {
+-    if (bySourceId.has(node.id)) throw new Error(`Duplicate clade id: ${node.id}`)
+-    bySourceId.set(node.id, node)
+-    children.set(node.id, [])
+-  }
+-  for (const node of source) {
+-    if (node.parent_id === null) {
+-      roots.push(node.id)
+-    } else {
+-      const siblings = children.get(node.parent_id)
+-      if (!siblings) throw new Error(`Clade ${node.id} has a missing parent`)
+-      siblings.push(node.id)
+-    }
+-  }
+-  if (roots.length !== 1) throw new Error(`Expected one root, found ${roots.length}`)
+-  const reachable = new Set<string>()
+-  const markReachable = (id: string) => {
+-    if (reachable.has(id)) return
+-    reachable.add(id)
+-    for (const child of children.get(id) ?? []) markReachable(child)
+-  }
+-  markReachable(roots[0])
+-  if (reachable.size !== source.length) throw new Error('The clade hierarchy is not connected')
+-
+-  const byId = new Map<string, PositionedClade>()
+-  const links: CladeLink[] = []
+-  const visited = new Set<string>()
+-  const active = new Set<string>()
+-  let row = 0
+-  let maxDepth = 0
+-
+-  const visit = (id: string, depth: number): PositionedClade => {
+-    if (active.has(id)) throw new Error(`Cycle at clade ${id}`)
+-    if (visited.has(id)) throw new Error(`Clade ${id} occurs more than once`)
+-    const node = bySourceId.get(id)
+-    if (!node) throw new Error(`Unknown clade ${id}`)
+-    active.add(id)
+-    const kids = children.get(id) ?? []
+-    const isCollapsed = collapsed.has(id) && kids.length > 0
+-    const positioned: PositionedClade = {
+-      ...node,
+-      children: kids,
+-      collapsed: isCollapsed,
+-      depth,
+-      x: margin + depth * levelWidth,
+-      y: 0,
+-    }
+-    maxDepth = Math.max(maxDepth, depth)
+-
+-    if (kids.length === 0 || isCollapsed) {
+-      positioned.y = margin + row * rowHeight
+-      row += 1
+-    } else {
+-      const positionedChildren = kids.map(child => visit(child, depth + 1))
+-      positioned.y = (positionedChildren[0].y + positionedChildren[positionedChildren.length - 1].y) / 2
+-      for (const child of positionedChildren) {
+-        links.push({
+-          from: id,
+-          to: child.id,
+-          path: `M ${positioned.x} ${positioned.y} V ${child.y} H ${child.x}`,
+-          frequency: Math.max(0, Math.min(1, child.cumulative_frequency)),
+-        })
+-      }
+-    }
+-    active.delete(id)
+-    visited.add(id)
+-    byId.set(id, positioned)
+-    return positioned
+-  }
+-
+-  visit(roots[0], 0)
+-
+-  // Return visible nodes in source order so SVG keyboard navigation is predictable.
+-  const nodes = source.filter(node => byId.has(node.id)).map(node => byId.get(node.id)!)
+-  return {
+-    nodes,
+-    byId,
+-    links,
+-    rows: row,
+-    width: margin * 2 + maxDepth * levelWidth + 300,
+-    height: Math.max(margin * 2, margin * 2 + (row - 1) * rowHeight),
+-  }
+-}
+-
+-export const cumulativeRadius = (frequency: number) =>
+-  3 + 9 * Math.sqrt(Math.max(0, Math.min(1, frequency)))
+-
+-export const cumulativeStroke = (frequency: number) =>
+-  1 + 5 * Math.sqrt(Math.max(0, Math.min(1, frequency)))
+diff --git a/frontend/src/components/DifferentialPanel.tsx b/frontend/src/components/DifferentialPanel.tsx
+index f7dca8c..a455942 100644
+--- a/frontend/src/components/DifferentialPanel.tsx
++++ b/frontend/src/components/DifferentialPanel.tsx
+@@ -186,6 +186,25 @@ export function DifferentialPanel({ study, runs, option, aggregate }: {
+             replacement. A quick, robust check whose effect is a CLR difference, not a fold
+             change.
+           </li>
++          <li>
++            <strong>ancom_bc</strong>: bias-corrected log-linear model (Lin &amp; Peddada
++            2020) estimating between-group sampling-fraction shifts via an E-M Gaussian
++            mixture before two-sided Wald inference.
++          </li>
++          <li>
++            <strong>aldex2</strong>: Dirichlet Monte-Carlo CLR instances (Fernandes et al.
++            2014) with consistent-sign Welch's t-tests and standardized CLR effect sizes.
++          </li>
++          <li>
++            <strong>songbird</strong>: compositional multinomial regression with CLR-centred
++            differentials summing to zero across fitted taxa (Morton et al. 2019).
++          </li>
++          <li>
++            <strong>zinb</strong> / <strong>hurdle_nb</strong>: two-part negative-binomial
++            models separating a logistic zero/occurrence process from the count process, with
++            a 2-df joint likelihood-ratio test; use cautiously only when excess zeros are
++            supported.
++          </li>
+         </ul>
+       </details>
+ 
+diff --git a/frontend/src/components/PipelineStages.test.ts b/frontend/src/components/PipelineStages.test.ts
+index 2c46743..a4931dd 100644
+--- a/frontend/src/components/PipelineStages.test.ts
++++ b/frontend/src/components/PipelineStages.test.ts
+@@ -8,25 +8,36 @@ test('dispersion uses the enum editor with both supported models', () => {
+   })
+ })
+ 
+-test('differential model editor exposes supported two-part NB methods', () => {
++test('differential method enum exposes all nine supported models and method-specific editors', () => {
+   expect(CONFIG_TYPES['analysis.differential.method']).toEqual({
+-    kind: 'enum', options: ['nb_glm', 'clr_welch', 'zinb', 'hurdle_nb'],
++    kind: 'enum',
++    options: [
++      'nb_glm', 'clr_welch', 'ancom_bc', 'aldex2', 'songbird',
++      'multinomial', 'dirichlet_multinomial', 'zinb', 'hurdle_nb',
++    ],
++  })
++  expect(CONFIG_TYPES['analysis.differential.dm_overdispersion_method']).toEqual({
++    kind: 'enum', options: ['mle', 'mom'],
++  })
++  expect(CONFIG_TYPES['analysis.differential.mn_penalty']).toEqual({
++    kind: 'float', min: 0, step: 0.05,
+   })
++  expect(CONFIG_TYPES['analysis.differential.max_seconds']).toEqual({
++    kind: 'float', min: 1,
++  })
++  expect(CONFIG_TYPES['analysis.differential.max_iter']).toEqual({ kind: 'int' })
++  expect(CONFIG_TYPES['analysis.differential.mc_samples']).toEqual({ kind: 'int' })
++  expect(CONFIG_DESCRIPTIONS['analysis.differential.method']).toContain('Two-part')
+ })
+ 
+ test('advanced zero handling exposes both methods, bounded delta and nullable alpha', () => {
+   expect(CONFIG_TYPES['analysis.differential.replacement_method']).toEqual({
+     kind: 'enum', options: ['bayesian_multiplicative', 'multiplicative_replacement'],
+   })
+-  expect(CONFIG_TYPES['analysis.differential.replacement_delta']).toMatchObject({ kind: 'float', step: 0.05 })
+-  expect(CONFIG_TYPES['analysis.differential.bayesian_alpha']).toMatchObject({ kind: 'float', nullable: true })
+-  expect(CONFIG_DESCRIPTIONS['analysis.differential.replacement_method']).toContain('every replacement is biased')
+-  expect(CONFIG_DESCRIPTIONS['analysis.differential.bayesian_alpha']).toContain('no posterior draws')
+-})
+-
+-test('differential method enum lists exactly the methods accepted by the backend', () => {
+-  expect(CONFIG_TYPES['analysis.differential.method']).toEqual({
+-    kind: 'enum',
+-    options: ['nb_glm', 'clr_welch', 'zinb', 'hurdle_nb'],
++  expect(CONFIG_TYPES['analysis.differential.replacement_delta']).toEqual({
++    kind: 'float', min: 0, max: 1, step: 0.05,
++  })
++  expect(CONFIG_TYPES['analysis.differential.bayesian_alpha']).toEqual({
++    kind: 'float', nullable: true, min: 0, step: 0.1,
+   })
+ })
+diff --git a/frontend/src/components/PipelineStages.tsx b/frontend/src/components/PipelineStages.tsx
+index f26198b..1d43e8b 100644
+--- a/frontend/src/components/PipelineStages.tsx
++++ b/frontend/src/components/PipelineStages.tsx
+@@ -150,13 +150,20 @@ export const CONFIG_DESCRIPTIONS: Record<string, string> = {
+   'analysis.alpha.rarefaction_iterations': 'rarefy draws averaged for each alpha diversity value.',
+   'analysis.beta.normalisation':  'Preparation before the Bray-Curtis dissimilarity used by NMDS and PERMANOVA: hellinger (square root of relative abundances), none, rarefy or srs.',
+   'analysis.beta.depth':          'Reads per sample for rarefy or srs; 0 uses the smallest non-empty sample.',
+-  'analysis.differential.method': 'Model per taxon: nb_glm (negative-binomial GLM); clr_welch (Welch test on CLR values after configured zero replacement); zinb (zero-inflated negative binomial); hurdle_nb (logistic zero process plus zero-truncated negative binomial). Two-part NB p-values jointly test group effects in both processes; use only with evidence for excess zeros and interpret cautiously.',
++  'analysis.differential.method': 'Model fitted across conditions: nb_glm (negative-binomial GLM on read counts), clr_welch (Welch\'s t-test on centred log-ratios after cmultRepl zero replacement), ancom_bc (Lin & Peddada 2020 bias-corrected log2 fold change), aldex2 (Dirichlet Monte-Carlo CLR instances with consistent-sign Welch\'s t-test), songbird (CLR-centred compositional multinomial differentials), multinomial or dirichlet_multinomial (joint reference-taxon log-ratio models), zinb (zero-inflated negative binomial), or hurdle_nb (logistic occurrence plus zero-truncated negative binomial). Two-part NB p-values jointly test group effects in both processes; use only with evidence for excess zeros and interpret cautiously.',
+   'analysis.differential.offset': 'Library-size offset in the count component of nb_glm, zinb and hurdle_nb: tss (total reads per sample) or rle (median-of-ratios over taxa present in every sample; refused when there are none).',
+-  'analysis.differential.dispersion': 'nb_glm only: ml estimates theta separately with MASS::glm.nb; glmGamPoi uses a cross-taxon dispersion trend in fixed-scale negative-binomial Wald fits.',
+-  'analysis.differential.min_prevalence': 'Fraction of samples, 0 to 1, in which a taxon must have reads to be tested; taxa below it are listed as filtered.',
++  'analysis.differential.dispersion': 'nb_glm only: ml estimates theta separately with MASS::glm.nb; glmGamPoi (Ahlmann-Eltze & Huber 2020) uses a cross-taxon dispersion trend in fixed-scale negative-binomial Wald fits.',
++  'analysis.differential.min_prevalence': 'Fraction of samples, 0 to 1, in which a taxon must have reads to be tested; taxa below it are listed as filtered. Filtering before replacement limits imputed mass on sparse tables.',
+   'analysis.differential.replacement_method': 'clr_welch only: bayesian_multiplicative uses cmultRepl GBM posterior estimates (Martín-Fernández et al. 2015); multiplicative_replacement uses CZM (Martín-Fernández et al. 2003). Both preserve observed-part ratios, but every replacement is biased. For sparse data consider NB on raw counts, prevalence filtering, occupancy or zero-inflated models instead.',
+   'analysis.differential.replacement_delta': "clr_welch only: cmultRepl frac, strictly between 0 and 1. CZM starts at delta × 0.5/sample total; either method caps high imputations at delta × the taxon's smallest observed proportion. Below 0.01 or at least 0.9 warns. Do not tune delta for significance; every replacement is biased.",
+   'analysis.differential.bayesian_alpha': "Bayesian replacement only: null uses GBM's estimated Dirichlet concentration; a positive number uses that concentration with the same leave-one-out prior mean. The posterior parameters are recorded; no posterior draws are generated. Larger alpha gives the prior more weight.",
++  'analysis.differential.mn_reference_taxon': 'multinomial and dirichlet_multinomial only: the taxon whose log-odds are the denominator of every reported log ratio; empty picks the most abundant fitted taxon. It must have reads in at least half the samples.',
++  'analysis.differential.mn_penalty': 'multinomial and dirichlet_multinomial only: L2 (ridge) penalty on the log-odds coefficients, 0 for maximum likelihood.',
++  'analysis.differential.dm_overdispersion_method': 'dirichlet_multinomial only: mle alternates the profile-likelihood Dirichlet concentration with the coefficients; mom takes one method-of-moments estimate from the multinomial composition.',
++  'analysis.differential.max_iter': 'multinomial and dirichlet_multinomial only: Newton iteration cap for one fit; a fit that stops at the cap is refused rather than reported.',
++  'analysis.differential.tolerance': 'multinomial and dirichlet_multinomial only: convergence tolerance, as the largest coefficient update relative to the size of the coefficients.',
++  'analysis.differential.max_seconds': 'multinomial and dirichlet_multinomial only: wall-clock budget in seconds for one fit; exceeding it fails with an explicit error instead of holding the request open.',
++  'analysis.differential.mc_samples': 'aldex2 only: number of Dirichlet(count + 0.5) Monte-Carlo instances drawn per sample (whole number in [16, 4096]; seeded by the study\'s top-level seed).',
+   'analysis.alpha.show_points':   'Show individual samples overlaid on alpha comparison boxplots.',
+   'analysis.alpha.annotate_significance': 'Annotate alpha comparison panels with Kruskal-Wallis significance.',
+   'analysis.alpha.pairwise_brackets': 'Run BH-adjusted pairwise Wilcoxon rank-sum tests between every group pair and draw brackets, including n.s. results.',
+@@ -253,13 +260,24 @@ export const CONFIG_TYPES: Record<string, ConfigType> = {
+   'analysis.alpha.rarefaction_iterations': { kind: 'int' },
+   'analysis.beta.normalisation':  { kind: 'enum', options: ['hellinger', 'none', 'rarefy', 'srs'] },
+   'analysis.beta.depth':          { kind: 'int' },
+-  'analysis.differential.method': { kind: 'enum', options: ['nb_glm', 'clr_welch', 'zinb', 'hurdle_nb'] },
++  'analysis.differential.method': {
++    kind: 'enum',
++    options: [
++      'nb_glm', 'clr_welch', 'ancom_bc', 'aldex2', 'songbird',
++      'multinomial', 'dirichlet_multinomial', 'zinb', 'hurdle_nb',
++    ],
++  },
+   'analysis.differential.offset': { kind: 'enum', options: ['tss', 'rle'] },
+   'analysis.differential.dispersion': { kind: 'enum', options: ['ml', 'glmGamPoi'] },
+   'analysis.differential.min_prevalence': { kind: 'float', min: 0, max: 1, step: 0.05 },
+   'analysis.differential.replacement_method': { kind: 'enum', options: ['bayesian_multiplicative', 'multiplicative_replacement'] },
+   'analysis.differential.replacement_delta': { kind: 'float', min: 0, max: 1, step: 0.05 },
+   'analysis.differential.bayesian_alpha': { kind: 'float', nullable: true, min: 0, step: 0.1 },
++  'analysis.differential.mn_penalty': { kind: 'float', min: 0, step: 0.05 },
++  'analysis.differential.dm_overdispersion_method': { kind: 'enum', options: ['mle', 'mom'] },
++  'analysis.differential.max_iter': { kind: 'int' },
++  'analysis.differential.tolerance': { kind: 'float' },
++  'analysis.differential.max_seconds': { kind: 'float', min: 1 },
+   'analysis.differential.mc_samples': { kind: 'int' },
+   'analysis.alpha.show_points':   { kind: 'boolean' },
+   'analysis.alpha.annotate_significance': { kind: 'boolean' },
+diff --git a/frontend/src/components/differentialTable.ts b/frontend/src/components/differentialTable.ts
+index fd4b398..0d83de6 100644
+--- a/frontend/src/components/differentialTable.ts
++++ b/frontend/src/components/differentialTable.ts
+@@ -46,48 +46,37 @@ export function formatStat(value: number | null): string {
+  */
+ export function configLine(result: DifferentialResult): string {
+   const c = result.config
+-
+-  if (c.method === 'multinomial' || c.method === 'dirichlet_multinomial') {
+-    const settings = [`method ${c.method}`]
+-    if (c.method === 'dirichlet_multinomial' && c.dm_overdispersion_method)
+-      settings.push(`overdispersion ${c.dm_overdispersion_method}`)
+-    if (c.mn_reference_taxon) settings.push(`reference ${c.mn_reference_taxon}`)
+-    if (c.mn_penalty !== undefined) settings.push(`penalty ${c.mn_penalty}`)
+-    settings.push(`min_prevalence ${c.min_prevalence}`)
+-    return `${settings.join(', ')}; estimates are log2 fold changes against the reference taxon`
+-  }
+-
+-  if (c.method === 'clr_welch') {
+-    const replacement = c.replacement_method ?? 'bayesian_multiplicative'
+-    const settings = [
+-      `method clr_welch`,
+-      `replacement_method ${replacement}`,
+-      `replacement_delta ${c.replacement_delta}`,
+-    ]
+-    // CZM has no Bayesian concentration parameter; do not claim one was used.
+-    if (replacement === 'bayesian_multiplicative') {
+-      const alpha = c.bayesian_alpha === null || c.bayesian_alpha === undefined
+-        ? 'estimated' : String(c.bayesian_alpha)
+-      settings.push(`bayesian_alpha ${alpha}`)
++  switch (c.method) {
++    case 'multinomial':
++    case 'dirichlet_multinomial': {
++      const overdispersion = c.method === 'dirichlet_multinomial'
++        ? `, overdispersion ${c.dm_overdispersion_method}`
++        : ''
++      return `method ${c.method}${overdispersion}, reference ${c.mn_reference_taxon}, ` +
++        `penalty ${c.mn_penalty}, min_prevalence ${c.min_prevalence}; estimates are ` +
++        'log2 fold changes against the reference taxon'
++    }
++    case 'clr_welch': {
++      const replacement = c.replacement_method ?? 'bayesian_multiplicative'
++      const alpha = replacement === 'bayesian_multiplicative'
++        ? `, bayesian_alpha ${c.bayesian_alpha === null || c.bayesian_alpha === undefined
++          ? 'estimated' : String(c.bayesian_alpha)}`
++        : ''
++      return `method clr_welch, replacement_method ${replacement}, replacement_delta ${c.replacement_delta}` +
++        `${alpha}, min_prevalence ${c.min_prevalence}; estimate is a CLR difference, not a fold change`
+     }
+-    settings.push(`min_prevalence ${c.min_prevalence}`)
+-    return `${settings.join(', ')}; estimate is a CLR difference, not a fold change`
++    case 'ancom_bc':
++      return `method ancom_bc, min_prevalence ${c.min_prevalence}; effect is bias-corrected log2 fold change (Lin & Peddada 2020)`
++    case 'aldex2':
++      return `method aldex2, mc_samples ${c.mc_samples}, seed ${c.seed}, min_prevalence ${c.min_prevalence}; estimate is an ALDEx2 standardized CLR effect size, not a fold change`
++    case 'songbird':
++      return `method songbird, min_prevalence ${c.min_prevalence}; estimate is a CLR-centred multinomial differential, not an absolute fold change`
++    case 'zinb':
++    case 'hurdle_nb':
++    case 'nb_glm':
++    default:
++      return `method ${c.method}, offset ${c.offset}, min_prevalence ${c.min_prevalence}`
+   }
+-
+-  if (c.method === 'ancom_bc')
+-    return `method ancom_bc, min_prevalence ${c.min_prevalence}; effect is bias-corrected log2 fold change (Lin & Peddada 2020)`
+-
+-  if (c.method === 'aldex2')
+-    return `method aldex2, mc_samples ${c.mc_samples}, seed ${c.seed}, min_prevalence ${c.min_prevalence}; estimate is an ALDEx2 standardized CLR effect size, not a fold change`
+-
+-  if (c.method === 'songbird')
+-    return `method songbird, min_prevalence ${c.min_prevalence}; estimate is a CLR-centred multinomial differential, not an absolute fold change`
+-
+-  const settings = [`method ${c.method}`]
+-  if (c.offset !== undefined) settings.push(`offset ${c.offset}`)
+-  if (c.method === 'nb_glm' && c.dispersion !== undefined) settings.push(`dispersion ${c.dispersion}`)
+-  settings.push(`min_prevalence ${c.min_prevalence}`)
+-  return settings.join(', ')
+ }
+ 
+ /** The effect size of one row, from the field the result names in `effect`. */
+diff --git a/frontend/src/views/StudyView.tsx b/frontend/src/views/StudyView.tsx
+index 553d948..7c1ea6a 100644
+--- a/frontend/src/views/StudyView.tsx
++++ b/frontend/src/views/StudyView.tsx
+@@ -15,14 +15,13 @@ import { ConfigAccordion } from '../components/ConfigAccordion'
+ import { TreesPanel } from '../components/TreesPanel'
+ import { PlacementPanel } from '../components/PlacementPanel'
+ import { EvidenceModeToggle } from '../components/EvidenceModeToggle'
+-import { CladeCumulusPanel as EvidenceCladeCumulusPanel } from '../components/CladeCumulusPanel'
++import { CladeCumulusPanel } from '../components/CladeCumulusPanel'
+ import { ReportPanel } from '../components/ReportPanel'
+ import { useNavRefresh } from '../hooks/useNavRefresh'
+-import { CladeCumulusPanel } from '../cladistics/CladeCumulusPanel'
+ 
+ type GroupedRun = Run & { group?: string | null }
+ 
+-const VIEWS = ['runs', 'analysis-dada2', 'analysis-vsearch', 'cladistics', 'trees', 'report', 'config'] as const
++const VIEWS = ['runs', 'analysis-dada2', 'analysis-vsearch', 'trees', 'report', 'config'] as const
+ type StudyTab = (typeof VIEWS)[number]
+ 
+ type Dialog =
+@@ -95,7 +94,6 @@ export function StudyView() {
+     ...(runs ?? []).map(r => ({ run: r.name, group: null, subgroups: r.pooled ? r.subgroups : [] })),
+     ...groupRuns.map(r => ({ run: r.name, group: r.group ?? null, subgroups: r.pooled ? r.subgroups : [] })),
+   ], [runs, groupRuns])
+-  const cladisticsRuns = useMemo(() => placementRuns.map(r => ({ run: r.run, group: r.group })), [placementRuns])
+   const [treesVersion, setTreesVersion] = useState(0)
+ 
+   const jobFilter = useMemo(() => ({ study: study! }), [study])
+@@ -216,7 +214,7 @@ export function StudyView() {
+             disabled={v.startsWith('analysis') && !hasSource(v === 'analysis-dada2' ? 'DADA2' : 'VSEARCH')}
+             title={v.startsWith('analysis') && !hasSource(v === 'analysis-dada2' ? 'DADA2' : 'VSEARCH')
+               ? `No run has a results table with ${v === 'analysis-dada2' ? 'DADA2' : 'VSEARCH'} taxonomy yet` : undefined}>
+-            {v === 'runs' ? 'Runs & Groups' : v === 'analysis-dada2' ? 'DADA2 analysis' : v === 'analysis-vsearch' ? 'VSEARCH analysis' : v === 'cladistics' ? 'Cladistics' : v === 'trees' ? 'Trees' : v === 'report' ? 'Report' : 'Config'}
++            {v === 'runs' ? 'Runs & Groups' : v === 'analysis-dada2' ? 'DADA2 analysis' : v === 'analysis-vsearch' ? 'VSEARCH analysis' : v === 'trees' ? 'Trees' : v === 'report' ? 'Report' : 'Config'}
+           </button>
+         ))}
+       </div>
+@@ -300,11 +298,9 @@ export function StudyView() {
+             source={analysisSource} />
+         : <p className="empty-state">No run has a results table with {analysisSource} taxonomy yet.</p>)}
+ 
+-      {view === 'cladistics' && <CladeCumulusPanel key={study} study={study!} runs={cladisticsRuns} />}
+-
+       {view === 'trees' && <>
+         <EvidenceModeToggle enabled={evidenceMode} onChange={setEvidenceMode} />
+-        {evidenceMode && <EvidenceCladeCumulusPanel study={study!} runs={placementRuns} />}
++        {evidenceMode && <CladeCumulusPanel study={study!} runs={placementRuns} />}
+         <PlacementPanel study={study!} runs={placementRuns} onPublished={() => setTreesVersion(v => v + 1)} />
+         <TreesPanel key={treesVersion} study={study!} />
+       </>}
+diff --git a/src/MetaManifold.jl b/src/MetaManifold.jl
+index 96451b6..0371c67 100644
+--- a/src/MetaManifold.jl
++++ b/src/MetaManifold.jl
+@@ -44,7 +44,7 @@ include("canonical.jl")
+ include("analysis/clade_cumulus.jl")
+ include("analysis/diversity.jl")
+ include("analysis/analysis.jl")
+-include("analysis/clade_cumulus.jl")
++include("analysis/compositional.jl")
+ include("analysis/differential.jl")
+ # Opt-in validated descriptive statistics (issue #1). Ordinary workflows above
+ # remain unchanged; these modes must be selected explicitly.
+diff --git a/src/analysis/differential.jl b/src/analysis/differential.jl
+index a1df0e0..a982d16 100644
+--- a/src/analysis/differential.jl
++++ b/src/analysis/differential.jl
+@@ -37,14 +37,19 @@ using ..CompositionalModels: CompositionalFit, CompositionalRefusal, RuntimeRefu
+        DM_METHODS, CONCENTRATION_MIN, CONCENTRATION_MAX, fit_multinomial,
+        fit_dirichlet_multinomial
+ export DifferentialConfig, ScalingRefusal, MASSUnavailable, ZCompositionsUnavailable,
+-       GlmGamPoiUnavailable, RStatsUnavailable, OFFSET_METHODS, METHODS, DISPERSIONS,
++       GlmGamPoiUnavailable, RStatsUnavailable, CompositionalRefusal, RuntimeRefusal,
++       OFFSET_METHODS, METHODS, COMPOSITIONAL_METHODS, DM_METHODS, DISPERSIONS,
+        REPLACEMENT_METHODS, MIN_MC_SAMPLES, MAX_MC_SAMPLES, DEFAULT_MC_SAMPLES,
+        tss_factors, rle_factors, size_factors, bh_adjust, validate_counts, replace_zeros,
+        clr_transform, fit_nb, fit_two_part_nb, fit_occupancy, fit_welch,
++       fit_ancom_bc, fit_aldex2, fit_songbird,
+        differential_abundance, volcano_chart
+ 
+-# Methods accepted under `analysis.differential.method`.
+-const METHODS = ("nb_glm", "clr_welch", "zinb", "hurdle_nb")
++# Methods accepted under `analysis.differential.method`. `COMPOSITIONAL_METHODS`
++# names the two reference-taxon joint multinomial models (`CompositionalModels`).
++const COMPOSITIONAL_METHODS = ("multinomial", "dirichlet_multinomial")
++const METHODS = ("nb_glm", "clr_welch", "ancom_bc", "aldex2", "songbird",
++                 COMPOSITIONAL_METHODS..., "zinb", "hurdle_nb")
+ 
+ # The per-taxon dispersion `nb_glm` uses: maximum likelihood (MASS::glm.nb's
+ # own theta) or glmGamPoi's shrinkage estimator, which shares information
+@@ -74,6 +79,13 @@ const MAX_MC_SAMPLES = 4096
+ const DEFAULT_MC_SAMPLES = 128
+ const DEFAULT_DA_SEED = 123
+ 
++# Optimiser defaults for the two multinomial models, repeated here so the file
++# documents every setting it validates; the values must match
++# CompositionalModels.DEFAULT_* (asserted in the unit tests).
++const COMPOSITIONAL_MAX_ITER    = 500
++const COMPOSITIONAL_TOL         = 1e-8
++const COMPOSITIONAL_MAX_SECONDS = 300.0
++
+ # Canonicalise and validate a public replacement-method name in one place, so
+ # direct library calls and YAML configuration have identical semantics.
+ function _replacement_method(method::AbstractString)
+@@ -88,12 +100,17 @@ end
+     DifferentialConfig(offset="tss", min_prevalence=0.0; method="nb_glm",
+                        replacement_delta=0.65, dispersion="ml",
+                        replacement_method="bayesian_multiplicative",
+-                       bayesian_alpha=nothing, mc_samples=128)
++                       bayesian_alpha=nothing, mc_samples=128,
++                       mn_reference_taxon=nothing, mn_penalty=0.0,
++                       dm_overdispersion_method="mle", max_iter=500, tol=1e-8,
++                       max_seconds=300.0)
+ 
+ Settings for one differential abundance analysis, read from
+ `analysis.differential` in the pipeline config. `method` is one of `"nb_glm"`,
+-`"clr_welch"`, `"ancom_bc"`, `"aldex2"` or `"songbird"`. `offset` names the
+-size factor method (`"tss"` or `"rle"`) and is used by `nb_glm` only.
++`"clr_welch"`, `"ancom_bc"`, `"aldex2"`, `"songbird"`, `"multinomial"`,
++`"dirichlet_multinomial"`, `"zinb"` or `"hurdle_nb"`. `offset` names the
++size factor method (`"tss"` or `"rle"`) and is used by `nb_glm`, `zinb` and
++`hurdle_nb`.
+ `min_prevalence` is the fraction of samples, in [0, 1], in which a taxon must
+ have at least one read to be tested. `replacement_delta`, in (0, 1), is the
+ `frac` passed to `zCompositions::cmultRepl` by `clr_welch`.
+@@ -109,6 +126,10 @@ coefficient with fixed scale 1; `"glmGamPoi"` is refused outside `nb_glm`. `zinb
+ fit a zero-process and negative-binomial count process per taxon, then use a 2-df likelihood-ratio
+ test for the group effect in both processes. Their count-component fold change is reported; the zero
+ process effect remains in diagnostics.
++`mc_samples`, a whole number in [`MIN_MC_SAMPLES`, `MAX_MC_SAMPLES`], sets the
++number of Dirichlet Monte-Carlo instances drawn per sample by `aldex2`.
++`mn_reference_taxon`, `mn_penalty`, `dm_overdispersion_method`, `max_iter`,
++`tol` and `max_seconds` configure `multinomial` and `dirichlet_multinomial`.
+ The trend is plugged into an NB Wald model; its estimation uncertainty is not
+ propagated. This option does not implement glmGamPoi's quasi-likelihood test.
+ Method and offset names are stripped and lowercased; dispersion names are
+@@ -118,21 +139,33 @@ method and dispersion choices, or non-finite or out-of-range fractions,
+ including settings unused by the selected method.
+ """
+ struct DifferentialConfig
+-    method             :: String
+-    offset             :: String
+-    min_prevalence     :: Float64
+-    replacement_delta  :: Float64
+-    dispersion         :: String
+-    replacement_method :: String
+-    bayesian_alpha     :: Union{Float64,Nothing}
+-    mc_samples         :: Int
++    method                   :: String
++    offset                   :: String
++    min_prevalence           :: Float64
++    replacement_delta        :: Float64
++    dispersion               :: String
++    replacement_method       :: String
++    bayesian_alpha           :: Union{Float64,Nothing}
++    mc_samples               :: Int
++    mn_reference_taxon       :: Union{Nothing,String}
++    mn_penalty               :: Float64
++    dm_overdispersion_method :: String
++    max_iter                 :: Int
++    tol                      :: Float64
++    max_seconds              :: Float64
+     function DifferentialConfig(offset::AbstractString="tss", min_prevalence::Real=0.0;
+                                 method::AbstractString="nb_glm",
+                                 replacement_delta::Real=DEFAULT_DELTA,
+                                 dispersion::AbstractString="ml",
+                                 replacement_method::AbstractString="bayesian_multiplicative",
+                                 bayesian_alpha::Union{Real,Nothing}=nothing,
+-                                mc_samples::Real=DEFAULT_MC_SAMPLES)
++                                mc_samples::Real=DEFAULT_MC_SAMPLES,
++                                mn_reference_taxon::Union{Nothing,AbstractString}=nothing,
++                                mn_penalty::Real=0.0,
++                                dm_overdispersion_method::AbstractString="mle",
++                                max_iter::Integer=COMPOSITIONAL_MAX_ITER,
++                                tol::Real=COMPOSITIONAL_TOL,
++                                max_seconds::Real=COMPOSITIONAL_MAX_SECONDS)
+         m = lowercase(strip(String(method)))
+         m in METHODS || throw(ArgumentError(
+             "analysis.differential.method must be one of $(join(METHODS, ", ")), not '$method'"))
+@@ -188,7 +221,9 @@ struct DifferentialConfig
+             "analysis.differential.mc_samples must be a whole number in " *
+             "[$MIN_MC_SAMPLES, $MAX_MC_SAMPLES], not $mc_samples"))
+         a = isnothing(bayesian_alpha) ? nothing : Float64(bayesian_alpha)
+-        new(m, o, Float64(min_prevalence), Float64(replacement_delta), d, r, a, Int(mc_samples))
++        new(m, o, Float64(min_prevalence), Float64(replacement_delta), d, r, a,
++            Int(mc_samples), ref, Float64(mn_penalty), dm, Int(max_iter),
++            Float64(tol), Float64(max_seconds))
+     end
+ end
+ 
+@@ -2134,7 +2169,253 @@ function differential_abundance(counts::AbstractMatrix{<:Real},
+                                     for (i, s) in enumerate(replaced.posterior.concentration)])
+         end
+         diagnostics["zero_replacement"] = zero_diagnostics
+-    else
++    elseif config.method in COMPOSITIONAL_METHODS
++        tested = findall(>=(config.min_prevalence), prevalence)
++        separated = Int[]
++        for j in tested
++            absent = [lvl for lvl in levels
++                      if all(i -> counts[i, j] == 0, findall(==(lvl), groups))]
++            if !isempty(absent)
++                push!(separated, j)
++                rows[j]["status"] = "failed"
++                rows[j]["note"] = "no reads in any '$(absent[1])' sample (complete " *
++                    "separation): the log fold change against the reference is unbounded, " *
++                    "so the taxon is left out of the composition"
++            end
++        end
++        tested = [j for j in tested if !(j in separated)]
++        isempty(tested) && throw(ArgumentError(
++            "no taxon passes analysis.differential.min_prevalence = $(config.min_prevalence) " *
++            "and has reads in both '$reference' and '$contrast' samples, so there is no " *
++            "composition to model; raise analysis.differential.min_prevalence or use " *
++            "method nb_glm"))
++
++        ref_name = config.mn_reference_taxon
++        ref_pos = 0
++        if isnothing(ref_name)
++            totals = [sum(view(counts, :, j)) for j in tested]
++            ref_pos = argmax(totals)
++            ref_name = String(taxa[tested[ref_pos]])
++        else
++            j = findfirst(==(ref_name), taxa)
++            isnothing(j) && throw(ArgumentError(
++                "analysis.differential.mn_reference_taxon = '$(ref_name)' is not a taxon " *
++                "at this rank"))
++            pos = findfirst(==(j), tested)
++            isnothing(pos) && throw(ArgumentError(
++                "the reference taxon '$(ref_name)' is not fitted: it has reads in " *
++                "$(count(>(0), view(counts, :, j))) of $n samples, below " *
++                "analysis.differential.min_prevalence = $(config.min_prevalence), or no " *
++                "reads in one group. Choose another reference taxon, or lower min_prevalence"))
++            ref_pos = pos
++        end
++        ref_prevalence = prevalence[tested[ref_pos]]
++        ref_prevalence >= 0.5 || throw(ArgumentError(
++            "the reference taxon '$(ref_name)' has reads in only " *
++            "$(round(Int, ref_prevalence * n)) of $n samples; the log ratios it anchors " *
++            "would be unstable. Choose a reference present in at least half the samples " *
++            "(analysis.differential.mn_reference_taxon), or use method nb_glm or clr_welch"))
++
++        design = Matrix{Float64}(undef, n, 2)
++        for i in 1:n
++            design[i, 1] = 1.0
++            design[i, 2] = groups[i] == contrast ? 1.0 : 0.0
++        end
++        sub = Matrix{Int}(counts[:, tested])
++        started = time()
++        fit = config.method == "multinomial" ?
++            fit_multinomial(sub, design; reference=ref_pos, penalty=config.mn_penalty,
++                            max_iter=config.max_iter, tol=config.tol,
++                            max_seconds=config.max_seconds) :
++            fit_dirichlet_multinomial(sub, design; reference=ref_pos, penalty=config.mn_penalty,
++                                      overdispersion_method=config.dm_overdispersion_method,
++                                      max_iter=config.max_iter, tol=config.tol,
++                                      max_seconds=config.max_seconds)
++        elapsed = time() - started
++        fit.converged || throw(CompositionalRefusal(
++            "the $(config.method == "multinomial" ? "multinomial" : "Dirichlet-multinomial") " *
++            "fit did not converge in $(config.max_iter) Newton steps on $(length(tested)) taxa; " *
++            "raise analysis.differential.max_iter, raise min_prevalence so fewer taxa are " *
++            "fitted, or analyse a coarser taxonomic rank"))
++        c = fit.concentration
++        at_bound = config.method == "dirichlet_multinomial" &&
++                   !(c > CONCENTRATION_MIN * (1 + 1e-6) && c < CONCENTRATION_MAX * (1 - 1e-6))
++        boundary_note = c >= CONCENTRATION_MAX * (1 - 1e-6) ?
++            "the Dirichlet concentration reached its upper bound: no overdispersion is " *
++            "detectable, so the model is effectively multinomial" :
++            "the Dirichlet concentration reached its lower bound: the composition is nearly " *
++            "degenerate and the standard errors are not trustworthy"
++        for (l, j) in enumerate(tested)
++            if l == ref_pos
++                rows[j]["status"] = "reference"
++                rows[j]["note"] = "reference taxon: the denominator of every log ratio; its " *
++                    "coefficient is fixed at zero, so it carries no test"
++                rows[j]["estimate"] = 0.0
++                rows[j]["log2_fold_change"] = 0.0
++                continue
++            end
++            k = l < ref_pos ? l : l - 1
++            est = fit.coefficients[k, 2]
++            se = fit.standard_errors[k, 2]
++            zz = fit.statistic[k, 2]
++            pv = fit.pvalue[k, 2]
++            if isnan(est) || isnan(se) || isnan(pv)
++                rows[j]["status"] = "failed"
++                rows[j]["note"] = "the fit returned a non-finite estimate or standard error"
++                continue
++            end
++            merge!(rows[j], Dict{String,Any}(
++                "status" => at_bound ? "boundary" : "ok",
++                "note" => at_bound ? boundary_note : "",
++                "estimate" => est,
++                "log2_fold_change" => est / log(2),
++                "standard_error" => se, "statistic" => zz, "pvalue" => pv,
++                "dispersion_theta" => nothing))
++        end
++        model = config.method == "multinomial" ? "multinomial logistic" :
++                "Dirichlet-multinomial"
++        method_text = "$model regression over $(length(tested)) taxa with " *
++            "'$(ref_name)' as the reference taxon (softmax link, each sample's read " *
++            "composition, no size factor and no zero replacement); " *
++            (config.method == "multinomial" ?
++             "Wald test of the group coefficient from the observed information, with a " *
++             "ridge penalty of $(config.mn_penalty); " :
++             "concentration estimated by $(uppercase(config.dm_overdispersion_method)), " *
++             "theta = $(round(fit.overdispersion; sigdigits=3)), Wald test of the group " *
++             "coefficient from the observed information; ") *
++            "Benjamini-Hochberg adjustment over the fitted taxa. Estimates are log fold " *
++            "changes in relative abundance against '$(ref_name)' (a log ratio of two taxa, " *
++            "so coherent under compositionality): " *
++            (config.method == "multinomial" ?
++             "Songbird's model, Morton et al. 2019" :
++             "La Rosa et al. 2012 for the Dirichlet-multinomial")
++        effect = Dict("key" => "log2_fold_change",
++                      "label" => "log2 fold change vs $(ref_name)")
++        size_factor_rows = Dict{String,Any}[]
++        config_echo = Dict{String,Any}("method" => config.method,
++                                       "min_prevalence" => config.min_prevalence,
++                                       "mn_reference_taxon" => ref_name,
++                                       "mn_penalty" => config.mn_penalty,
++                                       "tolerance" => config.tol,
++                                       "max_iter" => config.max_iter,
++                                       "max_seconds" => config.max_seconds)
++        config.method == "dirichlet_multinomial" &&
++            (config_echo["dm_overdispersion_method"] = config.dm_overdispersion_method)
++        diagnostics["model"] = Dict{String,Any}(
++            "reference_taxon" => ref_name, "penalty" => config.mn_penalty,
++            "n_parameters" => fit.n_parameters, "iterations" => fit.iterations,
++            "converged" => fit.converged, "log_likelihood" => fit.loglik,
++            "runtime_seconds" => elapsed, "n_taxa_fitted" => length(tested))
++        if config.method == "dirichlet_multinomial"
++            diagnostics["overdispersion"] = Dict{String,Any}(
++                "method" => config.dm_overdispersion_method,
++                "concentration" => c, "theta" => fit.overdispersion,
++                "at_bound" => at_bound)
++        end
++    elseif config.method == "ancom_bc"
++        (n_ref >= 2 && n_con >= 2) || throw(ArgumentError(
++            "ANCOM-BC needs at least 2 samples in each group to estimate within-group variance; " *
++            "'$reference' has $n_ref and '$contrast' has $n_con"))
++        for j in findall(==(0), present)
++            rows[j]["note"] = "no reads in any sample of either group, so it is not part of the composition"
++        end
++        tested = findall(j -> present[j] > 0 && prevalence[j] >= config.min_prevalence, axes(counts, 2))
++        length(tested) >= 3 || throw(ArgumentError(
++            "ancom_bc needs at least 3 taxa with reads at or above " *
++            "analysis.differential.min_prevalence = $(config.min_prevalence) to separate " *
++            "sampling-fraction bias from taxon effects; there are $(length(tested))"))
++        bc = fit_ancom_bc(counts[:, tested], groups; levels, samples)
++        for (k, j) in enumerate(tested)
++            f = bc.table[k, :]
++            merge!(rows[j], Dict{String,Any}(
++                "status" => f.status, "note" => f.note, "estimate" => f.estimate,
++                "log2_fold_change" => isnothing(f.estimate) ? nothing : f.estimate / log(2),
++                "standard_error" => f.se, "statistic" => f.statistic,
++                "pvalue" => f.pvalue))
++        end
++        method_text = "ANCOM-BC bias-corrected log-linear model (Lin & Peddada 2020) over the taxa " *
++                      "passing min_prevalence: within-group sample offsets and between-group " *
++                      "sampling-fraction bias estimated via an E-M Gaussian mixture on log(counts + 1), " *
++                      "with bias variance propagated into two-sided Wald tests and Benjamini-Hochberg " *
++                      "adjustment over the fitted taxa. Assumes fewer than half of the tested taxa " *
++                      "are differentially abundant"
++        effect = Dict("key" => "log2_fold_change", "label" => "Bias-corrected log2 FC")
++        size_factor_rows = Dict{String,Any}[]
++        config_echo = Dict{String,Any}("method" => config.method,
++                                       "min_prevalence" => config.min_prevalence)
++        diagnostics["ancom_bc"] = merge(bc.diagnostics, Dict{String,Any}(
++            "n_taxa_in_composition" => length(tested),
++            "n_taxa_unobserved" => count(==(0), present)))
++    elseif config.method == "aldex2"
++        (n_ref >= 2 && n_con >= 2) || throw(ArgumentError(
++            "ALDEx2 needs at least 2 samples in each group to estimate within-group variance; " *
++            "'$reference' has $n_ref and '$contrast' has $n_con"))
++        for j in findall(==(0), present)
++            rows[j]["note"] = "no reads in any sample of either group, so it is not part of the composition"
++        end
++        tested = findall(j -> present[j] > 0 && prevalence[j] >= config.min_prevalence, axes(counts, 2))
++        length(tested) >= 2 || throw(ArgumentError(
++            "ALDEx2 needs at least 2 taxa with reads at or above " *
++            "analysis.differential.min_prevalence = $(config.min_prevalence); there are $(length(tested))"))
++        ax = fit_aldex2(counts[:, tested], groups; levels, samples,
++                        mc_samples=config.mc_samples, seed=Int(seed))
++        for (k, j) in enumerate(tested)
++            f = ax.table[k, :]
++            merge!(rows[j], Dict{String,Any}(
++                "status" => f.status, "note" => f.note, "estimate" => f.estimate,
++                "standard_error" => nothing, "statistic" => f.statistic,
++                "pvalue" => f.pvalue))
++        end
++        method_text = "ALDEx2 Dirichlet(count + 0.5) Monte-Carlo CLR model (Fernandes et al. 2014; " *
++                      "$(config.mc_samples) instances, seed = $(Int(seed))) over the taxa passing " *
++                      "min_prevalence: consistent-sign posterior predictive Welch's t-test p-values " *
++                      "with Benjamini-Hochberg adjustment over the fitted taxa. Estimates are " *
++                      "standardized CLR effect sizes (between-group difference over max within-group " *
++                      "dispersion), not absolute fold changes"
++        effect = Dict("key" => "estimate", "label" => "ALDEx2 effect size")
++        size_factor_rows = Dict{String,Any}[]
++        config_echo = Dict{String,Any}("method" => config.method,
++                                       "min_prevalence" => config.min_prevalence,
++                                       "mc_samples" => config.mc_samples,
++                                       "seed" => Int(seed))
++        diagnostics["aldex2"] = merge(ax.diagnostics, Dict{String,Any}(
++            "n_taxa_in_composition" => length(tested),
++            "n_taxa_unobserved" => count(==(0), present)))
++    elseif config.method == "songbird"
++        (n_ref >= 2 && n_con >= 2) || throw(ArgumentError(
++            "songbird needs at least 2 samples in each group; " *
++            "'$reference' has $n_ref and '$contrast' has $n_con"))
++        for j in findall(==(0), present)
++            rows[j]["note"] = "no reads in any sample of either group, so it is not part of the composition"
++        end
++        tested = findall(j -> present[j] > 0 && prevalence[j] >= config.min_prevalence, axes(counts, 2))
++        length(tested) >= 2 || throw(ArgumentError(
++            "songbird needs at least 2 taxa with reads at or above " *
++            "analysis.differential.min_prevalence = $(config.min_prevalence); there are $(length(tested))"))
++        sb = fit_songbird(counts[:, tested], groups; levels, samples, taxa=taxa[tested])
++        for (k, j) in enumerate(tested)
++            f = sb.table[k, :]
++            merge!(rows[j], Dict{String,Any}(
++                "status" => f.status, "note" => f.note, "estimate" => f.estimate,
++                "standard_error" => f.se, "statistic" => f.statistic,
++                "pvalue" => f.pvalue))
++        end
++        ref_tax = something(sb.diagnostics["reference_taxon"], "none")
++        method_text = "Songbird-style compositional multinomial regression (Morton et al. 2019; " *
++                      "Zhang et al. 2017; reference taxon '$ref_tax') over the identifiable taxa " *
++                      "passing min_prevalence: CLR-centred differentials (summing to zero across " *
++                      "fitted taxa) with delta-method standard errors, two-sided Wald z-tests, and " *
++                      "Benjamini-Hochberg adjustment. Differentials are relative log-ratios, not " *
++                      "absolute fold changes, and multinomial likelihood conditions on read totals " *
++                      "without extra-multinomial overdispersion"
++        effect = Dict("key" => "estimate", "label" => "Differential (CLR log-ratio)")
++        size_factor_rows = Dict{String,Any}[]
++        config_echo = Dict{String,Any}("method" => config.method,
++                                       "min_prevalence" => config.min_prevalence)
++        diagnostics["songbird"] = merge(sb.diagnostics, Dict{String,Any}(
++            "n_taxa_in_composition" => length(tested),
++            "n_taxa_unobserved" => count(==(0), present)))
++    elseif config.method in ("zinb", "hurdle_nb")
+         factors = size_factors(counts, samples, config.offset)
+         tested = findall(>=(config.min_prevalence), prevalence)
+         fits = isempty(tested) ? nothing :
+@@ -2165,6 +2446,8 @@ function differential_abundance(counts::AbstractMatrix{<:Real},
+         diagnostics["model_warning"] = config.method == "zinb" ?
+             "Use ZINB only when diagnostics support excess zeros beyond NB; zero inflation and NB overdispersion can be difficult to distinguish." :
+             "Hurdle NB assumes every zero comes from the occurrence process and positive counts follow a zero-truncated NB."
++    else
++        throw(ArgumentError("unsupported differential method '$(config.method)'"))
+     end
+ 
+ 
+diff --git a/src/core/doi.jl b/src/core/doi.jl
+index 006b806..86efc40 100644
+--- a/src/core/doi.jl
++++ b/src/core/doi.jl
+@@ -1,8 +1,6 @@
+ # © 2026 Joshua Benjamin Jewell. All rights reserved.
+ # Licensed under the GNU Affero General Public License version 3 (AGPLv3).
+ 
+-module DOI
+-
+ # Zenodo deposition-v1 client for automated DOI minting.
+ #
+ # Publication is DISABLED by default. Opt-in requires DOI_ENABLED=true and a
+diff --git a/src/server/routes/analysis.jl b/src/server/routes/analysis.jl
+index 2e74e3c..4f5c287 100644
+--- a/src/server/routes/analysis.jl
++++ b/src/server/routes/analysis.jl
+@@ -1206,10 +1206,13 @@ raise their conversion errors.
+ """
+ function _differential_config(study::String)
+     resolved = _resolved_run_config(study, nothing, nothing, nothing)
+-    val(k, d) = something(get(get(resolved, k, (; value=d)), :value, d), d)
++    val(k, d) = let value = get(get(resolved, k, (; value=d)), :value, d)
++        isnothing(value) ? d : value
++    end
+     alpha = get(get(resolved, "analysis.differential.bayesian_alpha", (; value=nothing)), :value, nothing)
+     alpha_val = isnothing(alpha) || alpha isa Real ? alpha : throw(ArgumentError(
+         "analysis.differential.bayesian_alpha must be empty or a finite number greater than 0, not '$alpha'"))
++    reference = val("analysis.differential.mn_reference_taxon", nothing)
+     mc_raw = val("analysis.differential.mc_samples", Differential.DEFAULT_MC_SAMPLES)
+     mc_val = mc_raw isa Real ? mc_raw : throw(ArgumentError(
+         "analysis.differential.mc_samples must be a whole number in " *
+@@ -1222,7 +1225,13 @@ function _differential_config(study::String)
+                        replacement_method=String(val("analysis.differential.replacement_method",
+                                                        "bayesian_multiplicative")),
+                        bayesian_alpha=alpha_val,
+-                       mc_samples=mc_val)
++                       mc_samples=mc_val,
++                       mn_reference_taxon=isnothing(reference) ? nothing : string(reference),
++                       mn_penalty=Float64(val("analysis.differential.mn_penalty", 0.0)),
++                       dm_overdispersion_method=String(val("analysis.differential.dm_overdispersion_method", "mle")),
++                       max_iter=Int(val("analysis.differential.max_iter", 500)),
++                       tol=Float64(val("analysis.differential.tolerance", 1e-8)),
++                       max_seconds=Float64(val("analysis.differential.max_seconds", 300.0)))
+ end
+ 
+ """
+@@ -1304,6 +1313,8 @@ function _differential(study::String, body)
+         e isa ZCompositionsUnavailable && return json_error(503, "r_unavailable", sprint(showerror, e))
+         e isa GlmGamPoiUnavailable && return json_error(503, "r_unavailable", sprint(showerror, e))
+         e isa RStatsUnavailable && return json_error(503, "r_unavailable", sprint(showerror, e))
++        e isa CompositionalRefusal && return json_error(422, "model_refused", sprint(showerror, e))
++        e isa RuntimeRefusal   && return json_error(422, "runtime_budget_exceeded", sprint(showerror, e))
+         e isa ErrorException   && return json_error(422, "no_taxon_fitted", e.msg)
+         rethrow()
+     end
+diff --git a/src/server/routes/cladistics.jl b/src/server/routes/cladistics.jl
+deleted file mode 100644
+index 16d934a..0000000
+--- a/src/server/routes/cladistics.jl
++++ /dev/null
+@@ -1,330 +0,0 @@
+-# © 2026 Joshua Benjamin Jewell. All rights reserved.
+-# Licensed under the GNU Affero General Public License version 3 (AGPLv3).
+-
+-# Study-scoped de novo ASV phylogenies and their CladeCumulus analysis.
+-# Each build is an immutable directory under projects/{study}/cladistics/{id}:
+-# source document + FASTA + selected counts + the usual MAFFT/trimAl/IQ-TREE
+-# attestation + metrics pinned to the exact count and tree hashes. Rebuilding
+-# creates a new id instead of silently changing an earlier result.
+-using JSON3, SHA
+-
+-const CC = MetaManifold.CladeCumulus
+-const _CC_MAX_ASVS = 2000
+-
+-_clad_root(study::String) = joinpath(ServerState.projects_dir(), study, "cladistics")
+-_clad_dir(study::String, id::String) = joinpath(_clad_root(study), id)
+-_clad_doc_path(study::String, id::String) = joinpath(_clad_dir(study, id), "analysis.json")
+-_clad_counts_path(study::String, id::String) = joinpath(_clad_dir(study, id), "counts.json")
+-_clad_results_path(study::String, id::String) = joinpath(_clad_dir(study, id), "results.json")
+-_clad_files(study::String, id::String) = Phylo.reference_files(_clad_dir(study, id))
+-
+-function _clad_request_error(study::String, id::Union{String,Nothing}=nothing)
+-    _study_exists(study) || return json_error(404, "study_not_found", "Study '$study' not found")
+-    isnothing(id) && return nothing
+-    _valid_phylo_id(id) || return json_error(400, "invalid_id", "Cladistics analysis ids are 8 hex characters")
+-    isfile(_clad_doc_path(study, id)) ||
+-        return json_error(404, "not_found", "No Cladistics analysis '$id'")
+-    nothing
+-end
+-
+-function _clad_summary(study::String, id::String)
+-    doc = something(_read_doc(_clad_doc_path(study, id)), Dict{String,Any}())
+-    dir = _clad_dir(study, id)
+-    published = get(doc, "published", nothing)
+-    (; id,
+-       name = string(get(doc, "name", id)),
+-       created = string(get(doc, "created", "")),
+-       modified = string(get(doc, "modified", "")),
+-       asv_count = Int(get(doc, "asv_count", 0)),
+-       sample_count = Int(get(doc, "sample_count", 0)),
+-       state = _state(dir, "cc:$study/$id"),
+-       built = isfile(_clad_results_path(study, id)),
+-       published)
+-end
+-
+-function _cc_integer(value, fallback::Int, label::String, lo::Int, hi::Int)::Int
+-    isnothing(value) && return fallback
+-    (value isa Real && !(value isa Bool) && isfinite(value) && isinteger(value)) ||
+-        throw(ArgumentError("$label must be an integer"))
+-    number = Int(value)
+-    lo <= number <= hi || throw(ArgumentError("$label must be between $lo and $hi"))
+-    number
+-end
+-
+-function _cc_min_reads(value)::Float64
+-    isnothing(value) && return 1.0
+-    (value isa Real && !(value isa Bool) && isfinite(value) && value >= 1) ||
+-        throw(ArgumentError("min_reads must be a finite number of at least 1"))
+-    Float64(value)
+-end
+-
+-# Validate the run list before the generic cross-run collector, which is
+-# intentionally forgiving for chart UIs. A phylogeny must not silently omit one
+-# of the studies the user selected.
+-function _cc_check_runs(study::String, runs)
+-    runs isa AbstractVector || error("runs must be an array")
+-    isempty(runs) && error("Choose at least one run")
+-    seen = Set{Tuple{String,String}}()
+-    for spec in runs
+-        spec isa AbstractDict || error("each run must be an object")
+-        run = string(get(spec, :run, ""))
+-        group = _opt_string(spec, :group)
+-        key = (something(group, ""), run)
+-        key in seen && error("Run '$(isnothing(group) ? run : "$group/$run")' was selected more than once")
+-        push!(seen, key)
+-        resolved = _resolve_run_duckdb(study, spec)
+-        isnothing(resolved) && error("Run '$(isnothing(group) ? run : "$group/$run")' has no results")
+-    end
+-    nothing
+-end
+-
+-function _cc_sample_labels(samples, run_labels)
+-    labels = ["$(run_labels[i]) / $(samples[i])" for i in eachindex(samples)]
+-    length(unique(labels)) == length(labels) ||
+-        error("Sample labels are not unique; check the selected runs")
+-    labels
+-end
+-
+-# Select, normalize and persist the exact count matrix that the later tree and
+-# metrics use. Ties in top-N selection are broken by sequence, so a rebuild with
+-# the same inputs never depends on DuckDB or Dict iteration order.
+-function _cc_prepare!(study::String, id::String, body)
+-    runs = get(body, :runs, nothing)
+-    _cc_check_runs(study, runs)
+-    table = String(strip(string(get(body, :table, "merged"))))
+-    isempty(table) && error("Choose a results table")
+-    max_asvs = _cc_integer(get(body, :max_asvs, nothing), 500, "max_asvs", 4, _CC_MAX_ASVS)
+-    min_reads = _cc_min_reads(get(body, :min_reads, nothing))
+-    depth = _cc_integer(get(body, :depth, nothing), 0, "depth", 0, 1_000_000_000)
+-    method = string(get(body, :normalisation, "none"))
+-    method in NORMALISATION_METHODS || error("Unknown normalisation '$method'")
+-    seed = Int(get(body, :seed, _study_seed(study)))
+-
+-    params = _body_filter_params(body)
+-    run_data, _, _, _, missing_seq = _collect_cross_run_asvs(
+-        study, runs, table, params; aggregate=true)
+-    missing_seq && error("Table '$table' needs a DNA sequence column (Sequence or sequence)")
+-    expected = length(_expand_comparison_run_specs(study, runs; aggregate=true))
+-    length(run_data) == expected ||
+-        error("Every selected run needs table '$table' and at least one sample")
+-    isempty(run_data) && error("No ASV counts were found")
+-
+-    raw, samples, sequences, run_labels = combined_asv_counts_across_runs(run_data)
+-    all(v -> isfinite(v) && v >= 0, raw) || error("ASV counts must be finite and non-negative")
+-    totals = vec(sum(raw; dims=1))
+-    candidates = findall(v -> v >= min_reads, totals)
+-    sort!(candidates; by = j -> (-totals[j], sequences[j]))
+-    available = length(candidates)
+-    chosen = first(candidates, min(max_asvs, available))
+-    length(chosen) >= 4 || error(
+-        "A phylogeny needs at least 4 ASVs after filtering; found $(length(chosen))")
+-
+-    selected_sequences = sequences[chosen]
+-    tips = CC.asv_tip_name.(selected_sequences)
+-    length(unique(tips)) == length(tips) || error(
+-        "ASV sequences that differ only by case or gaps need to be de-duplicated first")
+-    selected = raw[:, chosen]
+-
+-    # Name samples by run as well as table column: equal sample names in two runs
+-    # remain distinct observations in the UniFrac matrix.
+-    labels = _cc_sample_labels(samples, run_labels)
+-    norm = normalise_counts(selected; method, depth, seed)
+-    normalised_labels = labels[norm.kept]
+-    nonempty = findall(v -> v > 0, vec(sum(norm.mat; dims=2)))
+-    isempty(nonempty) && error("All samples are empty after ASV selection and normalisation")
+-    kept = norm.kept[nonempty]
+-    excluded = labels[setdiff(1:length(labels), kept)]
+-    counts = norm.mat[nonempty, :]
+-    kept_labels = normalised_labels[nonempty]
+-
+-    records = Phylo.parse_fasta(join((">$(tips[i])\n$(selected_sequences[i])" for i in eachindex(tips)), "\n");
+-                                what="ASV phylogeny")
+-    files = _clad_files(study, id)
+-    Phylo.write_fasta(files["references.fasta"], records)
+-
+-    resolved_depth = method == "none" ? 0 :
+-                     (depth == 0 ? auto_min_depth(vec(sum(selected; dims=2))) : depth)
+-    counts_doc = Dict{String,Any}(
+-        "version" => 1,
+-        "samples" => kept_labels,
+-        "tips" => tips,
+-        "counts" => [collect(row) for row in eachrow(counts)],
+-        "excluded_samples" => excluded,
+-        "normalisation" => Dict{String,Any}(
+-            "method" => method, "depth" => resolved_depth, "seed" => seed),
+-    )
+-    counts_json = JSON3.write(counts_doc)
+-    counts_sha256 = bytes2hex(sha256(counts_json))
+-    _write_atomic(_clad_counts_path(study, id), counts_json)
+-
+-    name = strip(string(get(body, :name, "ASV phylogeny")))
+-    isempty(name) && error("The analysis needs a name")
+-    length(name) <= 100 || error("The analysis name is limited to 100 characters")
+-    overrides = get(body, :overrides, Dict{String,Any}())
+-    problem = _check_overrides(_study_config(study), overrides, "reference")
+-    isnothing(problem) || error(problem)
+-
+-    doc = Dict{String,Any}(
+-        "id" => id,
+-        "name" => name,
+-        "created" => _stamp(),
+-        "source" => Dict{String,Any}(
+-            "runs" => runs,
+-            "table" => table,
+-            "filters" => params,
+-            "min_reads" => min_reads,
+-            "max_asvs" => max_asvs,
+-            "available_asvs" => available,
+-            "selection" => "highest total reads; ties broken by sequence"),
+-        "overrides" => overrides,
+-        "asv_count" => length(tips),
+-        "sample_count" => length(kept_labels),
+-        "counts_sha256" => counts_sha256,
+-        "warning" => "A tree inferred from short amplicon ASVs is approximate; interpret deep branches cautiously.",
+-    )
+-    _write_doc(_clad_doc_path(study, id), doc)
+-    nothing
+-end
+-
+-function _cc_read_counts(study::String, id::String)
+-    doc = JSON3.read(read(_clad_counts_path(study, id), String))
+-    samples = string.(collect(doc.samples))
+-    tips = string.(collect(doc.tips))
+-    rows = collect(doc.counts)
+-    counts = zeros(Float64, length(rows), length(tips))
+-    for (i, row) in enumerate(rows)
+-        values = Float64.(collect(row))
+-        length(values) == length(tips) || error("Saved counts row $i has the wrong ASV count")
+-        counts[i, :] = values
+-    end
+-    counts, tips, samples, doc
+-end
+-
+-function _cc_compute(study::String, id::String)
+-    doc = _read_doc(_clad_doc_path(study, id))
+-    isnothing(doc) && error("The Cladistics source document is unreadable")
+-    counts, tips, samples, counts_doc = _cc_read_counts(study, id)
+-    tree_text = read(_clad_files(study, id)["reference.treefile"], String)
+-    tree = CC.parse_newick(tree_text)
+-    Set(keys(tree.tips)) == Set(tips) ||
+-        error("The inferred tree tips do not exactly match the saved ASV count columns")
+-    analysed = CC.analyse_phylogeny(tree, counts, tips, samples)
+-
+-    result = Dict{String,Any}(string(k) => v for (k, v) in pairs(analysed))
+-    # JSON arrays are explicitly row-major; do not rely on a serializer's
+-    # treatment of Julia's column-major Matrix.
+-    for key in ("unweighted_unifrac", "weighted_unifrac")
+-        result[key] = [collect(row) for row in eachrow(result[key])]
+-    end
+-    result["version"] = 1
+-    result["generated"] = _stamp()
+-    result["tree_sha256"] = bytes2hex(sha256(tree_text))
+-    result["counts_sha256"] = doc["counts_sha256"]
+-    result["normalisation"] = counts_doc.normalisation
+-    result["excluded_samples"] = counts_doc.excluded_samples
+-    result["weighted_unifrac_definition"] =
+-        "sum(branch * abs(a-b)) / sum(branch * (a+b)); clade relative abundances"
+-    result
+-end
+-
+-function _cc_publish(study::String, id::String, name::String)
+-    source = _clad_files(study, id)["reference.treefile"]
+-    file = "$(_phylo_slug(name))-$id.treefile"
+-    destination = joinpath(_trees_dir(study), file)
+-    mkpath(dirname(destination))
+-    cp(source, destination * ".tmp"; force=true)
+-    mv(destination * ".tmp", destination; force=true)
+-    file
+-end
+-
+-@get "/api/v1/studies/{study}/cladistics" function(req, study::String)
+-    err = _clad_request_error(study)
+-    isnothing(err) || return err
+-    root = _clad_root(study)
+-    isdir(root) || return json([])
+-    ids = filter(id -> _valid_phylo_id(id) && isfile(_clad_doc_path(study, id)), readdir(root))
+-    json(sort([_clad_summary(study, id) for id in ids]; by = a -> a.created, rev=true))
+-end
+-
+-@post "/api/v1/studies/{study}/cladistics" function(req, study::String)
+-    err = _clad_request_error(study)
+-    isnothing(err) || return err
+-    body = try JSON3.read(String(req.body)) catch
+-        return json_error(400, "invalid_body", "Expected a JSON object")
+-    end
+-    body isa JSON3.Object || return json_error(400, "invalid_body", "Expected a JSON object")
+-    id = _new_phylo_id()
+-    try
+-        _cc_prepare!(study, id, body)
+-    catch e
+-        rm(_clad_dir(study, id); recursive=true, force=true)
+-        return json_error(400, "invalid_analysis", sprint(showerror, e))
+-    end
+-
+-    doc = _read_doc(_clad_doc_path(study, id))
+-    name = string(doc["name"])
+-    overrides = get(doc, "overrides", nothing)
+-    job = _submit_phylo("cc:$study/$id"; study) do
+-        dir = _clad_dir(study, id)
+-        files = _clad_files(study, id)
+-        try
+-            Phylo.check_reference(files)
+-        catch e
+-            _fail_status!(dir, e)
+-            rethrow()
+-        end
+-        Phylo.run_workflow(Phylo.REFERENCE_STEPS, dir, files, _study_config(study);
+-            overrides,
+-            run = Dict{String,Any}("study" => study, "cladistics" => id, "name" => name,
+-                                   "counts_sha256" => doc["counts_sha256"]))
+-        try
+-            result = _cc_compute(study, id)
+-            _write_atomic(_clad_results_path(study, id), JSON3.write(result))
+-            latest = _read_doc(_clad_doc_path(study, id))
+-            latest["published"] = _cc_publish(study, id, name)
+-            latest["tree_sha256"] = result["tree_sha256"]
+-            _write_doc(_clad_doc_path(study, id), latest)
+-        catch e
+-            _fail_status!(dir, e)
+-            rethrow()
+-        end
+-    end
+-    json((; id, job = _job_to_namedtuple(job)))
+-end
+-
+-@get "/api/v1/studies/{study}/cladistics/{id}" function(req, study::String, id::String)
+-    err = _clad_request_error(study, id)
+-    isnothing(err) || return err
+-    doc = _read_doc(_clad_doc_path(study, id))
+-    d = _workflow_detail(Phylo.REFERENCE_STEPS, _clad_dir(study, id), _clad_files(study, id),
+-                         _study_config(study), get(doc, "overrides", nothing), "cc:$study/$id")
+-    result = isfile(_clad_results_path(study, id)) ? _read_doc(_clad_results_path(study, id)) : nothing
+-    json((; doc, summary = _clad_summary(study, id), d..., result))
+-end
+-
+-@get "/api/v1/studies/{study}/cladistics/{id}/log/{step}" function(req, study::String, id::String, step::String)
+-    err = _clad_request_error(study, id)
+-    isnothing(err) || return err
+-    _log_response(Phylo.REFERENCE_STEPS, _clad_dir(study, id), step)
+-end
+-
+-@get "/api/v1/studies/{study}/cladistics/{id}/qc/{step}" function(req, study::String, id::String, step::String)
+-    err = _clad_request_error(study, id)
+-    isnothing(err) || return err
+-    _qc_response(Phylo.REFERENCE_STEPS, _clad_dir(study, id), step)
+-end
+-
+-@delete "/api/v1/studies/{study}/cladistics/{id}" function(req, study::String, id::String)
+-    err = _clad_request_error(study, id)
+-    isnothing(err) || return err
+-    isnothing(_active_job("cc:$study/$id")) ||
+-        return json_error(409, "running", "The phylogeny is running; cancel its job first")
+-    doc = _read_doc(_clad_doc_path(study, id))
+-    published = get(doc, "published", nothing)
+-    if published isa AbstractString && _valid_tree_file(String(published))
+-        rm(joinpath(_trees_dir(study), String(published)); force=true)
+-        rm(_tree_view_path(study, String(published)); force=true)
+-    end
+-    rm(_clad_dir(study, id); recursive=true, force=true)
+-    json((; deleted = id))
+-end
+diff --git a/src/server/routes/config.jl b/src/server/routes/config.jl
+index 85749bf..6e3aa4c 100644
+--- a/src/server/routes/config.jl
++++ b/src/server/routes/config.jl
+@@ -245,11 +245,32 @@ function _differential_settings_error(effective::AbstractDict)
+         current = get(effective, k, _DIFFERENTIAL_SETTING_DEFAULTS[k])
+         current isa NamedTuple ? current.value : current
+     end
+-    method = value(keys_[1], "nb_glm")
+-    dispersion = value(keys_[2], "ml")
+-    if method isa AbstractString && dispersion isa AbstractString &&
+-       lowercase(strip(method)) != "nb_glm" && lowercase(strip(dispersion)) == "glmgampoi"
+-        return "analysis.differential.dispersion: glmGamPoi requires method: nb_glm; use dispersion: ml with $(strip(method))"
++    method = value("analysis.differential.method")
++    dispersion = value("analysis.differential.dispersion")
++    reference = value("analysis.differential.mn_reference_taxon")
++    penalty = value("analysis.differential.mn_penalty")
++    overdispersion = value("analysis.differential.dm_overdispersion_method")
++    method isa AbstractString || return nothing
++    m = lowercase(strip(method))
++    compositional = m in Differential.COMPOSITIONAL_METHODS
++    if m != "nb_glm" && dispersion isa AbstractString &&
++       lowercase(strip(dispersion)) == "glmgampoi"
++        return "analysis.differential.dispersion: glmGamPoi requires method: nb_glm; " *
++               "use dispersion: ml with $(strip(method))"
++    end
++    if !isnothing(reference) && !(reference isa AbstractString && isempty(strip(reference))) &&
++       !compositional
++        return "analysis.differential.mn_reference_taxon requires method: multinomial or " *
++               "dirichlet_multinomial; method is '$method'"
++    end
++    if penalty isa Real && !(penalty isa Bool) && penalty != 0 && !compositional
++        return "analysis.differential.mn_penalty requires method: multinomial or " *
++               "dirichlet_multinomial; method is '$method'"
++    end
++    if overdispersion isa AbstractString && lowercase(strip(overdispersion)) != "mle" &&
++       m != "dirichlet_multinomial"
++        return "analysis.differential.dm_overdispersion_method requires method: " *
++               "dirichlet_multinomial; method is '$method'"
+     end
+     nothing
+ end
+diff --git a/test/runtests.jl b/test/runtests.jl
+index af87ec3..a785175 100644
+--- a/test/runtests.jl
++++ b/test/runtests.jl
+@@ -62,7 +62,8 @@ const UNIT_FILES = [
+     "test_server_security.jl",
+     "test_canonical.jl",
+     "test_doi.jl",
+-    "test_clade_cumulus.jl",
++    "test_evidence.jl",
++    "test_evidence_routes.jl",
+ ]
+ 
+ # The files named on the command line ("test_routes.jl", "routes" or
+diff --git a/test/unit/test_differential.jl b/test/unit/test_differential.jl
+index f303bf3..da36ce2 100644
+--- a/test/unit/test_differential.jl
++++ b/test/unit/test_differential.jl
+@@ -168,7 +168,9 @@ end
+     end
+ 
+     @testset "Configuration" begin
+-        @test Differential.METHODS == ("nb_glm", "clr_welch", "zinb", "hurdle_nb")
++        @test Differential.METHODS ==
++              ("nb_glm", "clr_welch", "ancom_bc", "aldex2", "songbird",
++               "multinomial", "dirichlet_multinomial", "zinb", "hurdle_nb")
+         @test DifferentialConfig().offset == "tss"
+         @test DifferentialConfig().min_prevalence == 0.0
+         @test DifferentialConfig("rle", 0.5).offset == "rle"
+@@ -1200,7 +1202,8 @@ end
+         # Both methods are selectable names, and the two are told apart from the
+         # per-taxon models by one tuple.
+         @test Differential.METHODS ==
+-              ("nb_glm", "clr_welch", "multinomial", "dirichlet_multinomial")
++              ("nb_glm", "clr_welch", "ancom_bc", "aldex2", "songbird",
++               "multinomial", "dirichlet_multinomial", "zinb", "hurdle_nb")
+         @test Differential.COMPOSITIONAL_METHODS == ("multinomial", "dirichlet_multinomial")
+         c = DifferentialConfig(; method="multinomial")
+         @test c.method == "multinomial"
+diff --git a/test/unit/test_exact_summaries.jl b/test/unit/test_exact_summaries.jl
+index 71d8c00..418dd57 100644
+--- a/test/unit/test_exact_summaries.jl
++++ b/test/unit/test_exact_summaries.jl
+@@ -14,7 +14,7 @@ const EXACT_FEATURES = ["f1", "f2", "f3"]
+     @test !s.approximate
+     @test s.samples[1].total == 3
+     @test s.samples[1].proportions == fill(big(1)//3, 3)
+-    @test s.samples[2].proportions == Union{Rational{BigInt},Nothing}[big(1), big(0), big(0)]
++    @test s.samples[2].proportions == Union{Rational{BigInt},Nothing}[big(1), nothing, nothing]
+     @test length(s.groups) == 2
+     @test s.groups[1].label == "g1"
+     @test s.groups[2].counts == BigInt[2, 0, 0]
+@@ -28,7 +28,7 @@ const EXACT_FEATURES = ["f1", "f2", "f3"]
+     @test storage["input_status"] == "exact"
+     @test storage["samples"][1]["proportions"] == ["1/3", "1/3", "1/3"]
+     @test storage["samples"][1]["total"] == 3
+-    @test storage["samples"][2]["proportions"][2] == "0/1"
++    @test storage["samples"][2]["proportions"][2] === nothing
+     @test length(jcs_sha256(storage)) == 64
+     display = summary_to_display(s; digits=8)
+     @test occursin("exact", display)
+@@ -76,8 +76,8 @@ end
+     s = exact_summary(Float64.(EXACT_FIXTURE); sample_labels=EXACT_LABELS,
+         feature_labels=EXACT_FEATURES)
+     @test s.approximate
+-    @test all(x -> x.approximate, s.samples)
+-    @test all(x -> any(w -> occursin("approximations", w), x.warnings), s.samples)
++    @test all(x.approximate, s.samples)
++    @test all(any(w -> occursin("approximations", w), x.warnings), s.samples)
+     @test summary_to_storage(s)["input_status"] == "approximate"
+     @test occursin("remain approximate", summary_to_display(s))
+     @test_throws UnsupportedRepresentationError exact_summary(Float64.(EXACT_FIXTURE);
+diff --git a/test/unit/test_high_precision.jl b/test/unit/test_high_precision.jl
+index 1b903e0..86e0d53 100644
+--- a/test/unit/test_high_precision.jl
++++ b/test/unit/test_high_precision.jl
+@@ -3,13 +3,13 @@ using MetaManifold.NumericPolicy
+ using MetaManifold.HighPrecision
+ using MetaManifold.Canonical
+ 
+-# Independently produced with Python decimal. These are reference values, not
+-# values copied from Julia/MPFR; REF_LN2 has enough digits for the 1024-bit test.
++# Independently produced with Python decimal at 140 digits. They are references,
++# not values copied from Julia/MPFR, and are long enough to check a 512-bit run.
+ const HP_FIXTURE = [1 2; 1 0; 1 0]
+ const HP_LABELS = ["A", "B"]
+ const HP_FEATURES = ["f1", "f2", "f3"]
+ 
+-const REF_LN2 = "0.6931471805599453094172321214581765680755001343602552541206800094933936219696947156058633269964186875420014810205706857336855202357581305570326707516350759619307275708283714351903070386238916734711233501153644979552391204751726815749320651555247341395258829504530070953263666426541042391578149520437404303855008019441706416715186447128399681717845469570262716310645461502572074024816377733896385506952606683411372738737229289564935470257626520988596932019650586"
++const REF_LN2 = "0.6931471805599453094172321214581765680755001343602552541206800094933936219696947156058633269964186875420014810205706857336855202357581305570326707516350759619307275708283714351903070386238916734711233501153644979552391205"
+ const REF_LN3 = "1.098612288668109691395245236922525704647490557822749451734694333637494293218608966873615754813732088787970029065957865742368004225930519821052801870767277410603162769183381367179373698844360959903742570316795911521145592"
+ const REF_TWO_THIRDS = "0.6666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666667"
+ const REF_H_1234 = "1.279854225833667467182185762149429928131354186921692886392239591382930699742075074568049151649059984163575294301928203177013603961545520253317776056233522504371230806742168835499680746549033237086147384098562106321046048"
+@@ -66,7 +66,7 @@ end
+         sample_labels=HP_LABELS, feature_labels=HP_FEATURES, policy=policy)
+     @test_throws ArgumentError high_precision_summary([1 -2; 3 4];
+         sample_labels=HP_LABELS, feature_labels=["x", "y"], policy=policy)
+-    @test_throws UnsupportedRepresentationError high_precision_summary(HP_FIXTURE;
++    @test_throws ArgumentError high_precision_summary(HP_FIXTURE;
+         sample_labels=HP_LABELS, feature_labels=HP_FEATURES,
+         policy=numeric_policy(:exact_counts))
+ 
+diff --git a/test/unit/test_numeric_policy.jl b/test/unit/test_numeric_policy.jl
+index 5c2cdf5..2eb496a 100644
+--- a/test/unit/test_numeric_policy.jl
++++ b/test/unit/test_numeric_policy.jl
+@@ -51,10 +51,10 @@ end
+     tight = numeric_policy(mode=:exact_counts, max_denominator_bits=32)
+     @test_throws ResourceLimitError exact_fraction(1, big(2)^40; policy=tight)
+     @test_throws ResourceLimitError exact_fraction(big(2)^40, 1; policy=tight)
+-    # Each addend fits the 32-bit budget on its own; their reduced sum has a
+-    # 62-bit denominator, so the limit must fire on the running total.
++    # Each addend fits the 32-bit budget on its own; their sum 1/2^31 + 1/3 needs
++    # 33 bits, so the limit must fire on the running total, not only on inputs.
+     @test_throws ResourceLimitError exact_rational_sum(
+-        [big(1)//big(2)^31, big(1)//(big(2)^31 - 1)]; policy=tight)
++        [big(1)//big(2)^31, big(1)//big(3)]; policy=tight)
+ end
+ 
+ @testset "Precision scopes and restoration" begin
+-- 
+2.39.5
+
