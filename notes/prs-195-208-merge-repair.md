@@ -71,15 +71,23 @@ python3 test/references/check_high_precision_references.py --check test/unit/tes
 (cd frontend && npm install --ignore-scripts && npm run build && bun test src)
 bash proofs/tests/axiom-audit.sh
 bash scripts/lint-occupancy-readings.sh
+julia --project=. test/runtests.jl test_doi.jl test_differential.jl test_exact_summaries.jl test_numeric_policy.jl test_high_precision.jl test_clade_cumulus.jl test_evidence.jl test_evidence_routes.jl
 ```
 
 ## Verification completed when authoring this patch
 
-- `git am` onto clean `c06c0d4`: clean, zero warnings
-- `frontend`: `tsc && vite build` (418 modules, 0 errors) and `bun test src` (79 pass, 0 fail, 211 assertions)
-- `python3 test/references/check_high_precision_references.py --check test/unit/test_high_precision.jl`:
+- `git am` onto clean `c06c0d4` — clean, zero warnings.
+- `frontend` (`MetaManifold-WebUI/frontend/package.json`: `"build": "tsc && vite build"`):
+  `tsc && vite build` passed (418 modules, 0 errors) and `bun test src` passed (79 pass, 0 fail, 211 assertions).
+- `python3 test/references/check_high_precision_references.py --check test/unit/test_high_precision.jl` —
   `Independent decimal references agree (220-digit context).`
-- `bash proofs/tests/axiom-audit.sh`: 7 reachable Agda modules clean
-- `bash scripts/lint-occupancy-readings.sh`: clean
-- Cross-file audit: all 34 includes in `src/MetaManifold.jl`, all 25 includes in `src/server/server.jl`,
+- `bash proofs/tests/axiom-audit.sh` — 7 reachable Agda modules clean.
+- `bash scripts/lint-occupancy-readings.sh` — clean.
+- Cross-file audit — all 34 includes in `src/MetaManifold.jl`, all 25 includes in `src/server/server.jl`,
   all 49 `test/unit/test_*.jl` files in `UNIT_FILES`, and all `MetaManifold-WebUI_chora.deed` paths verified.
+- **Pending `MetaManifold-WebUI` CI (no Julia/R runtime in authoring sandbox)**:
+  `julia --project=. test/runtests.jl` (including `test_exact_summaries.jl`, `test_numeric_policy.jl`,
+  `test_high_precision.jl`, `test_differential.jl`, `test_doi.jl`, `test_clade_cumulus.jl`,
+  `test_evidence.jl`, and `test_evidence_routes.jl` — noting `test_exact_summaries.jl`,
+  `test_numeric_policy.jl`, and `test_high_precision.jl` are byte-identical to `e313d97` from PR `#202`,
+  which passed `Julia tests` before `#198` regressed them).
