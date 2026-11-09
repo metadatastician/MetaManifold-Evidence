@@ -95,7 +95,12 @@ helper lemmas that those proofs use, and they are not graded separately:
 and `⊥-elim` in `Bounds.agda`. They are checked wherever the theorems that
 use them are checked. Their counterparts in the recheck legs differ:
 
-* Lean re-proves each of them by hand under the same name, with no axioms.
+* Lean re-proves them by hand, with no axioms, mostly under the same
+  name. There are three exceptions, all recorded in `lean/CORRESPONDENCE.adoc`:
+  `zero-not-suc` is re-proved as `suc≰zero`; `⊥-elim` is Lean core's
+  `False.elim`, so nothing is ported; and `subst` takes a `Prop`-valued
+  motive where Agda's takes `Set p`, which is weaker but enough for its only
+  uses, at `≤` motives.
 * Rocq re-proves the order lemmas (`le_refl`, `le_trans`, `le_total`,
   `le_plus_r`, `plus_mono_r`, `plus_cancel_r`, `le_diff`, `ltb_true`,
   `ltb_false`, `irrefl`, `le0`, `le_to_lo`), all closed under the global
