@@ -24,9 +24,8 @@ toc::[]
 |Item |Value
 
 |Source of truth
-|`agda/src/MetaManifold/Evidence/*.agda` in the working tree on top of commit
-`d2d49aa9c8b838046fbdc228e50b45eb827bef37`. The working tree differs from that
-commit only in the `OPTIONS` pragma (`--cubical-compatible` added, per standards
+|`agda/src/MetaManifold/Evidence/*.agda` at commit `894bd41`, which differs from
+`d2d49aa9c8b838046fbdc228e50b45eb827bef37` only in the `OPTIONS` pragma (`--cubical-compatible` added, per standards
 PROOF-POLICY §2.1) and in `scripts/fetch-layer-a.sh` pinning residual-evidence-types
 at `559bba42`. The coordinator confirmed both changes are intended, and the port
 was made from this working tree. No statement
@@ -57,11 +56,15 @@ the explorer check. No axioms, no `Admitted`, and no
 conversion (`reflexivity`), not `vm_compute`/`native_compute`, so neither the
 VM nor native compilation is in the trusted base.
 
-|Not run here
-|Agda is not installed in this environment. The Agda leg was *not* rechecked
-for this record. The two transitive cross-checks below also rely on the Agda
-theorems `julia-agrees` and `checker-matches-explorer` holding at these
-revisions, and that was not re-observed here.
+|Agda leg
+|The agent that wrote this leg had no Agda. The same session then checked the
+Agda leg with Agda 2.6.4.3, under the canonical
+`--safe --without-K --cubical-compatible` profile. It ran this repository's
+`scripts/check.sh` and `scripts/mutants.sh`, which include `julia-agrees`, and
+residual-evidence-types' `scripts/correspondence.sh` at the pinned commit,
+which includes `checker-matches-explorer`. Both passed. So the two transitive
+cross-checks below rest on Agda theorems that were observed to hold at these
+revisions. That run is recorded in `PROOF-STATUS.adoc`.
 
 |Correspondence state (§2.2)
 |`COQ-CHECKED`. The statement comparison below was drafted by an LLM agent.

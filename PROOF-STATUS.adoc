@@ -1,0 +1,173 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell
+= Proof status: MetaManifold-Evidence
+:toc:
+
+This is the repository's proof ledger under
+https://github.com/metadatastician/standards/blob/main/3-practice/PROOF-POLICY.adoc[standards
+PROOF-POLICY] (§2, §2.2, §5, §8). Agda is the source of truth. Each theorem
+is rechecked in Rocq and in Lean. The Rocq and Lean legs are `re-proved`,
+because no Agda→Dedukti route was available and no released Lambdapi Lean
+exporter exists. The per-theorem statement comparison is in
+link:rocq/CORRESPONDENCE.adoc[rocq/CORRESPONDENCE.adoc] and
+link:lean/CORRESPONDENCE.adoc[lean/CORRESPONDENCE.adoc].
+
+== Summary
+
+[cols="2,3",options="header"]
+|===
+|Item |State
+
+|Agda leg
+|`PROVEN` for every theorem below, under
+`--safe --without-K --cubical-compatible`, from a local run (see
+<<receipts>>). A hosted run on the pull request that adds this file is the
+receipt CI keeps.
+
+|Rocq leg
+|`PROVEN`, re-proved; every theorem "Closed under the global context".
+§2.2 state: `COQ-CHECKED`, `BRIDGE-PENDING`.
+
+|Lean leg
+|`PROVEN`, re-proved with core `Init` only; every theorem "does not depend
+on any axioms". §2.2 state: `LEAN-CHECKED`, `BRIDGE-PENDING`.
+
+|Proof Witness Grade
+|`PWG-3` for every theorem below. Census: 22 of 22 theorems at `PWG-3`; 0 at
+`PWG-2i`, 0 at `PWG-2ii`, 0 at `PWG-1`, 0 `ungraded`. No theorem rests on an
+axiom in any prover.
+
+|Why not `PWG-2ii`
+|A leg counts towards a grade only when its §2.2 state is `RECONCILED`. The
+statement comparisons in the two correspondence files were drafted by agents
+and checked by a second agent. Under estate doctrine, a judgement that two
+statements are equivalent is provisional until the owner reviews it. When
+the owner signs off a correspondence file, its leg moves to `RECONCILED` and
+the grade rises to `PWG-2i`, or `PWG-2ii` when both are signed off. Until
+then the Rocq and Lean legs are owed, as §8.4 says.
+|===
+
+== Theorems
+
+The route for both recheck legs is `re-proved`. Rocq and Lean names follow
+each prover's conventions (`entailed_sound`, `«entailed-sound»`); the
+correspondence files map every name.
+
+[cols="2,3,1,1,1",options="header"]
+|===
+|Agda theorem |Statement, in words |Agda |Rocq |Lean
+
+5+|*Counts* (`agda/src/MetaManifold/Evidence/Counts.agda`)
+|`noiseless`, `case` |every observation has a candidate world, so every case is inhabited |PROVEN |PROVEN |PROVEN
+|`fibre⇒interval` |a candidate latent lies in `y ≤ x + n` and `x ≤ y + n` |PROVEN |PROVEN |PROVEN
+|`interval⇒fibre` |every latent in that interval is a candidate's |PROVEN |PROVEN |PROVEN
+|`entailed-sound` |`n < y` entails presence |PROVEN |PROVEN |PROVEN
+|`refuted-sound` |`y = n = 0` entails absence |PROVEN |PROVEN |PROVEN
+|`unresolved-sound` |`y ≤ n`, `y + n > 0`: neither presence nor absence holds |PROVEN |PROVEN |PROVEN
+|`verdict-sound` |the closed-form verdict is sound for every constructor it returns |PROVEN |PROVEN |PROVEN
+|`never-inconsistent` |counts never yield `inconsistent` |PROVEN |PROVEN |PROVEN
+
+5+|*Bounds* (`Bounds.agda`)
+|`lo⇒≤`, `fibre⇒bounds`, `bounds⇒fibre` |the fibre is exactly the latents in `[y ∸ n, y + n]` |PROVEN |PROVEN |PROVEN
+|`view`, `view-at` |complete characterisation of the verdict |PROVEN |PROVEN |PROVEN
+|`entailed-anti` |lowering the bound keeps an entailment |PROVEN |PROVEN |PROVEN
+|`unresolved-mono` |raising the bound keeps unresolved |PROVEN |PROVEN |PROVEN
+|`refuted-only-at-zero`, `refuted-fragile` |refuted only at `y = n = 0`; any positive bound makes it unresolved |PROVEN |PROVEN |PROVEN
+|`never-strengthens` |more noise never strengthens a verdict |PROVEN |PROVEN |PROVEN
+
+5+|*CheckerBridge* (`CheckerBridge.agda`)
+|`presence-agrees` |on `y, n ≤ 6` the finite checker's presence verdict is `verdict y n` |PROVEN |PROVEN |PROVEN
+|`latents-agree` |on `y, n ≤ 6` the checker's natural latents are `[lo, hi]` cut at 6 |PROVEN |PROVEN |PROVEN
+
+5+|*CountsCertificate* (`CountsCertificate.agda`)
+|`julia-agrees` |`grid 12 ≡ expected`: Agda's verdict and bounds equal the 169-row table the Julia code generates |PROVEN |PROVEN |PROVEN
+|===
+
+The census counts each named theorem once: 22 names, some rows grouped.
+
+`julia-agrees` is a certificate about one repository's Julia code, so it
+reads as engineering under PROOF-POLICY §1. It is carried on the theory
+ladder because the owner asked for every theorem to have both recheck legs.
+Outside the 0..12 grid the Julia code is tested, not proved.
+
+== The finite checker port
+
+The bridge theorems relate the counts model to the finite checker of
+`hyperpolymath/residual-evidence-types`, whose Agda checker is proved equal
+to the explorer's 546-row table by `refl`. Both recheck legs port that
+checker, and each proves its port equal to the same 546-row table, generated
+from `tests/correspondence/ExplorerTable.agda` at the pinned commit. So the
+three checkers agree on every row the explorer emits. That is agreement on
+that table, not a proof that the definitions are equal.
+
+[[receipts]]
+== Receipts
+
+=== Local run, 2026-11-09
+
+Source: this repository at the commit that adds this file. Dependency:
+`hyperpolymath/residual-evidence-types` at
+`559bba424f1819e4eb7c3104b418c4c5f5a1a22f`, the head of its PR #28, which
+adopts the same Agda profile. Once that PR merges, the pin moves to the
+merged commit and these checks are rerun.
+
+[cols="1,2,3",options="header"]
+|===
+|Leg |Checker and invocation |Result
+
+|Agda
+|Agda 2.6.4.3, built from Hackage with GHC 9.4.7; `bash scripts/check.sh`
+(`--safe --without-K --cubical-compatible --no-libraries --ignore-interfaces
+--double-check`) and `bash scripts/mutants.sh`
+|All modules accepted; axiom audit clean; 5/5 expected rejections; every
+mutant killed. `UnsupportedIndexedMatch` warnings only; no cubical
+computation is claimed.
+
+|Rocq
+|The Coq Proof Assistant 8.18.0 (Ubuntu `coq` 8.18.0+dfsg-1build2);
+`bash scripts/check-rocq.sh`
+|10 files compiled; 43 names closed under the global context; 6/6 expected
+rejections; the assumptions parser refuses its planted-axiom self-test.
+
+|Lean
+|Lean 4.24.0, release tarball sha256
+`b14f5e5159219dd1a1956c3b806813319f5e94ccd5bdfd56f54520609a5bb5ec`;
+`bash scripts/check-lean.sh`
+|9 modules compiled with warnings as errors; 136 declarations axiom-free;
+7/7 expected rejections refused at their invalid statements; the axiom audit
+flags its planted-`propext` self-test. The two 546-row `rfl` proofs raise
+only the elaborator's `maxRecDepth` and `maxHeartbeats`; the kernel checks
+the same term.
+|===
+
+These are local results, not hosted receipts. The `proofs` workflow runs all
+three legs on every pull request; its runs are the receipts to cite.
+
+== Toolchain deviations (PROOF-POLICY §6)
+
+[cols="1,2,2,1",options="header"]
+|===
+|Leg |Tool, version, digest |Why not Guix or a container |State
+
+|Rocq
+|Ubuntu `coq=8.18.0+dfsg-1build2` from the runner's package index; the
+script asserts 8.18.0
+|No Guix manifest exists here yet, and the Agda job's Debian 13 container
+ships a different Rocq version
+|`open`
+
+|Lean
+|Lean 4.24.0 release tarball, sha256 above; the script asserts the version
+and commit `797c613e…`
+|No Guix manifest exists here yet
+|`open`
+|===
+
+== Licences
+
+The Agda sources and the Rocq/Lean files that restate them carry
+`AGPL-3.0-or-later`, as the repository does. The ports of the
+residual-evidence-types vocabulary, checker and explorer table carry
+`MPL-2.0`, as their source does. The estate's language policy lists AGPL
+on its deny list, but licence changes are the owner's alone, so this
+ledger records the state without changing it.
