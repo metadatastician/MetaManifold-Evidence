@@ -1,4 +1,4 @@
-From 5ec203b7fe46a9cba5445ca3013f1074099d45d8 Mon Sep 17 00:00:00 2001
+From efc7448e5137f36bdad79c19de526f2b2dbc7f9a Mon Sep 17 00:00:00 2001
 From: "Jonathan D.A. Jewell" <6759885+hyperpolymath@users.noreply.github.com>
 Date: Mon, 9 Nov 2026 10:05:27 +0000
 Subject: [PATCH 2/2] ci: gate patch coverage, measure sensitivity, add the
@@ -74,16 +74,16 @@ locally.
 Co-authored-by: arena-agent <297053741+arena-agent@users.noreply.github.com>
 ---
  .github/workflows/ci.yml                   |  54 ++++
- .github/workflows/cicd-squabbler.yml       |  73 ++++++
+ .github/workflows/cicd-squabbler.yml       |  73 +++++
  .github/workflows/hypatia-scan.yml         |  92 +++++++
  .github/workflows/k9-deed-conformance.yml  |  78 ++++++
  .gitignore                                 |   6 +
  codecov.yml                                |  50 +++-
- docs/guide/development.md                  | 101 ++++++++
- scripts/ci/check-sensitivity-evidence.jl   | 129 ++++++++++
+ docs/guide/development.md                  | 101 +++++++
+ scripts/ci/check-sensitivity-evidence.jl   | 129 +++++++++
  scripts/ci/mutants-differential.sh         | 104 ++++++++
- test/unit/test_differential_sensitivity.jl | 284 +++++++++++++++++++++
- 10 files changed, 967 insertions(+), 4 deletions(-)
+ test/unit/test_differential_sensitivity.jl | 297 +++++++++++++++++++++
+ 10 files changed, 980 insertions(+), 4 deletions(-)
  create mode 100644 .github/workflows/cicd-squabbler.yml
  create mode 100644 .github/workflows/hypatia-scan.yml
  create mode 100644 .github/workflows/k9-deed-conformance.yml
@@ -865,10 +865,10 @@ index 0000000..5954d4a
 +echo "PASS: every mutant was killed by the differential native suite"
 diff --git a/test/unit/test_differential_sensitivity.jl b/test/unit/test_differential_sensitivity.jl
 new file mode 100644
-index 0000000..9a54f91
+index 0000000..5b4b49f
 --- /dev/null
 +++ b/test/unit/test_differential_sensitivity.jl
-@@ -0,0 +1,284 @@
+@@ -0,0 +1,297 @@
 +# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 +# SPDX-License-Identifier: AGPL-3.0-or-later
 +
@@ -1061,9 +1061,22 @@ index 0000000..9a54f91
 +    else
 +        # The same input with the labels shuffled destroys every real
 +        # difference. Any sensitivity left is the threshold talking.
-+        order = Random.shuffle(MersenneTwister(_SENSITIVITY_SEED + 1),
-+                               collect(eachindex(groups)))
-+        permuted_groups = groups[order]
++        #
++        # Reshuffled until both groups keep at least three samples: a split of
++        # 1/15 is still a valid permutation but it is not a valid input to
++        # either analysis, and a seed that happened to draw one would fail this
++        # file for a reason that has nothing to do with sensitivity.
++        rng = MersenneTwister(_SENSITIVITY_SEED + 1)
++        order = collect(eachindex(groups))
++        permuted_groups = groups
++        while true
++            Random.shuffle!(rng, order)
++            candidate = groups[order]
++            if count(==("control"), candidate) >= 3 && count(==("treated"), candidate) >= 3
++                permuted_groups = candidate
++                break
++            end
++        end
 +
 +        for method in methods
 +            config = DifferentialConfig(; method)
