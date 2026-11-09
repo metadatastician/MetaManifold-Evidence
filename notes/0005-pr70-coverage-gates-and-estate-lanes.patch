@@ -1,0 +1,1168 @@
+From efc7448e5137f36bdad79c19de526f2b2dbc7f9a Mon Sep 17 00:00:00 2001
+From: "Jonathan D.A. Jewell" <6759885+hyperpolymath@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 10:05:27 +0000
+Subject: [PATCH 2/2] ci: gate patch coverage, measure sensitivity, add the
+ estate lanes
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The coverage report on this pull request said "52.38095% with 30 lines missing"
+and nothing failed: patch coverage was `informational: true`, so an unreachable
+adapter was a number in a comment rather than a problem with a pull request to
+fix it in. It is a gate now, at 90%, with no tolerance, `precision: 2` and
+`round: down` so a report cannot round its way past the bar. The project status
+also stops comparing a fraction measured on a run whose tests failed.
+
+Coverage counts lines that ran. Three additions count other things:
+
+- `test/unit/test_differential_sensitivity.jl` measures whether the differential
+  methods find a signal that is known to be there: a negative-binomial community
+  with eight taxa multiplied fourfold, eight divided and eight unchanged, scored
+  after BH at 0.05 for sensitivity, specificity and precision, against a
+  label-permuted control. Every other test in the suite compares a method with a
+  reference implementation of the same method, which a method that calls
+  everything significant would also pass; the control is what that cannot pass.
+  Floors are loose on purpose (0.625/0.625/0.6) and the metrics are themselves
+  unit-tested against a table scored by hand, so a broken counter cannot produce
+  a passing report.
+- `scripts/ci/check-sensitivity-evidence.jl` reads the measurement and decides
+  whether it is evidence: a missing file is a failure (a skipped measurement is
+  not a pass), a value below its floor is a failure, a `passed` flag the numbers
+  contradict is a failure, and an `Actually-Proven` tier is a failure because
+  this lane cannot produce one. Each claim is Provisionally-Proven in the sense
+  of hyperpolymath/proven-tests-and-benches: derived from a test that ran, never
+  declared. The CI step writes the table to the job summary and keeps the JSON
+  as an artifact.
+- `scripts/ci/mutants-differential.sh` asks whether the suite would NOTICE: ten
+  deliberate corruptions of the native adapter (BH applied twice, the wrong
+  column as the estimate, log10 for log2, structural decisions ignored, the
+  contrast direction swapped, the seam bypassed, the one-taxon floor removed,
+  the composition refusal swallowed, the package name hardcoded, a NaN
+  published) run against the focused suite. The unmutated baseline runs first; a
+  survivor fails the step; a mutant that dies of a syntax error fails it too.
+  Adapted from scripts/mutants.sh and scripts/julia-mutants.sh in
+  hyperpolymath/MetaManifold-Evidence. None needs R, because the stand-in
+  backend is what runs.
+
+Then the estate lanes, each calling the shared canon at a commit where the
+reusable exists (checked against the API, not assumed) instead of copying it:
+
+- `.github/workflows/hypatia-scan.yml` — the neurosymbolic governance scan, with
+  the pons-asinorum (`pons-ref`) and panic-attack (`panic-ref`, the scanner
+  behind the fleet's panicbot) rows pinned explicitly so the checker cannot move
+  without a commit here. It reports rather than blocks for now: `block-on-high`
+  becomes the change that triages the first run's findings into a baseline or a
+  named exemption, because gating before that would fail pull requests for
+  findings that predate them.
+- `.github/workflows/k9-deed-conformance.yml` — DEED and K9 conformance. This
+  repository carries neither yet, so `require-files` is false and an empty
+  corpus is grey rather than red; the change that adds the deed and the
+  contracts flips it.
+- `.github/workflows/cicd-squabbler.yml` — `squabble chains` as a hard gate
+  (cycles and dead upstreams fail, and so does a tool that cannot look), with the
+  fight report left advisory and not run without a credential that can read
+  classic branch protection.
+
+None of the three renames or replaces a required check; `Julia tests`,
+`Agda proofs` and `REUSE compliance` keep their names and their matrix-free
+shapes, and `test/unit/test_install_pins.jl` keeps enforcing that for `ci.yml`.
+`docs/guide/development.md` gains a "Continuous verification" section stating
+what each gate measures, what it explicitly does not claim, and how to run it
+locally.
+
+Co-authored-by: arena-agent <297053741+arena-agent@users.noreply.github.com>
+---
+ .github/workflows/ci.yml                   |  54 ++++
+ .github/workflows/cicd-squabbler.yml       |  73 +++++
+ .github/workflows/hypatia-scan.yml         |  92 +++++++
+ .github/workflows/k9-deed-conformance.yml  |  78 ++++++
+ .gitignore                                 |   6 +
+ codecov.yml                                |  50 +++-
+ docs/guide/development.md                  | 101 +++++++
+ scripts/ci/check-sensitivity-evidence.jl   | 129 +++++++++
+ scripts/ci/mutants-differential.sh         | 104 ++++++++
+ test/unit/test_differential_sensitivity.jl | 297 +++++++++++++++++++++
+ 10 files changed, 980 insertions(+), 4 deletions(-)
+ create mode 100644 .github/workflows/cicd-squabbler.yml
+ create mode 100644 .github/workflows/hypatia-scan.yml
+ create mode 100644 .github/workflows/k9-deed-conformance.yml
+ create mode 100644 scripts/ci/check-sensitivity-evidence.jl
+ create mode 100644 scripts/ci/mutants-differential.sh
+ create mode 100644 test/unit/test_differential_sensitivity.jl
+
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 3b2d922..92e6d6b 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -310,6 +310,60 @@ jobs:
+           slug: JoshuaJewell/MetaManifold-WebUI
+           fail_ci_if_error: false
+ 
++      # The sensitivity measurement is written by
++      # test/unit/test_differential_sensitivity.jl and read here, not trusted:
++      # the checker refuses a claim with no measured value, a value below its
++      # floor, and a `passed` flag the numbers contradict. `always()` because a
++      # missing file IS the finding - the measurement skipped, and a skipped
++      # measurement is not a pass (hyperpolymath/proven-tests-and-benches:
++      # coverage is derived from tests that ran, never declared) - and because a
++      # red coverage gate must still say whether the methods can find a signal
++      # that is known to be there.
++      - name: Differential sensitivity and specificity
++        if: always()
++        shell: bash
++        run: |
++          set +e
++          julia --project=. scripts/ci/check-sensitivity-evidence.jl > /tmp/sensitivity.txt 2>&1
++          status=$?
++          cat /tmp/sensitivity.txt
++          {
++            echo
++            echo "## Differential sensitivity and specificity"
++            echo
++            echo 'A spike-in community with a known answer, scored after BH at 0.05,'
++            echo 'against a label-permuted control. Floors are loose on purpose; the'
++            echo 'control is the strong assertion.'
++            echo
++            cat /tmp/sensitivity.txt
++          } >> "$GITHUB_STEP_SUMMARY"
++          exit "$status"
++
++      - name: Keep the sensitivity evidence
++        if: always()
++        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
++        with:
++          name: differential-sensitivity
++          path: test/artifacts/differential-sensitivity.json
++          # A missing file is already a failed step above, with a reason. This
++          # upload must not be the thing that explains it.
++          if-no-files-found: warn
++
++      # Coverage counts lines that ran. This counts lines that would be NOTICED
++      # if they were wrong - a different question, and the one the estate's
++      # scripts/mutants.sh answers for the Agda proofs. Ten mutants, each with a
++      # named catcher in test/unit/test_differential_native.jl, each run against
++      # the focused suite; none of them needs R, because the native adapter is
++      # exercised through the stand-in backend. A survivor means the suite does
++      # not constrain that behaviour and this step fails.
++      - name: Test sensitivity (mutants)
++        # Only meaningful on a green suite: the baseline run inside the script
++        # would otherwise fail and the error would blame the mutants.
++        if: success()
++        timeout-minutes: 45
++        shell: bash
++        run: bash scripts/ci/mutants-differential.sh
++
+   # Machine-checked proofs of the Benjamini-Hochberg adjustment and the TSS/RLE
+   # scaling algebra (proofs/agda, proofs/agda/README.md).
+   # Agda publishes no 2.6.4.3 binary, and agda-stdlib 2.1 requires Agda 2.6.4.x,
+diff --git a/.github/workflows/cicd-squabbler.yml b/.github/workflows/cicd-squabbler.yml
+new file mode 100644
+index 0000000..ccddb8d
+--- /dev/null
++++ b/.github/workflows/cicd-squabbler.yml
+@@ -0,0 +1,73 @@
++# SPDX-FileCopyrightText: 2026 Joshua Benjamin Jewell
++# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
++# SPDX-License-Identifier: MPL-2.0
++
++## CI/CD squabbler
++#
++# The estate's CI/CD fighter, run inside the gate set rather than beside it.
++#
++# WHY THIS REPOSITORY NEEDS IT
++# ----------------------------
++# This repository has already paid for the failure the squabbler exists to
++# catch, and the invoice is in `ci.yml`: a required status check whose name
++# GitHub does not post verbatim is a check that never reports, and a pull request
++# can then be merged only by bypassing the rule. The comment on the `test` job
++# records the measurement (a 1x1 matrix still embedded its values in the check
++# name, `Julia tests (1.12.5, ubuntu-24.04)`, so the required context `Julia
++# tests` was simply absent), and `test/unit/test_install_pins.jl` now asserts the
++# rule over every job in `ci.yml`.
++#
++# `squabble chains` is the general case of that test: it maps reusable-workflow
++# and action edges across repositories, so a dead upstream or a dependency cycle
++# is found while the board still reads green. Exit 4 (cycle or dead upstream)
++# fails the job. Exit 2 (the tool could not look) fails too, deliberately: a gate
++# that cannot look must not pass.
++#
++# The `fight-report` half is advisory and always will be here. It classifies a
++# pull request's reds, and when it runs it fails only if the tool itself fails;
++# "the planner proposed a move" is information for a human, not a verdict on a
++# pull request. It never passes `--apply` and never writes to the repository —
++# enacting a move is a reviewed commit, not a workflow's decision.
++#
++# The squabble binary is installed by the upstream composite action at a pinned
++# commit inside the reusable, and that action refuses any binary whose sha256 and
++# build attestation do not match its pinned release. Nothing here downloads a
++# tool by name and trusts it.
++#
++# This file adds no required status check.
++
++name: CI/CD Squabbler
++
++on:
++  push:
++    branches: [main]
++  pull_request:
++  workflow_dispatch:
++
++permissions:
++  contents: read
++  pull-requests: read
++  attestations: read
++
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: true
++
++jobs:
++  squabble:
++    name: Squabble this pull request's gate
++    uses: hyperpolymath/standards/.github/workflows/cicd-squabbler-reusable.yml@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5
++    # The callee's jobs read `contents`, `pull-requests` and `attestations`;
++    # granting less is refused at startup with no check run to explain it.
++    permissions:
++      contents: read
++      pull-requests: read
++      attestations: read
++    with:
++      # Empty on push and schedule runs, which skips the advisory fight report;
++      # on a pull request it is the number the report is about.
++      pr-number: ${{ github.event.pull_request.number || '' }}
++    # No `ADMINISTRATION_READ_TOKEN`: without a credential that can read this
++    # repository's classic branch protection, `fight` says NOT RUN in those words
++    # instead of guessing. Supplying one is a separate decision, with a separate
++    # credential, and the hard `chains` gate runs either way.
+diff --git a/.github/workflows/hypatia-scan.yml b/.github/workflows/hypatia-scan.yml
+new file mode 100644
+index 0000000..91462c8
+--- /dev/null
++++ b/.github/workflows/hypatia-scan.yml
+@@ -0,0 +1,92 @@
++# SPDX-FileCopyrightText: 2026 Joshua Benjamin Jewell
++# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
++# SPDX-License-Identifier: MPL-2.0
++
++## Hypatia estate security scan
++#
++# The estate's neurosymbolic CI/CD governance scanner, run as a caller of the
++# shared reusable rather than copied: every rule, baseline and severity decision
++# then arrives from the canon at one pinned commit instead of drifting here.
++#
++# WHAT THE GRID CARRIES, AND THE TWO NAMES IN IT
++# ----------------------------------------------
++# Hypatia's verdict grid gives one row per tool. Two of those rows are the ones
++# this repository cares about most, because both read the Julia and Python
++# analysis code rather than only the workflow files:
++#
++#   * ponsbot — hyperpolymath/pons-asinorum, the depth-first scanner for wasted
++#     work, self-contradiction and missing escape hatches. It is passed as
++#     `pons-ref`.
++#   * panicbot — hyperpolymath/panic-attack, universal stress testing and
++#     logic-based bug signatures (the gitbot-fleet adapter in
++#     bots/panicbot/ wraps the same scanner). It is passed as `panic-ref`.
++#
++# All three refs are passed EXPLICITLY even though the reusable declares the
++# same values as defaults at the commit pinned below. Two reasons, both
++# measured elsewhere in this estate rather than guessed: a lane that silently
++# follows the reusable's moving default changes its checker when nobody is
++# looking at this repository, and a scan whose tool versions are not in the
++# caller's diff cannot be reviewed. The values below are the reusable's declared
++# defaults at `9bdf864c`, so this changes nothing about today's behaviour and
++# everything about tomorrow's. When the estate moves a default, that move must
++# arrive here as a commit.
++#
++# WHAT THIS LANE DOES NOT DO
++# --------------------------
++# It does not change the required-check contract. The required contexts
++# (`Julia tests`, `Agda proofs`, `REUSE compliance`) keep their names and their
++# matrix-free shapes; `test/unit/test_install_pins.jl` enforces that for
++# `ci.yml`, and this file leaves `ci.yml` alone. A failing row here is a finding
++# to triage against `.hypatia-baseline.json` or an exemption in
++# `.hypatia-exemptions.adoc`, not a licence to edit the required set.
++#
++# The scan is expensive (it builds three scanners). It runs on main, on every
++# pull request, weekly, and on demand; it is not attached to a path filter,
++# because a path-filtered security lane never reports on the changes that miss
++# the filter.
++
++name: Hypatia Security Scan
++
++on:
++  push:
++    branches: [main]
++  pull_request:
++  schedule:
++    - cron: "47 5 * * 1"
++  workflow_dispatch:
++
++permissions:
++  actions: read
++  contents: read
++  security-events: write
++
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: true
++
++jobs:
++  hypatia:
++    name: Hypatia neurosymbolic scan
++    uses: hyperpolymath/standards/.github/workflows/hypatia-scan-reusable.yml@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5
++    # Only the one secret the callee declares. `secrets: inherit` would forward
++    # every repository secret to a workflow that asked for one of them
++    # (standards#1108 §6b), and the estate's linter refuses it.
++    secrets:
++      HYPATIA_SCAN_PAT: ${{ secrets.HYPATIA_SCAN_PAT }}
++    with:
++      hypatia-ref: adb2f41db34156cf81b2508f6596a10c7f076098
++      pons-ref: bca1ea289a4f8a86bac6212731e6f8ec15c67ad4
++      panic-ref: 410a8f821ea8297833162565b50a298f787815da
++      # Reporting, not gating, for the first runs. A scan whose findings cannot
++      # fail anything is a dashboard, and that is why this is temporary: the
++      # first run's findings have to be triaged into `.hypatia-baseline.json` or
++      # named in `.hypatia-exemptions.adoc` before they can be a gate. Flipping
++      # this to true is the commit that makes them one, and it should be a commit
++      # whose diff is the triage itself — turning it on before that would fail
++      # this repository's pull requests for findings that predate them, which is
++      # the failure mode that got a validator deleted instead of the findings
++      # fixed elsewhere in this estate.
++      block-on-high: false
++      # Below-threshold findings stay out of the JSON too: nothing consumes them
++      # yet, and a report nobody reads is not worth the artefact.
++      hypatia-advisory: false
+diff --git a/.github/workflows/k9-deed-conformance.yml b/.github/workflows/k9-deed-conformance.yml
+new file mode 100644
+index 0000000..502bc44
+--- /dev/null
++++ b/.github/workflows/k9-deed-conformance.yml
+@@ -0,0 +1,78 @@
++# SPDX-FileCopyrightText: 2026 Joshua Benjamin Jewell
++# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
++# SPDX-License-Identifier: MPL-2.0
++
++## K9 and DEED conformance
++#
++# Two estate formats, two lanes, one file, because they are adopted together and
++# reviewed together:
++#
++#   * DEED — the repository deed (`<repo>_chora.deed`) that states what this
++#     repository is, who maintains it and under which terms. The canon's own
++#     linter checks it against the grammar.
++#   * K9 — the contracts under `.machine_readable/contractiles/` that state what
++#     the repository's configuration must satisfy, typechecked rather than
++#     eyeballed.
++#
++# Both are called from the canon at one pinned commit rather than reimplemented
++# here: `hyperpolymath/standards` is the owner spelling the Actions resolver has
++# accepted in this estate, and the pons-asinorum record of 2026-10-25 shows what
++# the other spelling costs (a reusable refused at job setup produces
++# `startup_failure`, no job and no log, so nothing is red and nothing explains
++# why). The `@9bdf864c` pin is a commit at which both reusable files exist; that
++# was checked against the API rather than assumed.
++#
++# WHY `require-files` IS FALSE FOR NOW
++# ------------------------------------
++# This repository carries no `.deed` and no `.k9` yet. With `require-files:
++# false` a lane with no corpus is grey rather than red, and the moment a file
++# appears it is validated — which is the property worth having today. Setting it
++# to true would fail every push until somebody manufactures a manifest to
++# satisfy the gate, and a manifest written to satisfy a validator is exactly how
++# a conformance lane stops meaning anything. The change that flips these to true
++# is the change that adds the deed and the contracts, and it should carry no
++# other subject.
++#
++# This file adds no required status check: the required contexts are unchanged,
++# and these two lanes are informational until the corpus exists.
++
++name: K9 and DEED conformance
++
++on:
++  push:
++    branches: [main]
++  pull_request:
++  workflow_dispatch:
++
++permissions:
++  contents: read
++
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: true
++
++jobs:
++  deed:
++    name: DEED conformance
++    uses: hyperpolymath/standards/.github/workflows/deed-conformance.yml@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5
++    permissions:
++      contents: read
++    with:
++      require-files: false
++
++  k9:
++    name: K9 contract conformance
++    uses: hyperpolymath/standards/.github/workflows/k9-conformance.yml@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5
++    # The callee's grid job reads `contents: read` and `pull-requests: read`
++    # (the latter to read its own previous grid comment as the delta baseline).
++    # A caller that grants less is refused at startup, with no job to explain it.
++    permissions:
++      contents: read
++      pull-requests: read
++    with:
++      require-files: false
++      # An orange grid is a real state, not a pass: with `false` only red fails,
++      # and orange is reported. Flipped together with `require-files` when the
++      # corpus exists.
++      fail-on-indeterminate: false
++      grid-author: github-actions[bot]
+diff --git a/.gitignore b/.gitignore
+index 58c02bf..0d2fca8 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -340,3 +340,9 @@ dev/server.log
+ 
+ # Agda interface files (proofs/agda)
+ proofs/agda/_build/
++
++# Evidence written by the test suite and uploaded by CI. It records what ran:
++# committing it would let a stale copy speak for a run that never happened.
++# Writer: test/unit/test_differential_sensitivity.jl
++# Reader: scripts/ci/check-sensitivity-evidence.jl
++test/artifacts/
+diff --git a/codecov.yml b/codecov.yml
+index 1ba73fe..39162e3 100644
+--- a/codecov.yml
++++ b/codecov.yml
+@@ -4,20 +4,53 @@
+ ## Codecov configuration
+ # Only the Julia backend under src/ is instrumented (see the
+ # julia-processcoverage step in CI); the TypeScript frontend is not measured
+-# through this report.
++# through this report, and this file does not pretend otherwise. Numbers that
++# quietly exclude most of the tree are worse than no numbers, because they read
++# as a guarantee.
+ 
+ coverage:
++  # Two decimals, rounded down: a report that rounds 89.6% to 90% is a report
++  # that passes a 90% gate it did not meet.
++  precision: 2
++  round: down
++  range: "85...100"
++
+   status:
+     project:
+       default:
+         ## Compare against the parent commit and tolerate a small dip so that
+         ## routine refactors do not fail the build on coverage alone.
+         target: auto
+-        threshold: 1%
++        threshold: 0.5%
++        ## A run whose tests failed has no coverage worth comparing; saying so
++        ## is better than reporting the fraction that happened to execute.
++        if_ci_failed: error
+     patch:
+       default:
+-        ## Report patch coverage for information without blocking merges.
+-        informational: true
++        ## PATCH COVERAGE IS NOW A GATE.
++        ##
++        ## It was informational, and on MetaManifold-WebUI#70 that meant a pull
++        ## request adding 139 lines to src/analysis/differential.jl landed at
++        ## 38.77% patch coverage with the report saying "missing lines" and
++        ## nothing failing. The lines were unreachable in CI for a real reason -
++        ## the native estimators need CompositionalDA, which is not in the
++        ## General registry, so no checkout CI can produce has it - and an
++        ## informational setting made that reason invisible: it did not have to
++        ## be fixed or even stated, because nothing broke.
++        ##
++        ## The fix was a test seam (`differential_abundance(...;
++        ## native_backend=…)` plus a stand-in backend in test/support/), not a
++        ## lower bar. The bar is what makes the next unreachable branch visible
++        ## while there is still a pull request to fix it in.
++        ##
++        ## 90% rather than 100%: a hundred-percent patch target on a codebase
++        ## with R- and package-gated branches invites `# codecov: ignore` on the
++        ## one line that mattered, and Codecov's own guidance is that a hundred
++        ## percent target produces more suppression than coverage. Below this,
++        ## a file needs a reason in review.
++        target: 90%
++        threshold: 0%
++        informational: false
+ 
+ ## Paths excluded from the coverage denominator
+ # MetaManifold.jl is pure module assembly: it contains only include and using
+@@ -25,3 +58,12 @@ coverage:
+ # reported percentage without reflecting any real gap in testing.
+ ignore:
+   - "src/MetaManifold.jl"
++
++comment:
++  ## Show the diff-level picture, not just the percentage: the question on a
++  ## coverage comment is "which of the lines I added are not tested", and the
++  ## default layout does not answer it.
++  layout: "reach, diff, files"
++  require_changes: false
++  require_base: false
++  require_head: true
+diff --git a/docs/guide/development.md b/docs/guide/development.md
+index 88b4a7d..0c44388 100644
+--- a/docs/guide/development.md
++++ b/docs/guide/development.md
+@@ -45,6 +45,107 @@ The integration run assigns taxonomy against PR2 by default, which needs about 1
+ 
+ Name unit test files to run only those: `julia --project=. test/runtests.jl routes trees`. `dev/dev.sh` runs the development server, rebuilds and tests one job at a time, stopping and restarting the server around builds and tests (`dev/dev.sh` alone lists its commands). Deferred work is listed in `dev/TODO.md`.
+ 
++## Continuous verification
++
++CI is three required checks — `Julia tests`, `Agda proofs`, `REUSE compliance` — and a set of
++lanes beside them. The names of the required checks are load-bearing: a branch ruleset
++matches a required status check by the display name GitHub posts, and a check that is renamed
++or that embeds a matrix combination is simply absent, which no pull request can satisfy.
++`test/unit/test_install_pins.jl` asserts over every job in `ci.yml` that the name interpolates
++nothing and that the job has no matrix, so the rule cannot regress silently. Nothing below
++renames or replaces those three.
++
++### Coverage
++
++Julia line coverage of `src/` is uploaded to Codecov by the test job; the TypeScript frontend
++is not measured through that report, and `codecov.yml` says so rather than letting a
++frontend-sized blind spot read as a guarantee.
++
++Patch coverage is a gate at 90%, with no tolerance. It used to be informational, and the cost
++of that was measurable: the native `aldex2`/`ancombc` adapter in `src/analysis/differential.jl`
++landed at 38.77% patch coverage, because the estimators need `CompositionalDA`, which is not in
++the General registry, so no checkout CI can produce has it and the adapter's whole body was
++unreachable there. An informational setting meant that reason never had to be stated.
++
++The fix was a seam rather than a lower bar: `differential_abundance(...; native_backend=…)`
++calls a module instead of the package name, so `test/support/native_da_stub.jl` can supply a
++stand-in with the same entry points, columns and verdict strings, and
++`test/unit/test_differential_native.jl` exercises the production path with it. The result
++records which module produced it under `diagnostics.native_method.package`, so a record made
++with the stand-in cannot be read as one made with the package.
++
++### Sensitivity, specificity and precision
++
++Every other test in the suite asks whether a method computes what it says it computes. None can
++tell a working method from one that calls every taxon significant, because such a method is
++consistent with its own reference implementation. `test/unit/test_differential_sensitivity.jl`
++is the external check: a negative-binomial community is simulated with a known answer (eight
++taxa multiplied fourfold in the contrast condition, eight divided, eight unchanged), the real
++analyses are run on it, and the calls are scored after Benjamini-Hochberg at 0.05.
++
++```
++sensitivity = tp / (tp + fn)    of the taxa that really differ, how many were called
++specificity = tn / (tn + fp)    of the taxa that do not, how many were left alone
++precision   = tp / (tp + fp)    the complement of the false discovery proportion
++```
++
++Two things keep it from being a tautology. A label-permuted control re-runs the same counts with
++the group labels shuffled, destroying every real difference; a method whose sensitivity survives
++that is measuring its own threshold, and that comparison — not the absolute floors, which are
++deliberately loose — is the strong assertion. The metric functions themselves are unit-tested
++against a table whose scores are known by hand, so a broken counter cannot produce a passing
++report.
++
++The measurement is written to `test/artifacts/differential-sensitivity.json` (ignored by git: a
++stale copy must not speak for a run that never happened) and read by
++`scripts/ci/check-sensitivity-evidence.jl`, which refuses the file when a claim has no measured
++value, when a value contradicts its floor, when `passed` is not what the numbers imply, or when
++the file is absent — a skipped measurement is not a pass. Each claim is graded
++`Provisionally-Proven` in the sense of `hyperpolymath/proven-tests-and-benches`: demonstrated by
++a test that ran and passed, never proved. The checker refuses an `Actually-Proven` claim, because
++this lane cannot produce one.
++
++```bash
++julia --project=. test/runtests.jl differential_sensitivity   # measure (needs R with MASS)
++julia --project=. scripts/ci/check-sensitivity-evidence.jl    # read the evidence
++```
++
++### Test sensitivity (mutants)
++
++Coverage counts lines that ran. `scripts/ci/mutants-differential.sh` counts lines that would be
++*noticed* if they were wrong: ten deliberate, plausible corruptions of the native adapter (BH
++applied twice, the wrong column published as the estimate, the contrast direction swapped, the
++seam bypassed, a non-finite statistic published) each run against a focused suite. The
++unmutated baseline runs first and must pass, because a survivor only means something against a
++green baseline. A mutant that survives fails the step: the suite does not constrain that
++behaviour. A mutant that dies of a syntax error fails it too, since that proves the parser works
++rather than the tests. None of them needs R, because the stand-in backend is what is exercised.
++
++```bash
++bash scripts/ci/mutants-differential.sh          # run every mutant
++bash scripts/ci/mutants-differential.sh --list   # the labels only
++```
++
++Adapted from `scripts/mutants.sh` and `scripts/julia-mutants.sh` in
++`hyperpolymath/MetaManifold-Evidence` (AGPL-3.0-or-later), which hold the same line for the Agda
++proofs and the grid certificate.
++
++### Estate lanes
++
++Three lanes call the shared canon (`hyperpolymath/standards`) instead of copying it, each pinned
++to a commit at which the reusable exists — checked against the API, not assumed. They add no
++required status check.
++
++| Workflow | What it does | What it does not do |
++|---|---|---|
++| `hypatia-scan.yml` | Runs the neurosymbolic governance scan. Its grid carries the pons-asinorum row (`pons-ref`) and the panic-attack row (`panic-ref`, the scanner behind the fleet's `panicbot`), both pinned explicitly so the checker cannot move without a commit here. | It reports rather than blocks for now: high findings become a gate in the change that triages the first run's findings into a baseline or a named exemption. Flipping `block-on-high` before that would fail pull requests for findings that predate them. |
++| `k9-deed-conformance.yml` | Lints the DEED repository deed and typechecks the K9 contracts from `.machine_readable/contractiles/`. | This repository carries neither yet, so `require-files` is false and an empty corpus is grey, not red. The change that adds the deed and the contracts flips it to true; a manifest written to satisfy a validator would defeat the lane. |
++| `cicd-squabbler.yml` | `squabble chains` maps reusable-workflow and action edges across repositories, so a dead upstream or a cycle is found while the board reads green. Exit 4 fails; exit 2 (the tool could not look) fails too. | The `fight-report` half is advisory and never passes `--apply`. Without a credential that can read classic branch protection it reports NOT RUN rather than guessing. |
++
++The first run of `hypatia-scan.yml` is the measurement that decides whether `block-on-high`
++can be flipped in the next pull request; nothing in this guide should be read as a promise
++about findings that have not been scanned yet.
++
+ ## Architecture
+ 
+ ```
+diff --git a/scripts/ci/check-sensitivity-evidence.jl b/scripts/ci/check-sensitivity-evidence.jl
+new file mode 100644
+index 0000000..0750a08
+--- /dev/null
++++ b/scripts/ci/check-sensitivity-evidence.jl
+@@ -0,0 +1,129 @@
++#!/usr/bin/env julia
++# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
++# SPDX-License-Identifier: AGPL-3.0-or-later
++
++## Check the differential sensitivity evidence
++#
++# `test/unit/test_differential_sensitivity.jl` measures how well the differential
++# methods find a spike-in signal that is known to be there, and writes what it
++# measured to `test/artifacts/differential-sensitivity.json`. This script is the
++# reader that decides whether that file is evidence.
++#
++# The rule it enforces is the one hyperpolymath/proven-tests-and-benches is built
++# around: coverage and provenance are DERIVED from tests that ran and passed,
++# never declared. So the file must exist (a suite that skipped produced no
++# evidence), each claim must carry a measured value and the floor it was held to
++# (a claim without a number is a slogan), the measured value must clear the floor
++# in both directions (the file cannot assert a pass the numbers contradict), and
++# `passed` must be the value the comparisons imply rather than a field somebody
++# wrote.
++#
++# Usage: julia --project=. scripts/ci/check-sensitivity-evidence.jl [path]
++# Exit: 0 when the evidence is complete and consistent; 1 otherwise.
++
++using JSON3
++
++const DEFAULT_PATH = joinpath(@__DIR__, "..", "..", "test", "artifacts",
++                              "differential-sensitivity.json")
++
++# The tiers of proven-tests-and-benches. This lane can only ever produce the
++# middle one: the metrics are demonstrated by a test that ran, never proved.
++const TIERS = ("Actually-Proven", "Provisionally-Proven", "Unproven")
++
++# The claims every method entry must carry.
++const REQUIRED_CLAIMS = ("sensitivity", "specificity", "precision")
++
++function problems_with(path)
++    problems = String[]
++    isfile(path) || return ["$path does not exist: the sensitivity testset did not run, " *
++                            "so there is no evidence to read. A skipped measurement is not a pass."]
++    doc = try
++        JSON3.read(read(path, String))
++    catch err
++        return ["$path is not readable JSON: $(sprint(showerror, err))"]
++    end
++
++    get(doc, :schema_version, nothing) == 1 || push!(problems, "schema_version must be 1")
++    if get(doc, :kind, "") != "differential-sensitivity"
++        push!(problems, "kind must be \"differential-sensitivity\"")
++    end
++    if !haskey(doc, :seed)
++        push!(problems, "the seed is not recorded, so the run is not reproducible")
++    end
++
++    methods = get(doc, :methods, nothing)
++    if !(methods isa JSON3.Object && !isempty(methods))
++        return vcat(problems, "no method produced a measurement")
++    end
++
++    for (method, entry) in pairs(methods)
++        label = String(method)
++        tier = get(entry, :tier, "")
++        tier in TIERS || push!(problems, "$label: tier '$tier' is not one of $(join(TIERS, ", "))")
++        tier == "Actually-Proven" && push!(problems,
++            "$label: claims Actually-Proven, which this lane cannot produce: the metrics come " *
++            "from a test that ran, not from a proof")
++        get(entry, :passed, false) === true ||
++            push!(problems, "$label: passed is not true")
++        claims = get(entry, :claims, nothing)
++        if !(claims isa JSON3.Object)
++            push!(problems, "$label: claims are missing")
++        else
++            for name in REQUIRED_CLAIMS
++                if !haskey(claims, Symbol(name))
++                    push!(problems, "$label: the $name claim is missing")
++                    continue
++                end
++                claim = claims[Symbol(name)]
++                value = get(claim, :value, nothing)
++                floor = get(claim, :floor, nothing)
++                if !(value isa Real && floor isa Real)
++                    push!(problems, "$label/$name: value and floor must both be numbers")
++                elseif !isfinite(value)
++                    push!(problems, "$label/$name: value is not finite")
++                elseif value < floor
++                    push!(problems, "$label/$name: measured $value is below its floor $floor, " *
++                                    "so 'passed' contradicts the measurement")
++                end
++            end
++        end
++        # A method that called nothing has precision 1 and specificity 1 by
++        # construction. The table has to show real calls, or the perfect ratios
++        # are arithmetic, not ability.
++        counts = get(entry, :counts, nothing)
++        counts isa JSON3.Object || push!(problems, "$label: the confusion counts are missing")
++    end
++    problems
++end
++
++function summary(path)
++    doc = JSON3.read(read(path, String))
++    rows = ["| Method | Sensitivity | Specificity | Precision | tp/fp/fn/tn | Tier |",
++            "|---|---|---|---|---|---|"]
++    for (method, entry) in pairs(doc.methods)
++        c = entry.claims
++        n = entry.counts
++        push!(rows, "| `$method` | $(round(c.sensitivity.value; digits=3)) | " *
++                    "$(round(c.specificity.value; digits=3)) | " *
++                    "$(round(c.precision.value; digits=3)) | " *
++                    "$(n.tp)/$(n.fp)/$(n.fn)/$(n.tn) | $(entry.tier) |")
++    end
++    join(rows, "\n")
++end
++
++function main(args)
++    path = isempty(args) ? DEFAULT_PATH : args[1]
++    problems = problems_with(path)
++    if isempty(problems)
++        println("sensitivity evidence: complete and consistent ($(abspath(path)))")
++        println(summary(path))
++        return 0
++    end
++    println(stderr, "sensitivity evidence: $(length(problems)) problem(s) in $path")
++    for p in problems
++        println(stderr, "  - ", p)
++    end
++    return 1
++end
++
++exit(main(ARGS))
+diff --git a/scripts/ci/mutants-differential.sh b/scripts/ci/mutants-differential.sh
+new file mode 100644
+index 0000000..5954d4a
+--- /dev/null
++++ b/scripts/ci/mutants-differential.sh
+@@ -0,0 +1,104 @@
++#!/usr/bin/env bash
++# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
++# SPDX-License-Identifier: AGPL-3.0-or-later
++#
++# Test sensitivity: does the differential suite actually constrain the code?
++#
++# Adapted from `scripts/mutants.sh` and `scripts/julia-mutants.sh` in
++# hyperpolymath/MetaManifold-Evidence (AGPL-3.0-or-later), which hold the same
++# line for the Agda proofs and the Julia certificate table: a mutant is a
++# deliberate, plausible corruption of the code under test, and a suite that
++# still passes with it in place is not testing that behaviour. Coverage counts
++# lines that ran; this counts lines that would be *noticed* if they were wrong.
++# The two answer different questions and the estate has been bitten by treating
++# the first as the second.
++#
++# Every mutant below has a named catcher in
++# `test/unit/test_differential_native.jl`, and none of them needs R: the native
++# adapter is exercised through the stand-in backend, so this gate runs in the
++# same job as the suite without a second environment.
++#
++# The invariant, stated so that it cannot drift into a bypass: a mutant survives
++# only if the suite is blind to it. It is never "the suite is green, so pass" —
++# the unmutated baseline runs first and must pass, or nothing below is
++# meaningful.
++#
++# Usage: bash scripts/ci/mutants-differential.sh [--list]
++# Exit: 0 when every mutant is killed and the baseline passes; 1 otherwise.
++
++set -euo pipefail
++cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.."
++
++julia_bin="${JULIA:-julia}"
++target="src/analysis/differential.jl"
++tests="differential_native"
++
++if [ "${1:-}" = "--list" ]; then
++  printf '%s\n' \
++    'bh-not-suppressed' 'estimate-from-wrong-column' 'log2-uses-log10' \
++    'structural-decisions-ignored' 'contrast-direction-reversed' \
++    'seam-bypassed' 'one-taxon-floor' 'composition-error-swallowed' \
++    'package-name-hardcoded' 'nonfinite-published'
++  exit 0
++fi
++
++work="$(mktemp -d)"
++backup="$work/differential.jl"
++cp "$target" "$backup"
++restore() { cp "$backup" "$target"; }
++trap 'restore; rm -rf "$work"' EXIT
++
++echo "baseline: the unmutated suite must pass, or a survivor means nothing"
++if ! "$julia_bin" --project=. test/runtests.jl "$tests" >"$work/baseline.log" 2>&1; then
++  echo "ERROR: the baseline suite fails, so mutation results cannot be interpreted" >&2
++  tail -40 "$work/baseline.log" >&2
++  exit 1
++fi
++echo "PASS: baseline is green"
++
++# Apply one sed expression to the target and require that the copy changed and
++# that the focused suite fails. A mutant that dies of a syntax error is not a
++# kill: it proves the parser works, not the tests.
++kill_mutant() {
++  local label=$1 expr=$2
++  restore
++  sed -i -e "$expr" "$target"
++  if cmp -s "$backup" "$target"; then
++    echo "ERROR: mutant $label did not change $target (stale pattern)" >&2
++    exit 1
++  fi
++  if "$julia_bin" --project=. test/runtests.jl "$tests" >"$work/$label.log" 2>&1; then
++    echo "ERROR: mutant survived: $label - the suite does not constrain this behaviour" >&2
++    tail -20 "$work/$label.log" >&2
++    exit 1
++  fi
++  if grep -qE 'syntax:|ParseError|ERROR: LoadError' "$work/$label.log"; then
++    cat "$work/$label.log" >&2
++    echo "ERROR: mutant $label failed to load, so it was never tested" >&2
++    exit 1
++  fi
++  echo "PASS: killed $label"
++}
++
++# Applying BH a second time to ALDEx2's expected p-values.
++kill_mutant bh-not-suppressed 's@^    if !native_adjustment$@    if true@'
++# Reporting the within-instance effect where the between-condition difference belongs.
++kill_mutant estimate-from-wrong-column 's@^                "estimate" => aldex ? f.diff_btw : f.effect,$@                "estimate" => f.effect,@'
++# Converting natural-log effects with the wrong base.
++kill_mutant log2-uses-log10 's@^                "log2_fold_change" => aldex ? nothing : f.effect / log(2),$@                "log2_fold_change" => aldex ? nothing : f.effect / log(10),@'
++# Publishing a table of numbers for taxa the model declared structurally absent.
++kill_mutant structural-decisions-ignored 's@^            if config.method == "ancombc" \&\& f.status != "tested"$@            if false@'
++# Swapping the contrast direction, so a positive effect means less abundant.
++kill_mutant contrast-direction-reversed 's@^        native_groups = \[g == reference ? "0" : "1" for g in groups\]$@        native_groups = [g == reference ? "1" : "0" for g in groups]@'
++# Checking the package instead of the backend that will actually be called.
++kill_mutant seam-bypassed 's@^        _native_methods_available(config.method, backend)$@        _native_methods_available(config.method)@'
++# Letting a single retained taxon through to a two-group composition.
++kill_mutant one-taxon-floor 's@^        length(tested) >= 2 ||@        length(tested) >= 1 ||@'
++# Rethrowing the package's refusal instead of reporting it as one.
++kill_mutant composition-error-swallowed 's@^            _is_composition_error(backend, e) \&\& error(sprint(showerror, e))$@            false \&\& error(sprint(showerror, e))@'
++# Recording the package's name when a stand-in produced the numbers.
++kill_mutant package-name-hardcoded 's@^        diagnostics\["native_method"\] = Dict("package" => string(nameof(backend)),$@        diagnostics["native_method"] = Dict("package" => "CompositionalDA",@'
++# Publishing a NaN statistic rather than refusing to report one.
++kill_mutant nonfinite-published 's@^            isfinite(f.effect) \&\& isfinite(f.pvalue) \&\& isfinite(f.qvalue) ||$@            true ||@'
++
++echo "PASS: every mutant was killed by the differential native suite"
+diff --git a/test/unit/test_differential_sensitivity.jl b/test/unit/test_differential_sensitivity.jl
+new file mode 100644
+index 0000000..5b4b49f
+--- /dev/null
++++ b/test/unit/test_differential_sensitivity.jl
+@@ -0,0 +1,297 @@
++# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
++# SPDX-License-Identifier: AGPL-3.0-or-later
++
++# Does the differential analysis find what is there, and only what is there?
++#
++# Every other test in this suite checks that a method computes what it says it
++# computes. None of them can tell a working method from one that calls every
++# taxon significant, or none, because such a method is *consistent*: it matches
++# its own reference implementation exactly. This file is the external check. A
++# community is simulated with a known answer — eight taxa multiplied in the
++# contrast condition, eight divided, eight unchanged — the real analyses are run
++# on it, and the calls are scored:
++#
++#   sensitivity  tp / (tp + fn)   of the sixteen taxa that really differ, how
++#                                 many were called
++#   specificity  tn / (tn + fp)   of the eight that do not differ, how many were
++#                                 left alone
++#   precision    tp / (tp + fp)   1 - the false discovery proportion
++#
++# Two things keep this from being a tautology:
++#
++# * A label-permuted control. The same counts are analysed again with the group
++#   labels shuffled, which destroys every real difference. A method whose
++#   sensitivity survives that is measuring its own threshold, not the data. The
++#   control is the *strong* assertion here; the absolute floors below are
++#   deliberately loose, because they have to hold on any machine, and a loose
++#   floor that a working implementation always meets still fails loudly when a
++#   method starts calling everything or nothing.
++#
++# * The metrics themselves are unit-tested against a table whose scores are
++#   known by hand, above, so a broken counter cannot produce a passing report.
++#
++# The evidence is written to `test/artifacts/differential-sensitivity.json`,
++# with the tier of every claim — Provisionally-Proven, in the sense of
++# hyperpolymath/proven-tests-and-benches: demonstrated by a test that ran and
++# passed, not proved. `passed` is derived from the checks that actually ran, not
++# declared, and `scripts/ci/check-sensitivity-evidence.jl` refuses the file if a
++# claim is missing, unmeasured or failing.
++
++using MetaManifold, Test
++using Random, JSON3
++using MetaManifold.Differential
++
++const _SENSITIVITY_ARTIFACT = joinpath(@__DIR__, "..", "artifacts", "differential-sensitivity.json")
++const _SENSITIVITY_SEED = 20261109
++
++# The claims this file makes, and the floor each one has to clear. Loose on
++# purpose; see the preamble.
++const _SENSITIVITY_FLOORS = Dict(
++    "sensitivity" => 0.625,     # 10 of the 16 taxa that really differ
++    "specificity" => 0.625,     # 5 of 8 unchanged taxa left alone
++    "precision"   => 0.6)
++
++"""
++    _poisson(rng, lambda) -> Int
++
++A Poisson draw by Knuth's method. `exp(-lambda)` underflows for the larger
++means in this simulation, and Poisson variates are additive, so the mean is
++consumed in pieces of at most 20 rather than exponentiated whole.
++"""
++function _poisson_small(rng, lambda::Float64)
++    lambda <= 0 && return 0
++    limit = exp(-lambda)
++    k = 0
++    p = 1.0
++    while true
++        k += 1
++        p *= rand(rng)
++        p <= limit && return k - 1
++    end
++end
++
++function _poisson(rng, lambda::Real)
++    total = 0
++    remaining = Float64(lambda)
++    while remaining > 20
++        total += _poisson_small(rng, 20.0)
++        remaining -= 20
++    end
++    total + _poisson_small(rng, remaining)
++end
++
++"""
++    _simulate(; n_per_group=8, n_up=8, n_down=8, n_null=8, dispersion=5, fold=4.0)
++
++A samples x taxa count matrix with a known answer, drawn from a
++negative-binomial (Gamma-Poisson) community: each taxon has a baseline mean, the
++`n_up` taxa are multiplied by `fold` in the contrast group, the `n_down` taxa are
++divided by it, and the `n_null` taxa are unchanged. `dispersion` is the Gamma
++shape, so the counts are overdispersed exactly as amplicon counts are.
++
++Returns `(counts, samples, taxa, groups, truth)` where `truth[taxon]` is `1` for
++up, `-1` for down and `0` for unchanged.
++"""
++function _simulate(; n_per_group::Int=8, n_up::Int=8, n_down::Int=8, n_null::Int=8,
++                   dispersion::Int=5, fold::Float64=4.0)
++    rng = MersenneTwister(_SENSITIVITY_SEED)
++    n_taxa = n_up + n_down + n_null
++    taxa = ["taxon_$(lpad(j, 3, '0'))" for j in 1:n_taxa]
++    truth = Dict{String,Int}()
++    for (j, taxon) in enumerate(taxa)
++        truth[taxon] = j <= n_up ? 1 : (j <= n_up + n_down ? -1 : 0)
++    end
++    # Baseline means spanning two orders of magnitude, so neither the rare nor
++    # the abundant end of the table is the only one tested.
++    baseline = [20.0 * 1.18^(j - 1) for j in 1:n_taxa]
++    groups = vcat(fill("control", n_per_group), fill("treated", n_per_group))
++    samples = ["s$(i)" for i in eachindex(groups)]
++    counts = Matrix{Int}(undef, length(samples), n_taxa)
++    for i in eachindex(samples)
++        treated = groups[i] == "treated"
++        for j in 1:n_taxa
++            mu = baseline[j]
++            treated && truth[taxa[j]] == 1 && (mu *= fold)
++            treated && truth[taxa[j]] == -1 && (mu /= fold)
++            # Gamma(shape=dispersion, scale=mu/dispersion), exactly, as the sum
++            # of `dispersion` exponentials; then Poisson, giving the
++            # negative-binomial marginal.
++            lambda = (mu / dispersion) * sum(randexp(rng, dispersion))
++            counts[i, j] = _poisson(rng, lambda)
++        end
++    end
++    (counts, samples, taxa, groups, truth)
++end
++
++"""
++    _classification_metrics(result, truth; alpha=0.05) -> NamedTuple
++
++tp, fp, fn, tn and the three ratios for one analysis, counting a taxon as
++called when its BH-adjusted p-value is below `alpha`. A taxon with no adjusted
++p-value (filtered, or a structural decision) is not called.
++"""
++function _classification_metrics(result, truth; alpha::Real=0.05)
++    called = Set{String}()
++    for row in result["rows"]
++        p = row["padj"]
++        (isnothing(p) || p >= alpha) && continue
++        push!(called, String(row["taxon"]))
++    end
++    tp = fp = fn = tn = 0
++    for (taxon, direction) in truth
++        if direction == 0
++            taxon in called ? (fp += 1) : (tn += 1)
++        else
++            taxon in called ? (tp += 1) : (fn += 1)
++        end
++    end
++    sensitivity = tp + fn == 0 ? NaN : tp / (tp + fn)
++    specificity = tn + fp == 0 ? NaN : tn / (tn + fp)
++    precision = tp + fp == 0 ? 1.0 : tp / (tp + fp)
++    (tp=tp, fp=fp, fn=fn, tn=tn, sensitivity=sensitivity,
++     specificity=specificity, precision=precision, n_called=length(called))
++end
++
++@testset "Differential sensitivity and specificity" begin
++    # First the counter itself: a table whose scores are known by hand.
++    hand = Dict(
++        "status" => "ok",
++        "rows" => [Dict{String,Any}("taxon" => "up1",   "padj" => 0.001),
++                   Dict{String,Any}("taxon" => "up2",   "padj" => 0.2),
++                   Dict{String,Any}("taxon" => "null1", "padj" => 0.04),
++                   Dict{String,Any}("taxon" => "null2", "padj" => nothing)])
++    hand_truth = Dict("up1" => 1, "up2" => 1, "null1" => 0, "null2" => 0)
++    m = _classification_metrics(hand, hand_truth)
++    @test (m.tp, m.fp, m.fn, m.tn) == (1, 1, 1, 1)
++    @test m.sensitivity == 0.5
++    @test m.specificity == 0.5
++    @test m.precision == 0.5
++    @test m.n_called == 2
++
++    counts, samples, taxa, groups, truth = _simulate()
++    @test size(counts) == (16, 24)
++    @test all(>=(0), counts)
++    @test count(==(1), values(truth)) == 8
++    @test count(==(-1), values(truth)) == 8
++    @test count(==(0), values(truth)) == 8
++
++    # HAVE_MASS and HAVE_ZCOMP are established by test_differential.jl, which
++    # runs first. Naming this file alone must not crash on their absence.
++    _have_mass = @isdefined(HAVE_MASS) ? HAVE_MASS : false
++    _have_zcomp = @isdefined(HAVE_ZCOMP) ? HAVE_ZCOMP : false
++    methods = String[]
++    _have_mass && push!(methods, "nb_glm")
++    _have_zcomp && push!(methods, "clr_welch")
++
++    claims = Dict{String,Any}()
++    if isempty(methods)
++        @info "R, MASS or zCompositions unavailable - the sensitivity measurement is SKIPPED"
++        @test_skip false
++    else
++        # The same input with the labels shuffled destroys every real
++        # difference. Any sensitivity left is the threshold talking.
++        #
++        # Reshuffled until both groups keep at least three samples: a split of
++        # 1/15 is still a valid permutation but it is not a valid input to
++        # either analysis, and a seed that happened to draw one would fail this
++        # file for a reason that has nothing to do with sensitivity.
++        rng = MersenneTwister(_SENSITIVITY_SEED + 1)
++        order = collect(eachindex(groups))
++        permuted_groups = groups
++        while true
++            Random.shuffle!(rng, order)
++            candidate = groups[order]
++            if count(==("control"), candidate) >= 3 && count(==("treated"), candidate) >= 3
++                permuted_groups = candidate
++                break
++            end
++        end
++
++        for method in methods
++            config = DifferentialConfig(; method)
++            actual = differential_abundance(counts, samples, taxa, groups;
++                reference="control", contrast="treated", config)
++            control = differential_abundance(counts, samples, taxa, permuted_groups;
++                reference="control", contrast="treated", config)
++            a = _classification_metrics(actual, truth)
++            c = _classification_metrics(control, truth)
++
++            @test a.tp + a.fp + a.fn + a.tn == length(truth)
++            @test a.sensitivity >= _SENSITIVITY_FLOORS["sensitivity"]
++            @test a.specificity >= _SENSITIVITY_FLOORS["specificity"]
++            @test a.precision >= _SENSITIVITY_FLOORS["precision"]
++            # The control is the assertion that matters: permuted labels cannot
++            # find more of the truth than the real labels do.
++            @test c.sensitivity <= a.sensitivity
++            @test c.sensitivity <= 0.25
++
++            claims[method] = Dict{String,Any}(
++                "tier" => "Provisionally-Proven",
++                "tier_basis" => "a test that ran and passed; no proof",
++                "claims" => Dict{String,Any}(
++                    "sensitivity" => Dict("value" => a.sensitivity,
++                                          "floor" => _SENSITIVITY_FLOORS["sensitivity"]),
++                    "specificity" => Dict("value" => a.specificity,
++                                          "floor" => _SENSITIVITY_FLOORS["specificity"]),
++                    "precision" => Dict("value" => a.precision,
++                                        "floor" => _SENSITIVITY_FLOORS["precision"])),
++                "counts" => Dict("tp" => a.tp, "fp" => a.fp,
++                                 "fn" => a.fn, "tn" => a.tn),
++                "control" => Dict("sensitivity" => c.sensitivity,
++                                  "specificity" => c.specificity,
++                                  "precision" => c.precision,
++                                  "tp" => c.tp, "fp" => c.fp),
++                "passed" => a.sensitivity >= _SENSITIVITY_FLOORS["sensitivity"] &&
++                            a.specificity >= _SENSITIVITY_FLOORS["specificity"] &&
++                            a.precision >= _SENSITIVITY_FLOORS["precision"] &&
++                            c.sensitivity <= a.sensitivity &&
++                            c.sensitivity <= 0.25)
++        end
++
++        if compositional_da_available()
++            config = DifferentialConfig(; method="aldex2", mc_samples=64, seed=7)
++            actual = differential_abundance(counts, samples, taxa, groups;
++                reference="control", contrast="treated", config)
++            a = _classification_metrics(actual, truth)
++            @test a.sensitivity >= _SENSITIVITY_FLOORS["sensitivity"]
++            @test a.specificity >= _SENSITIVITY_FLOORS["specificity"]
++            claims["aldex2"] = Dict{String,Any}(
++                "tier" => "Provisionally-Proven",
++                "tier_basis" => "a test that ran and passed; no proof",
++                "claims" => Dict{String,Any}(
++                    "sensitivity" => Dict("value" => a.sensitivity,
++                                          "floor" => _SENSITIVITY_FLOORS["sensitivity"]),
++                    "specificity" => Dict("value" => a.specificity,
++                                          "floor" => _SENSITIVITY_FLOORS["specificity"]),
++                    "precision" => Dict("value" => a.precision,
++                                        "floor" => _SENSITIVITY_FLOORS["precision"])),
++                "counts" => Dict("tp" => a.tp, "fp" => a.fp,
++                                 "fn" => a.fn, "tn" => a.tn),
++                "passed" => a.sensitivity >= _SENSITIVITY_FLOORS["sensitivity"] &&
++                            a.specificity >= _SENSITIVITY_FLOORS["specificity"] &&
++                            a.precision >= _SENSITIVITY_FLOORS["precision"])
++        end
++
++        # Written only now, from what ran: every entry above is the record of an
++        # analysis that was actually executed in this session.
++        mkpath(dirname(_SENSITIVITY_ARTIFACT))
++        open(_SENSITIVITY_ARTIFACT, "w") do io
++            JSON3.pretty(io, Dict{String,Any}(
++                "schema_version" => 1,
++                "kind" => "differential-sensitivity",
++                "seed" => _SENSITIVITY_SEED,
++                "alpha" => 0.05,
++                "design" => Dict("samples_per_group" => 8, "n_up" => 8,
++                                 "n_down" => 8, "n_null" => 8,
++                                 "fold" => 4.0, "dispersion" => 5),
++                "floors" => _SENSITIVITY_FLOORS,
++                "provenance" => Dict("provided_by" => "test/unit/test_differential_sensitivity.jl",
++                                     "derived_from" => "the analyses this file ran",
++                                     "not_claimed" => "that the methods are calibrated; " *
++                                                      "the floors are loose and the control " *
++                                                      "is the strong assertion"),
++                "methods" => claims))
++        end
++        @test isfile(_SENSITIVITY_ARTIFACT)
++    end
++end
