@@ -48,6 +48,53 @@ jobs:
       - name: Gate self-test (every mutant must be refused)
         run: bash scripts/mutants.sh
 
+  rocq:
+    # PROOF-POLICY §2 recheck leg, re-proved by hand. Rocq comes from
+    # Ubuntu's package index at an exact version, not a Guix manifest or
+    # container: a §6 deviation, recorded in PROOF-STATUS.adoc.
+    name: Rocq recheck leg
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Install Rocq from Ubuntu at an exact version
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y coq=8.18.0+dfsg-1build2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Fetch residual-evidence-types by commit
+        run: bash scripts/fetch-layer-a.sh
+      - name: Rocq leg, assumptions audit and expected rejections
+        run: bash scripts/check-rocq.sh
+
+  lean:
+    # PROOF-POLICY §2 recheck leg, re-proved by hand with core Init only.
+    # The release tarball is checked against a recorded sha256: a §6
+    # deviation, recorded in PROOF-STATUS.adoc.
+    name: Lean recheck leg
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      LEAN_VERSION: 4.24.0
+      LEAN_SHA256: b14f5e5159219dd1a1956c3b806813319f5e94ccd5bdfd56f54520609a5bb5ec
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Install checksum-verified Lean
+        run: |
+          curl -fsSLo lean.tar.zst "https://github.com/leanprover/lean4/releases/download/v${LEAN_VERSION}/lean-${LEAN_VERSION}-linux.tar.zst"
+          echo "${LEAN_SHA256}  lean.tar.zst" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/lean"
+          tar --use-compress-program=unzstd -xf lean.tar.zst -C "$RUNNER_TEMP/lean" --strip-components=1
+          rm lean.tar.zst
+          echo "LEAN=$RUNNER_TEMP/lean/bin/lean" >> "$GITHUB_ENV"
+      - name: Fetch residual-evidence-types by commit
+        run: bash scripts/fetch-layer-a.sh
+      - name: Lean leg, axiom audit and expected rejections
+        run: bash scripts/check-lean.sh
+
   julia:
     # The official tarball, checked against the sha256 julialang publishes,
     # instead of a third-party setup action.

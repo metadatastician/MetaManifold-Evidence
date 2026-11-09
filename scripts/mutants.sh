@@ -31,7 +31,7 @@ kill_mutant() {
     echo "ERROR: mutant $label did not change the module (stale pattern)" >&2
     exit 1
   fi
-  if "$prover" --safe --without-K --no-libraries --ignore-interfaces \
+  if "$prover" --safe --without-K --cubical-compatible --no-libraries --ignore-interfaces \
        -i "$dir" -i "$ret_src" "$dir/$check" >"$dir.log" 2>&1; then
     echo "ERROR: mutant survived: $label" >&2
     exit 1

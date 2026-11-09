@@ -24,4 +24,4 @@ fetch() {
 }
 
 mkdir -p "$deps"
-fetch residual-evidence-types hyperpolymath/residual-evidence-types 62d749075425ec32a5aa150d8bc64bf05a7e542f
+fetch residual-evidence-types hyperpolymath/residual-evidence-types 559bba424f1819e4eb7c3104b418c4c5f5a1a22f

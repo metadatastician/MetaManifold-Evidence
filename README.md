@@ -18,7 +18,7 @@ and runs beside it.
 | Part | Status |
 |---|---|
 | Generic residual-evidence semantics (`Candidate`, `Case`, `Holds`) | **proved** upstream in [`residual-evidence-types`](https://github.com/hyperpolymath/residual-evidence-types) (MPL-2.0), pinned by commit |
-| Counts model (`agda/src/MetaManifold/Evidence/Counts.agda`) | **proved**, Agda `--safe --without-K`, builtins only, no postulates |
+| Counts model (`agda/src/MetaManifold/Evidence/Counts.agda`) | **proved**, Agda `--safe --without-K --cubical-compatible`, builtins only, no postulates; re-proved in Rocq and in Lean (`rocq/`, `lean/`), with no axioms in either. Every theorem is `PWG-3`: the Rocq and Lean statement comparisons await the owner's review before they count. See [PROOF-STATUS.adoc](PROOF-STATUS.adoc) |
 | Interval ends and verdict behaviour (`agda/src/MetaManifold/Evidence/Bounds.agda`) | **proved**, same flags |
 | Agreement with the generic finite checker (`agda/src/MetaManifold/Evidence/CheckerBridge.agda`) | **proved** on the whole domain the two models share (reads and noise bound 0..6). The checker only exists on −6..6 |
 | Julia verdict code (`count_verdict`, `fibre` in `julia/src/counts.jl`) | **certified on the grid** reads, noise ∈ 0..12 (169 rows): Agda proves `grid 12 ≡ expected` by `refl` against a table this code generates. Outside the grid it is **tested**, not proved. The closed forms it implements are proved for all naturals |
@@ -119,6 +119,10 @@ overlay keyed on one is drawn on the other.
 
 `bash scripts/fetch-layer-a.sh && bash scripts/check.sh && bash scripts/mutants.sh && bash scripts/julia-mutants.sh`
 
+The Rocq and Lean recheck legs: `bash scripts/check-rocq.sh` and
+`bash scripts/check-lean.sh` (Rocq 8.18.0 and Lean 4.24.0; the scripts check
+the versions). The per-theorem ledger is [PROOF-STATUS.adoc](PROOF-STATUS.adoc).
+
 - `check.sh` type-checks the positive set and audits it for escape hatches.
   It then requires every module in `agda/reject/` to **fail** at its intended
   declaration. These are claims that must not be provable, such as "entailed
@@ -177,4 +181,11 @@ places to change.
 
 AGPL-3.0-or-later, matching MetaManifold. The generic libraries it depends on
 (`residual-evidence-types` for the proofs, `ResidualEvidenceTypes.jl` for the
-server) stay MPL-2.0. They are used, never copied.
+server) stay MPL-2.0. The Agda and Julia code uses them without copying. The
+Rocq and Lean recheck legs translate the parts of `residual-evidence-types`
+their theorems need: the vocabulary, the finite checker and the generated
+explorer table (`rocq/ResidualEvidence.v`, `rocq/ExplorerTable.v`,
+`rocq/Correspondence.v`, `lean/ResidualEvidence.lean`,
+`lean/ExplorerTable.lean`, `lean/Correspondence.lean` and their explorer
+reject controls). Those translated files carry MPL-2.0, as their source
+does.

@@ -1,0 +1,451 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell
+= Lean recheck leg of the counts theorems: statement correspondence
+:toc: macro
+
+The Lean leg required by the estate proof policy
+(`standards/3-practice/PROOF-POLICY.adoc` §2, §2.2) for the Agda theorems in
+`agda/src/MetaManifold/Evidence/`, together with the re-proof of
+residual-evidence-types' `checker-matches-explorer`, which checks the ported
+finite checker against the explorer's 546-row table. Route: *re-proved* for every theorem. No
+released Lambdapi exporter targets Lean, so no Agda proof term was carried
+across; each statement was restated in Lean by hand and proved by hand.
+
+toc::[]
+
+== Record
+
+[cols="1,3"]
+|===
+| Agda source (truth)
+| `agda/src/MetaManifold/Evidence/{Counts,Bounds,CheckerBridge,CountsGrid,CountsJuliaTable,CountsCertificate}.agda`
+  at commit `894bd41`, which adds `--cubical-compatible` to the `OPTIONS` line
+  of `d2d49aa9c8b838046fbdc228e50b45eb827bef37`; no statement or proof changed. sha256 of the files read:
+  Counts `3f1867bb6b62946ee8dd77a0081d7b1e2ef418be3a131a115aa0ac9f8a1383da`,
+  Bounds `eea88a6f477c6880082ad49c5269c30c8573cc777d10e285cb49969ea6814137`,
+  CheckerBridge `6a3dd157839c5a3176e7d59da39893ead1db483750d69bf6f4379d70f8ac5574`,
+  CountsGrid `414739a174aa8f183a42f31aa7c92d885edf89b00ff6eaad1b2ba0f9f3c640aa`,
+  CountsJuliaTable `177412896e7ec4d0b110ab53f24b269c9a05e041a29e058cdc31d4eb717685bb`,
+  CountsCertificate `40e28a635dea2010372f38495f41ac7fddd73ef507d4b0e2ba1b2ea752da2125`.
+| Generic vocabulary
+| `hyperpolymath/residual-evidence-types` at `559bba424f1819e4eb7c3104b418c4c5f5a1a22f`
+  (the commit `scripts/fetch-layer-a.sh` pins):
+  `src/ResidualEvidence/{Prelude,Core,Finite/Int,Finite/Row,Finite/Checker}.agda`,
+  `tests/correspondence/{Correspondence,ExplorerTable}.agda`. `check-lean.sh`
+  refuses a checkout at any other commit, or with `ExplorerTable.agda` modified.
+| Agda result observed
+| `scripts/check.sh` with Agda 2.6.4.3 (`--safe --without-K --cubical-compatible`):
+  `PASS: counts proofs and all 5 expected rejections` (with
+  `UnsupportedIndexedMatch` warnings from `--cubical-compatible`). In the
+  residual-evidence-types checkout,
+  `agda --safe --without-K --cubical-compatible --no-libraries -i src -i tests/correspondence tests/correspondence/Correspondence.agda`
+  exits 0 (warnings only).
+| Lean
+| Lean 4.24.0, commit `797c613eb9b6d4ec95db23e3e00af9ac6657f24b`, from the upstream
+  release tarball `lean-4.24.0-linux.tar.zst`, sha256
+  `b14f5e5159219dd1a1956c3b806813319f5e94ccd5bdfd56f54520609a5bb5ec`. Core `Init` only:
+  no Mathlib, `Std`, `Lean` or any other library; no `lake` project.
+| Invocation
+| `LEAN=<path to lean> bash scripts/check-lean.sh`. Each module is compiled as
+  `LEAN_PATH=_build/lean lean -E warning --root=lean -o _build/lean/<M>.olean lean/<M>.lean`
+  in the order ResidualEvidence, Counts, Bounds, CheckerBridge, CountsGrid,
+  CountsJuliaTable, CountsCertificate, ExplorerTable, Correspondence; then
+  `lean/All.lean` prints the axioms. The whole script takes about two minutes,
+  most of it the two 546-row `rfl` checks (the theorem and its reject control).
+| Lean result observed
+| `PASS: Lean leg: 9 modules, 136 declarations axiom-free, 7 expected rejections`.
+  Every declaration, theorem or definition, prints `does not depend on any axioms`.
+| Axiom allow-list
+| *Empty.* `scripts/check-lean.sh` fails on any axiom (`propext`, `Quot.sound`,
+  `Classical.choice`, `Lean.ofReduceBool`, or a declared `axiom`).
+| §5 status (Lean leg)
+| `PROVEN`: the Lean kernel accepted every proof term on compilation; no axiom,
+  `sorry`, `native_decide`, `implemented_by` or `extern`. No independent
+  re-check of the `.olean` files (for example by `lean4checker`) was run.
+| §2.2 correspondence state
+| `LEAN-CHECKED`, with the statement correspondence justified by reading, row by
+  row, below. Not claimed: `RECONCILED` (that needs the Rocq leg and a review of
+  this correspondence by someone other than its author).
+| Elaborator options
+| `lean/Correspondence.lean` (and its reject control) raise `maxRecDepth` to 2000
+  and `maxHeartbeats` to 1000000 for the one `rfl` declaration: the elaborator's
+  definitional-equality check unfolds all 546 rows and exceeds the defaults.
+  These bound the elaborator's work only; the kernel checks the same term
+  either way, and the escape-hatch audit admits no other `set_option`.
+| Licence headers
+| The ports of residual-evidence-types sources (`ResidualEvidence.lean`,
+  `ExplorerTable.lean`, `Correspondence.lean`, `reject/ExplorerCellChanged.lean`)
+  carry that repository's `MPL-2.0`; every other new file carries this
+  repository's `AGPL-3.0-or-later`.
+| §6 deviation
+| `open`. The Lean toolchain was installed from the upstream release archive
+  (digest above), not through a Guix manifest or the CI container: the agent
+  session had no Lean in either. CI runs the leg in the `lean` job of
+  `.github/workflows/proofs.yml`, from the same tarball checked against the
+  same sha256. The deviation is recorded in `PROOF-STATUS.adoc`.
+|===
+
+== Translation conventions
+
+These apply to every row below; a row repeats a convention only where it
+changes the reading.
+
+. *Agda `Set` propositions become Lean `Prop`.* `_≤_`, `_≡_`, `Holds`,
+  `Sound`, `VerdictView`, `InInterval`, `InBounds`, `Bounded`, `Present`,
+  `Absent`, `PresenceAgrees`, `LatentsAgree` are `Prop` in Lean. A theorem
+  statement asserts that its type is inhabited, and that reading is the same
+  in both provers. Lean's `Prop` is proof-irrelevant and Lean's `Eq` has
+  uniqueness of identity proofs; Agda (`--without-K`) has neither. No
+  statement here quantifies over or compares two proofs of one of these
+  types, so this changes no statement. Every equation is at `Nat`, `Verdict`,
+  `List Nat` or a list of rows, all types with decidable equality, where
+  uniqueness of identity proofs is a theorem in Agda too.
+. *Types that carry data stay in `Type`.* `Candidate` and `ReadFibre` are
+  Lean subtypes `{world : W // observe world = r ∧ E world}`: the world is
+  data, the two proof components are `Prop`. Agda's
+  `Σ W (λ world → (observe world ≡ r) × E world)` has proof-relevant
+  components; at the counts instance both components are propositions in
+  Agda as well (equality of naturals; `_≤_` on naturals), so the two types
+  have the same elements up to equality of their worlds. `Σ A (λ a → B a)`
+  with a propositional `B` (results of `interval⇒fibre`, `bounds⇒fibre`,
+  `≤-diff`) becomes `{a : A // B a}`. `_⊎_` (used by `≤-total` to pick a
+  world) becomes `Uplus`, an inductive in `Sort (max 1 u v)` with the same
+  constructors `inj₁`/`inj₂`, so it can still choose data.
+. *`×` of propositions becomes `∧`; `¬ A` is `A → ⊥` in Agda and `Not A`,
+  i.e. `A → False`, in Lean; `⊥` becomes `False`, `⊥-elim` becomes
+  `False.elim`.*
+. *`_≤_` is the ported inductive `Le`, notation `≤ₐ`*, with the two Agda
+  constructors `z≤n : 0 ≤ₐ n` and `s≤s : m ≤ₐ n → m + 1 ≤ₐ n + 1`. It is not
+  Lean's `Nat.le` (constructors `refl`/`step`). Lean writes `suc m` as
+  `m + 1`, which is definitionally `Nat.succ m`; Agda's `suc zero` is Lean's
+  literal `1`, definitionally `Nat.succ 0`.
+. *Agda's builtin naturals map to Lean core's.* `Nat`, `zero`, `suc`; `_+_` is
+  `Nat.add`, the truncated `_-_` is `Nat.sub`, the Boolean `_<_` is
+  `Nat.blt`, the Boolean `_==_` is `Nat.beq`. Each pair is the same function
+  on the naturals, so no statement changes. The *equations that hold by
+  definition* differ: Agda's `_+_` recurses on its first argument, Lean's
+  `Nat.add` on its second. So `+-zero` and `+-suc` are `rfl` in Lean, and the
+  Agda definitional facts `0 + a = a`, `suc a + b = suc (a + b)`,
+  `0 - suc m = 0`, `suc n - suc m = n - m`, `0 < suc b = true` are Lean
+  helper lemmas (`zero-+`, `suc-+`, `zero-∸`, `suc-∸-suc`, `zero-<-suc`).
+. *`Int` is the ported inductive* `ResidualEvidence.Int` with constructors
+  `pos`/`negsuc`, as `Agda.Builtin.Int`, not Lean's `Int`, so every checker
+  function computes by the same clauses.
+. *Universe levels.* Agda's level-polymorphic `Candidate`, `Case`, `Holds`
+  over `W : Set w`, `O : Set o`, `E : W → Set e`, `P : W → Set p` are Lean
+  definitions over `W : Type u`, `O : Type v`, `E : W → Prop`,
+  `P : W → Prop`. The Lean versions are less general (evidence and claims are
+  propositions); every use in the counts theorems instantiates
+  `E = Bounded n` and `P = Present | Absent`, which are propositions in both.
+  `subst` and `upto6` likewise take a `Prop`-valued motive in Lean where
+  Agda's takes `Set p`; both are only used at propositional motives here.
+. *Implicit and explicit arguments are kept as in Agda* (`{y n}` stays
+  implicit, `∀ y n →` stays explicit), except where a row says otherwise.
+. *Names.* Every Agda name is kept, as a Lean quoted identifier where Agda's
+  spelling is not a Lean identifier (`«fibre⇒interval»`, `«≤-trans»`,
+  `«case»`). Declarations live under `MetaManifoldEvidence.<Module>`; the
+  vocabulary port lives under `MetaManifoldEvidence.ResidualEvidence` and the
+  checker under `MetaManifoldEvidence.ResidualEvidence.Checker`.
+. *Proofs are not transcribed.* Lean's match compiler, when a pattern on a
+  `≤ₐ` proof forces a non-variable index (for example `s≤s p` against
+  `a + 1 ≤ₐ b + 1`), proves the index equations with `Nat.succ.injEq`, which
+  rests on `propext`. The Lean proofs therefore split on the naturals and
+  invert `≤ₐ` through two eliminator lemmas with variable indices
+  (`≤-pred`, `≤-zero`). This is why the proofs differ from the Agda ones
+  while the statements do not.
+
+== Theorems
+
+Lean names are relative to `MetaManifoldEvidence.Counts` (C),
+`MetaManifoldEvidence.Bounds` (B), `MetaManifoldEvidence.CheckerBridge` (BR)
+and `MetaManifoldEvidence.CountsCertificate` (CC). Every row: route
+`re-proved`; result `PROVEN` (compiled and kernel-checked by Lean 4.24.0,
+2026-11-09). The axioms column is the `#print axioms` output from
+`lean/All.lean`.
+
+[cols="2,2,4,5,1",options="header"]
+|===
+| Agda (file) | Lean | Lean statement | Correspondence | Axioms
+
+| `noiseless` (Counts)
+| C.`noiseless`
+| `(y n : Nat) → ReadFibre y n`
+| Same: `∀ y n → ReadFibre y n`. The witness is the same world `world y 0 under`.
+| none
+
+| `case` (Counts)
+| C.`«case»`
+| `(y n : Nat) → Case observed y (Bounded n)`
+| Same: `∀ y n → Case observed y (Bounded n)`, built with `inhabited (noiseless y n)`.
+| none
+
+| `fibre⇒interval` (Counts)
+| C.`«fibre⇒interval»`
+| `∀ {y n : Nat} (c : ReadFibre y n), InInterval y n (latent c.val)`
+| Same. `fst c` is `c.val` (`c.1`). `InInterval y n x` is `(y ≤ₐ x + n) ∧ (x ≤ₐ y + n)` for Agda's `(y ≤ x + n) × (x ≤ y + n)`.
+| none
+
+| `interval⇒fibre` (Counts)
+| C.`«interval⇒fibre»`
+| `{y n x : Nat} → InInterval y n x → {c // latent c.val = x}` (`c : ReadFibre y n`)
+| Same: `∀ {y n x} → InInterval y n x → Σ (ReadFibre y n) (λ c → latent (fst c) ≡ x)`, Σ with a propositional second component as a subtype. A definition (it returns data), as in Agda.
+| none
+
+| `entailed-sound` (Counts)
+| C.`«entailed-sound»`
+| `∀ {y n : Nat}, n + 1 ≤ₐ y → Holds (case y n) Present`
+| Same: `∀ {y n} → suc n ≤ y → Holds (case y n) Present`.
+| none
+
+| `refuted-sound` (Counts)
+| C.`«refuted-sound»`
+| `Holds (case 0 0) Absent`
+| Same: `Holds (case zero zero) Absent`.
+| none
+
+| `unresolved-sound` (Counts)
+| C.`«unresolved-sound»`
+| `∀ {y n : Nat}, y ≤ₐ n → ¬ y + n = 0 → ¬ Holds (case y n) Present ∧ ¬ Holds (case y n) Absent`
+| Same: `∀ {y n} → y ≤ n → ¬ (y + n ≡ zero) → (¬ Holds (case y n) Present) × (¬ Holds (case y n) Absent)`, `×` as `∧`. The two candidates used are Agda's `zero-candidate` and `top-candidate`.
+| none
+
+| `verdict-sound` (Counts)
+| C.`«verdict-sound»`
+| `∀ (y n : Nat), Sound y n (verdict y n)`
+| Same: `∀ y n → Sound y n (verdict y n)`. `Sound` is the same three-constructor family (`is-entailed`, `is-refuted`, `is-unresolved`, same premises), in `Prop`.
+| none
+
+| `never-inconsistent` (Counts)
+| C.`«never-inconsistent»`
+| `∀ (y n : Nat), ¬ verdict y n = Verdict.inconsistent`
+| Same: `∀ y n → ¬ (verdict y n ≡ inconsistent)`.
+| none
+
+| `lo⇒≤` (Bounds)
+| B.`«lo⇒≤»`
+| `∀ (y n x : Nat), lo y n ≤ₐ x → y ≤ₐ x + n`
+| Same: `∀ y n x → lo y n ≤ x → y ≤ x + n`; `lo y n = y - n` with `Nat.sub`.
+| none
+
+| `≤⇒lo` (Bounds)
+| B.`«≤⇒lo»`
+| `∀ (y n x : Nat), y ≤ₐ x + n → lo y n ≤ₐ x`
+| Same: `∀ y n x → y ≤ x + n → lo y n ≤ x`.
+| none
+
+| `fibre⇒bounds` (Bounds)
+| B.`«fibre⇒bounds»`
+| `∀ {y n : Nat} (c : ReadFibre y n), InBounds y n (latent c.val)`
+| Same. `InBounds y n x` is `(lo y n ≤ₐ x) ∧ (x ≤ₐ hi y n)`.
+| none
+
+| `bounds⇒fibre` (Bounds)
+| B.`«bounds⇒fibre»`
+| `{y n x : Nat} → InBounds y n x → {c // latent c.val = x}` (`c : ReadFibre y n`)
+| Same, Σ as subtype (convention 2). A definition, as in Agda.
+| none
+
+| `view` (Bounds)
+| B.`view`
+| `∀ (y n : Nat), VerdictView y n (verdict y n)`
+| Same. `VerdictView` has Agda's three constructors: `v-entailed : n + 1 ≤ₐ y → …`, `v-refuted : y = 0 → n = 0 → …`, `v-unresolved : y ≤ₐ n → 1 ≤ₐ n → …` (`suc zero` as `1`).
+| none
+
+| `view-at` (Bounds)
+| B.`«view-at»`
+| `∀ {y n : Nat} {v : Verdict}, verdict y n = v → VerdictView y n v`
+| Same: `∀ {y n v} → verdict y n ≡ v → VerdictView y n v`.
+| none
+
+| `entailed-anti` (Bounds)
+| B.`«entailed-anti»`
+| `∀ {y n n' : Nat}, n' ≤ₐ n → verdict y n = Verdict.entailed → verdict y n' = Verdict.entailed`
+| Same.
+| none
+
+| `unresolved-mono` (Bounds)
+| B.`«unresolved-mono»`
+| `∀ {y n n' : Nat}, n ≤ₐ n' → verdict y n = Verdict.unresolved → verdict y n' = Verdict.unresolved`
+| Same.
+| none
+
+| `refuted-only-at-zero` (Bounds)
+| B.`«refuted-only-at-zero»`
+| `∀ {y n : Nat}, verdict y n = Verdict.refuted → y = 0 ∧ n = 0`
+| Same, `×` as `∧`.
+| none
+
+| `refuted-fragile` (Bounds)
+| B.`«refuted-fragile»`
+| `∀ {y n n' : Nat}, verdict y n = Verdict.refuted → 1 ≤ₐ n' → verdict y n' = Verdict.unresolved`
+| Same (`suc zero ≤ n'` as `1 ≤ₐ n'`).
+| none
+
+| `never-strengthens` (Bounds)
+| B.`«never-strengthens»`
+| `∀ {y n n' : Nat}, n ≤ₐ n' → (verdict y n' = Verdict.entailed → verdict y n = Verdict.entailed) ∧ (verdict y n' = Verdict.refuted → n' = 0)`
+| Same, `×` as `∧`.
+| none
+
+| `upto6` (CheckerBridge)
+| BR.`upto6`
+| `∀ (P : Nat → Prop), P 0 → P 1 → P 2 → P 3 → P 4 → P 5 → P 6 → ∀ {k : Nat}, k ≤ₐ 6 → P k`
+| Agda: `∀ {p} (P : Nat → Set p) → P 0 → … → P 6 → ∀ {k} → k ≤ 6 → P k`. *Weaker*: the motive is `Prop`-valued in Lean, `Set p` for every level in Agda. Used only at propositional motives.
+| none
+
+| `presence-agrees` (CheckerBridge)
+| BR.`«presence-agrees»`
+| `∀ {y n : Nat}, y ≤ₐ 6 → n ≤ₐ 6 → PresenceAgrees y n`
+| Same: `∀ {y n} → y ≤ 6 → n ≤ 6 → PresenceAgrees y n`, the premises as the inductive `≤ₐ`, not a Boolean test. `PresenceAgrees y n` is `presence (asConfig y n) = verdict y n`, `asConfig y n = config (pos y) n exact false`. `presence` is the ported checker (see Definitions). Proved by `upto6` and 49 `rfl` cells, as in Agda.
+| none
+
+| `latents-agree` (CheckerBridge)
+| BR.`«latents-agree»`
+| `∀ {y n : Nat}, y ≤ₐ 6 → n ≤ₐ 6 → LatentsAgree y n`
+| Same. `LatentsAgree y n` is `checkerLatents y n = span (lo y n) (min (hi y n) 6)`, with `checkerLatents`, `naturals`, `span` and `min` ported clause for clause (`min` is `CheckerBridge.min`, not Lean's `min`).
+| none
+
+| `julia-agrees` (CountsCertificate)
+| CC.`«julia-agrees»`
+| `grid 12 = expected`
+| Same. `expected` is generated by `scripts/gen-lean-table.sh` from the Agda `CountsJuliaTable.agda` (169 rows; `check-lean.sh` regenerates it and `cmp`s). Proved by `rfl`, i.e. kernel reduction; no `native_decide`.
+| none
+
+| `checker-matches-explorer` (residual-evidence-types `tests/correspondence/Correspondence.agda`)
+| `MetaManifoldEvidence.Correspondence.«checker-matches-explorer»`
+| `table = expected`
+| Same: `table ≡ expected`, `table = map report allConfigs` from the ported checker, `expected` generated by `scripts/gen-lean-explorer-table.sh` from the Agda `ExplorerTable.agda` (546 rows; `check-lean.sh` regenerates and `cmp`s it, and translates every Lean row back into Agda spelling and compares it with the Agda rows). Proved by `rfl`, i.e. kernel reduction, with the elaborator budgets above. See "What the explorer correspondence shows".
+| none
+|===
+
+=== Helper lemmas of the Agda modules
+
+Same conventions and route. All print `does not depend on any axioms`.
+
+[cols="2,2,4,4",options="header"]
+|===
+| Agda (file) | Lean | Lean statement | Correspondence
+
+| `≤-refl` (Counts) | C.`«≤-refl»` | `∀ {n : Nat}, n ≤ₐ n` | Same.
+| `≤-trans` (Counts) | C.`«≤-trans»` | `∀ {a b c : Nat}, a ≤ₐ b → b ≤ₐ c → a ≤ₐ c` | Same.
+| `≤-total` (Counts) | C.`«≤-total»` | `(a b : Nat) → a ≤ₐ b ⊎ b ≤ₐ a` | Same; `⊎` is `Uplus` (convention 2). A definition.
+| `≤-+ʳ` (Counts) | C.`«≤-+ʳ»` | `∀ (m k : Nat), m ≤ₐ m + k` | Same.
+| `+-monoʳ` (Counts) | C.`«+-monoʳ»` | `∀ (m : Nat) {a b : Nat}, a ≤ₐ b → m + a ≤ₐ m + b` | Same.
+| `+-cancelʳ` (Counts) | C.`«+-cancelʳ»` | `∀ (m : Nat) {a b : Nat}, m + a ≤ₐ m + b → a ≤ₐ b` | Same.
+| `+-assoc` (Counts) | C.`«+-assoc»` | `∀ (a b c : Nat), a + b + c = a + (b + c)` | Same (`a + b + c` parses as `(a + b) + c`).
+| `+-zero` (Counts) | C.`«+-zero»` | `∀ (a : Nat), a + 0 = a` | Same; `rfl` in Lean.
+| `+-suc` (Counts) | C.`«+-suc»` | `∀ (a b : Nat), a + (b + 1) = a + b + 1` | Same; `rfl` in Lean.
+| `+-comm` (Counts) | C.`«+-comm»` | `∀ (a b : Nat), a + b = b + a` | Same.
+| `subst` (Counts) | C.`subst` | `∀ {A : Sort u} (P : A → Prop) {x y : A}, x = y → P x → P y` | *Weaker*: motive `Prop`, Agda's `Set p`. Used only at `≤ₐ` motives.
+| `≤-diff` (Counts) | C.`«≤-diff»` | `{m n : Nat} → m ≤ₐ n → {k // m + k = n}` | Same, Σ as subtype. A definition; the witness is `n - m` (Lean cannot eliminate the `Prop` proof into data; the difference is the same number).
+| `<-true` (Counts) | C.`«<-true»` | `∀ (a b : Nat), a.blt b = true → a + 1 ≤ₐ b` | Same: `(a < b) ≡ true → suc a ≤ b`, `_<_` as `Nat.blt`.
+| `<-false` (Counts) | C.`«<-false»` | `∀ (a b : Nat), a.blt b = false → b ≤ₐ a` | Same.
+| local `absurd`/`go` of `entailed-sound`; private `irrefl` (Bounds) | C.`irrefl` | `∀ (k : Nat), ¬ k + 1 ≤ₐ k` | Same as Agda's `irrefl : ∀ k → suc k ≤ k → ⊥`; one public lemma in Counts instead of two local ones.
+| local `le0` of `refuted-sound`; private `≤0` (Bounds) | C.`«≤0»` | `∀ {x : Nat}, x ≤ₐ 0 → x = 0` | Same.
+| private `zero-not-suc` (Bounds) | C.`«suc≰zero»` | `∀ {a : Nat}, a + 1 ≤ₐ 0 → False` | Same, renamed.
+| private `⊥-elim` (Bounds) | `False.elim` (core) | `False → C` | Lean core's eliminator; no port needed.
+|===
+
+=== Lean-only helper lemmas
+
+Lemmas with no Agda counterpart, needed because an Agda definitional equation
+is propositional in Lean or because index-forcing matches are avoided
+(conventions 5 and 10). All print `does not depend on any axioms`.
+
+[cols="2,5",options="header"]
+|===
+| Lean (C) | Statement
+| `«≤-pred»` | `∀ {a b : Nat}, a ≤ₐ b → a.pred ≤ₐ b.pred`
+| `peel` | `∀ {a b : Nat}, a + 1 ≤ₐ b + 1 → a ≤ₐ b` (Agda: the local `peel` of `≤⇒lo`)
+| `«≤-zero»` | `∀ {a b : Nat}, a ≤ₐ b → b = 0 → a = 0`
+| `«≤-step»` | `∀ {a b : Nat}, a ≤ₐ b → a ≤ₐ b + 1`
+| `«zero-+»` | `∀ (a : Nat), 0 + a = a`
+| `«suc-+»` | `∀ (a b : Nat), a + 1 + b = a + b + 1`
+| `«suc-∸-suc»` | `∀ (n m : Nat), n + 1 - (m + 1) = n - m`
+| `«zero-∸»` | `∀ (m : Nat), 0 - m = 0`
+| `«+-∸»` | `∀ {m n : Nat}, m ≤ₐ n → m + (n - m) = n`
+| `«zero-<-suc»` | `∀ (b : Nat), Nat.blt 0 (b + 1) = true`
+|===
+
+== Definitions
+
+The theorem statements are only as faithful as the definitions they mention.
+Each is transcribed clause for clause; differences are listed.
+
+[cols="2,2,5",options="header"]
+|===
+| Agda | Lean | Difference
+
+| `Prelude._≤_` | `ResidualEvidence.Le` (`≤ₐ`) | `Prop`, not `Set` (convention 1, 4).
+| `Core.Candidate`, `Case` (`inhabited`, `witness`), `Holds` | same names in `ResidualEvidence` | Convention 2 and 7. `Holds c P = ∀ x : Candidate observe r E, P x.val`; `c` is unused in both.
+| `Finite.Int`: `Int`, `_⊖_`, `_+ᵢ_`, `absᵢ`, `signᵢ`, `_==ᵢ_`, `range` | `Int`, `«⊖»`, `«+ᵢ»` (`+ᵢ`), `absᵢ`, `signᵢ`, `«==ᵢ»` (`==ᵢ`), `range` | Same clauses; `_==_` is `Nat.beq`. Unported (no theorem mentions them): `negᵢ`, `_≤ᵇ_`, `_∈_`, the range lemmas.
+| `Finite.Row`: `View`, `Verdict`, `IdStatus`, `Row` (`row`) | same names; `no-candidate` as `«no-candidate»` | Same constructors and fields.
+| `Finite.Checker`: `not`, `_∧_`, `_∨_`, `World`, `latent`, `noise`, `∣_∣`, `through`, `Config` (`config`), `observe`, `target`, `zeroCheck`, `admits`, `consIf`, `noiseLoop`, `latentLoop`, `enumerate`, `present`, `absent`, `any`, `classify`, `presenceOf`, `latentsFrom`, `latentsStep`, `latents`, `presence`, `identityOf`, `identity`, `length`, `map`, `forEach`, `summarise`, `report`, `bounds`, `views`, `flags`, `allConfigs`, `table` | same names in `ResidualEvidence.Checker` (`∣_∣` as `absN`, `_∧_`/`_∨_` as `«∧»`/`«∨»`) | Same clauses; `_<_` is `Nat.blt`. `World` is `Int × Int` (`Prod`). *`latentsStep` is inlined* into `latentsFrom` as a `match` on the same Boolean: the Agda pair is mutually recursive and Lean's structural recursion does not accept the `latentsStep → latentsFrom` call on the same list; the inlined clauses are Agda's, unfolded once. `allConfigs` spells Agda's section `config r b v z ∷_` as `fun rest => config r b v z :: rest`. Unported (no theorem mentions them): `InRange`, the checker's `Bounded`, `Assumed`, `Zero`, `Evidence`, `FiniteCandidate`, `FiniteCase`, `Present`/`Absent` of the checker, and the anonymous check `length allConfigs ≡ 546` (Lean's elaborator exceeds its recursion budget on it; `checker-matches-explorer` implies it, since `map` keeps length and `expected` has 546 rows, but that implication is not a Lean theorem here).
+| `Counts`: `_⊎_`, `Direction`, `World` (`world`), `latent`, `observed`, `Bounded`, `ReadFibre`, `Present`, `Absent`, `InInterval`, `verdict`, `Sound` | same names (`_⊎_` as `Uplus`/`⊎`) | Same clauses. `verdict` matches `Nat.blt n y`, then `y`, then `n`, as Agda's `with` does.
+| `Bounds`: `lo`, `hi`, `InBounds`, `VerdictView` | same names | Same.
+| `CheckerBridge`: `asConfig`, `naturals`, `span` (local `from`), `min`, `checkerLatents`, `PresenceAgrees`, `LatentsAgree` | same names; `from` as `spanFrom` | Same clauses.
+| `CountsGrid`: `Row` (`row`), `cell`, `upto` (local `go`), `cells` (local `along`), `grid` | same names; `along` top level | *`along` takes the outer call's result `cells ys ns` as an argument* instead of calling `cells` itself, so both recursions are structural. It returns the same list. `julia-agrees` checks the result against the generated table in any case.
+| `CountsJuliaTable.expected` | `CountsJuliaTable.expected` | Generated, never hand-typed: each Agda line `row Y N V L H ∷` becomes `Row.row Y N Verdict.V L H ::`.
+| residual-evidence-types `ExplorerTable.expected` | `ExplorerTable.expected` | Generated, never hand-typed: each Agda row `row (pos|negsuc K) B V Z C P I (v₁ ∷ … ∷ [])` becomes `Row.row (Int.pos|Int.negsuc K) B View.V Z C Verdict.P IdStatus.«I» [v₁, …]`. The outer list is a Lean list literal `[r₁, …, r₅₄₆]` instead of a `∷` chain: the same `List` value, which Lean elaborates without exceeding its recursion depth.
+|===
+
+== Expected rejections
+
+`scripts/check-lean.sh` demands that each file under `lean/reject/` fails to
+elaborate with a type error located on its `theorem invalid` line, and with
+no unknown name, parse error or resource limit. The first five mirror
+`agda/reject/`.
+
+A rejection shows that the proof attempt in that file does not elaborate:
+the theorem cannot be applied without its premise, or `rfl` does not reduce
+to the claimed value. It does not, by itself, show that the stated
+proposition is unprovable by some other proof. Where the proposition is in
+fact false, that follows from the positive theorems (for example `view` and
+`never-inconsistent`), not from the rejection.
+
+[cols="2,5",options="header"]
+|===
+| File | Invalid statement
+
+| `EntailedAtBound` | `Holds (case 2 2) Present` by `entailed-sound`: the premise would be `3 ≤ₐ 2`.
+| `RefutedUnderNoise` | `Holds (case 0 1) Absent` by `refuted-sound`, which covers only `case 0 0`.
+| `VerdictMislabel` | `verdict 3 1 = unresolved` by `rfl` (it is `entailed`).
+| `BridgeOutOfRange` | `presence (asConfig 7 0) = verdict 7 0` by `rfl`: without `y ≤ 6` the checker has no candidate (`inconsistent`) while the counts verdict is `entailed`.
+| `BridgeUnclipped` | `checkerLatents 6 1 = span (lo 6 1) (hi 6 1)` by `rfl`: without the cut-off at 6 the interval `[5, 7]` exceeds what the checker visits.
+| `CertificateMismatch` | `grid 1` equal to a table whose cell (1, 1) says `entailed`: the certificate's `rfl` is not vacuous.
+| `ExplorerCellChanged` | `table = bumpCount 273 expected` by `rfl`: the explorer table with one cell changed (the candidate count of row 273 counting from 0: residual 0, bound 3, sign view, `assumeZero` true, from 1 to 2). The explorer correspondence's `rfl` is not vacuous.
+|===
+
+`lean/control/AxiomGate.lean` is a gate self-test, not a rejection: the check
+demands that its axiom audit flags a theorem that rests on `propext` and
+passes one that rests on nothing.
+
+== What this leg does not establish
+
+* It does not check that the Lean and Agda statements are the same
+  proposition by machine. The correspondence above is by reading, by the
+  author of the Lean files; it has not been reviewed independently.
+* The vocabulary port (`lean/ResidualEvidence.lean`) is transcribed from the
+  Agda source and checked against it by reading. See the next section for
+  what the explorer correspondence adds.
+* The `.olean` files were not re-checked by an independent kernel checker.
+
+== What the explorer correspondence shows
+
+residual-evidence-types proves its Agda checker against the explorer by
+`checker-matches-explorer : table ≡ ExplorerTable.expected`, over all 546
+configurations the explorer emits (residual −6..6, noise bound 0..6, the
+exact, sign and magnitude views, `assumeZero` false and true). The Lean leg
+proves `table = expected` for the *ported* checker against the *same* table,
+generated from the same Agda file at the pinned commit.
+
+So the Agda checker and the Lean port compute the same row (candidate count,
+presence verdict, identification status and latent values) on every one of
+those 546 configurations, and in particular the same `presence` and the same
+`latents` on the 49 cells of the counts bridge.
+
+This is agreement on that table, not a proof that the two definitions are
+equal. No prover compares the Agda and Lean definitions as functions, and
+nothing here constrains either checker on a configuration the explorer does
+not emit (a residual or bound outside the table, or a list of worlds that is
+not `enumerate` of a configuration).
