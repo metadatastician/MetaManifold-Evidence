@@ -4,6 +4,8 @@
 | --- | --- |
 | `0003-fix-post-merge-conflict-regressions-prs-195-208.patch` | unified `git format-patch` commit onto `MetaManifold-WebUI` `c06c0d4` repairing all five merge-conflict regression areas across PRs `#195`–`#208` |
 | `prs-195-208-merge-repair.md` | audit summary, apply instructions, and verification record for `0003-*.patch` |
+| `0004-pr68-ssh-recovery-coverage.patch` | one `git format-patch` commit onto `MetaManifold-WebUI#68` head `5115109`, adding regression cases for the 18 changed lines Codecov reported uncovered |
+| `pr68-ssh-recovery-review.md` | close-out audit for `#68`: the three open Codex threads mapped to the fixes already at head, exact Codecov gaps, CI/merge readiness, thread IDs and draft replies |
 | `pr33-reply.md` | the reply to post on `MetaManifold-WebUI#33` after the rebase and README commit pushed to the fork (2026-10-14) |
 | `webui-issues.md` | the five open WebUI issues: what each waits on, what moved here, and draft comments |
 | the rest | the PR #25 rework, below |

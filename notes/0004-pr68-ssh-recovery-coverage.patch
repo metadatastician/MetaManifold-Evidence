@@ -1,0 +1,304 @@
+From b36f2b7ce00aef3b0f09262947e6a073256ee2cd Mon Sep 17 00:00:00 2001
+From: arena-agent <297053741+arena-agent@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 09:49:52 +0000
+Subject: [PATCH] test(remote): cover the remaining patch lines on the SSH
+ recovery runner
+
+Codecov reports 18 uncovered changed lines on PR #68 at 94.59% patch
+coverage. Add regression cases for the paths the existing suite reaches
+only with an injected transport or not at all:
+
+- the fetch's own required-output error, a durable cancel request at
+  reattachment, cleanup of a retained attempt behind a verified receipt,
+  and a stale-attempt sweep that refuses;
+- the transport the runner owns and closes itself, including both
+  superseded-journal branches, using a refusing ssh/scp on PATH;
+- phylogeny's local and remote log/key branch in run_workflow;
+- the shared single-quote escaping in verify_remote_sizes.
+
+The three Codex findings are already fixed at 5115109; these tests pin
+the uncovered parts of those fixes and of the recovery protocol.
+
+Co-authored-by: Jonathan D.A. Jewell <6759885+hyperpolymath@users.noreply.github.com>
+---
+ test/unit/remote_protocol_tests.jl | 141 ++++++++++++++++++++++++++++-
+ test/unit/test_phylogeny.jl        |  50 ++++++++++
+ test/unit/test_remote_stages.jl    |  21 +++++
+ 3 files changed, 211 insertions(+), 1 deletion(-)
+
+diff --git a/test/unit/remote_protocol_tests.jl b/test/unit/remote_protocol_tests.jl
+index cbb5e95..47311c4 100644
+--- a/test/unit/remote_protocol_tests.jl
++++ b/test/unit/remote_protocol_tests.jl
+@@ -22,6 +22,7 @@ function _remote_fixture(f)
+         drop_status = Ref(false)
+         drop_start_reply = Ref(false)
+         fail_cancel = Ref(false)
++        fail_sweep = Ref(false)
+         retries = Ref(0)
+         ssh = function (_, command)
+             if probe_launch[] && occursin("worker.sh' start", command)
+@@ -32,6 +33,9 @@ function _remote_fixture(f)
+                 return `bash -c '(exec 9>"$1"; flock -x 9; touch "$2"; sleep 0.5) & while ! test -f "$2"; do sleep 0.01; done; bash -c "$3"' _ $lockfile $held $command`
+             end
+             occursin("worker.sh' retry", command) && (retries[] += 1)
++            if fail_sweep[] && occursin("for d in ", command)
++                return `bash -c 'exit 255'`
++            end
+             if drop_status[] && occursin("worker.sh' status", command)
+                 return `bash -c 'exit 255'`
+             end
+@@ -73,7 +77,7 @@ function _remote_fixture(f)
+         end
+         try
+             f((; d, target, input, uploads, downloads, fail_download, fail_control, probe_launch, drop_status,
+-                drop_start_reply, fail_cancel, retries, invoke, ssh, scp))
++                drop_start_reply, fail_cancel, fail_sweep, retries, invoke, ssh, scp))
+         finally
+             # Never let a failed assertion strand a detached test process.
+             for dir in readdir(target.base; join=true)
+@@ -101,6 +105,24 @@ function _task_error(t)
+     end
+ end
+ 
++# The branches that own and close their own SSH master are only reachable when
++# `_connection` is nothing. A transport that refuses every request is enough to
++# exercise that ownership and its teardown: no sshd, account or second
++# connection is needed, and the fake executables are visible only inside the
++# `withenv` block.
++function _refusing_transport(f)
++    mktempdir() do bin
++        for name in ("ssh", "scp")
++            path = joinpath(bin, name)
++            write(path, "#!/bin/sh\nexit 255\n")
++            chmod(path, 0o700)
++        end
++        withenv("PATH" => bin * ":" * ENV["PATH"]) do
++            f()
++        end
++    end
++end
++
+ @testset "Durable remote execution protocol" begin
+     @testset "a transient status probe cannot lose a detached launch" begin
+         _remote_fixture() do f
+@@ -650,6 +672,123 @@ end
+         end
+     end
+ 
++    @testset "the fetch reports a required output it cannot see" begin
++        _remote_fixture() do f
++            out = joinpath(f.d, "never.out")
++            caught = try
++                _RX._fetch_outputs(f.ssh, f.scp, f.target,
++                    joinpath(f.target.base, "absent"), ["output" => out],
++                    Pair{String,String}[])
++                nothing
++            catch e
++                e
++            end
++            @test caught isa ErrorException
++            @test occursin("finished without required output", sprint(showerror, caught))
++            @test !isfile(out)
++        end
++    end
++
++    @testset "a durable cancel request is honoured before a receipt is reused" begin
++        _remote_fixture() do f
++            command = d -> "cd '$d' && cat input > output"
++            f.invoke(command)
++            journal = _journal(f)
++            journal["cancel_requested"] = true
++            write(joinpath(f.d, "stage.log.remote.json"), JSON3.write(journal))
++            uploads = f.uploads[]
++            f.invoke(command)
++            @test read(joinpath(f.d, "stage.out"), String) == "known input\n"
++            @test f.uploads[] > uploads
++            @test _journal(f)["cancel_requested"] == false
++            @test haskey(_journal(f), "retrieved")
++            @test isempty(readdir(f.target.base))
++        end
++    end
++
++    @testset "receipt recovery cleans up a retained attempt" begin
++        _remote_fixture() do f
++            command = d -> "cd '$d' && cat input > output"
++            f.fail_download[] = true
++            @test_throws Exception f.invoke(command)
++            dir = _dir(f)
++            @test _RX._remote_state(f.ssh, f.target, dir) == "exit 0"
++            out = joinpath(f.d, "stage.out")
++            write(out, "known input\n")
++            journal = _journal(f)
++            journal["retrieved"] = Dict(abspath(out) => _RX._digest(out))
++            write(joinpath(f.d, "stage.log.remote.json"), JSON3.write(journal))
++            f.fail_download[] = false
++            uploads = f.uploads[]
++            f.invoke(command)
++            @test f.uploads[] == uploads
++            @test read(out, String) == "known input\n"
++            @test !isdir(dir)
++            @test haskey(_journal(f), "retrieved")
++        end
++    end
++
++    @testset "a failed stale-attempt sweep cannot fail a finished stage" begin
++        _remote_fixture() do f
++            f.fail_sweep[] = true
++            f.invoke(d -> "cd '$d' && cat input > output")
++            @test read(joinpath(f.d, "stage.out"), String) == "known input\n"
++            @test isempty(readdir(f.target.base))
++        end
++    end
++
++    @testset "an owned transport is closed even when the connection refuses" begin
++        _remote_fixture() do f
++            log = joinpath(f.d, "own.log")
++            _refusing_transport() do
++                @test_throws Exception begin
++                    _RX.run_remote(_ -> nothing, f.target,
++                        d -> "cd '$d' && cat input > output";
++                        inputs=[f.input => "input"],
++                        outputs=["output" => joinpath(f.d, "own.out")],
++                        log_path=log, stage="denoise", _poll_interval=0.02)
++                end
++            end
++            @test isfile(log * ".remote.json")
++        end
++    end
++
++    @testset "a superseded journal closes the old master it opened" begin
++        _remote_fixture() do f
++            for cancel_requested in (false, true)
++                tag = string(cancel_requested)
++                log = joinpath(f.d, "superseded-" * tag * ".log")
++                journal_path = log * ".remote.json"
++                old_identity = _RX._identity(f.target, "denoise", d -> "cd '$d' && true",
++                    [f.input => "input"],
++                    ["output" => joinpath(f.d, "old-" * tag * ".out")],
++                    Pair{String,String}[], ["old"])
++                journal = Dict{String,Any}(
++                    "identity" => old_identity,
++                    "directory" => joinpath(f.target.base,
++                        "mm_" * "0"^64 * "_00000000-0000-4000-8000-000000000000"),
++                    "identity_file" => nothing,
++                    "failed" => false,
++                    "cancel_requested" => cancel_requested)
++                write(journal_path, JSON3.write(journal))
++                _refusing_transport() do
++                    @test_throws Exception begin
++                        _RX.run_remote(_ -> nothing, f.target,
++                            d -> "cd '$d' && cat input > output";
++                            inputs=[f.input => "input"],
++                            outputs=["output" => joinpath(f.d, "superseded-" * tag * ".out")],
++                            log_path=log, stage="denoise", context=["new"],
++                            _poll_interval=0.02)
++                    end
++                end
++                if !cancel_requested
++                    @test any(n -> startswith(n, basename(journal_path) * ".superseded-"),
++                              readdir(f.d))
++                end
++            end
++        end
++    end
++
+     @testset "path traversal and reserved control files are refused" begin
+         for path in ("/absolute", "../outside", "a/../../b", "a//b", ".metamanifold/pid", "a\nb", "a\\b")
+             @test_throws ErrorException _RX._relative(path)
+diff --git a/test/unit/test_phylogeny.jl b/test/unit/test_phylogeny.jl
+index 22f03b1..e41a148 100644
+--- a/test/unit/test_phylogeny.jl
++++ b/test/unit/test_phylogeny.jl
+@@ -59,6 +59,56 @@ _ph_factory() = YAML.load_file(joinpath(@__DIR__, "..", "..", "config", "default
+     @test !("-redo" in split(remote_command))
+ end
+ 
++@testset "run_workflow keeps a retained remote log and clears only unverified outputs" begin
++    # Both halves of the new branch run before a step can fail, so a step whose
++    # command cannot run is enough to observe what each half did to the stage
++    # log, the outputs and the per-step key.
++    mktempdir() do root
++        dir = joinpath(root, "reference")
++        files = _PH.reference_files(dir)
++        cfg = _ph_factory()
++        align_dir = mkpath(dirname(files["reference.aln.fasta"]))
++        trim_dir = mkpath(dirname(files["reference.trim.fasta"]))
++        write(files["reference.aln.fasta"], ">a\nACGT\n")
++        write(files["references.fasta"], ">a\nACGT\n")
++
++        # Local: reset the log and clear the old outputs, then fail on a step
++        # with no tool behind it (nothing must be installed for this test).
++        local_step = _PH.Step("trim", ("reference", "trim"), nothing, String[],
++            ["reference.aln.fasta"],
++            ["reference.trim.fasta", "reference.columns"], String[])
++        local_log = joinpath(dir, "logs", "trim.log")
++        mkpath(dirname(local_log))
++        write(local_log, "sentinel that a local rerun must truncate")
++        write(files["reference.trim.fasta"], "stale")
++        write(files["reference.columns"], "stale")
++        write(_PH._key_path(files, local_step), "stale key")
++        @test_throws Exception _PH.run_workflow([local_step], dir, files, cfg)
++        @test !occursin("sentinel", read(local_log, String))
++        @test !isfile(files["reference.trim.fasta"])
++        @test !isfile(_PH._key_path(files, local_step))
++        @test _PH.read_status(dir)["state"] == "failed"
++
++        # Remote: a retained journal means the runner may replay the remote
++        # diagnostics, so the log must not be truncated; only the key is
++        # cleared before the runner checks the receipt under its owner lock.
++        remote_step = _PH.Step("align", ("reference", "align"), "phylogeny_align",
++            ["mafft"], ["references.fasta"], ["reference.aln.fasta"], String[])
++        remote_log = joinpath(dir, "logs", "align.log")
++        mkpath(dirname(remote_log))
++        write(remote_log, "sentinel that a retained journal must keep")
++        write(remote_log * ".remote.json", "{}")
++        write(_PH._key_path(files, remote_step), "stale key")
++        cfg["remote"] = Dict("host" => "127.0.0.1",
++            "staging_dir" => mkpath(joinpath(root, "remote")),
++            "stages" => ["phylogeny_align"])
++        @test_throws Exception _PH.run_workflow([remote_step], dir, files, cfg)
++        @test occursin("sentinel", read(remote_log, String))
++        @test !isfile(_PH._key_path(files, remote_step))
++        @test _PH.read_status(dir)["state"] == "failed"
++    end
++end
++
+ @testset "Remote phylogeny clears outputs without a matching verified receipt" begin
+     if Sys.islinux()
+         for changed in (:settings, :input, :output)
+diff --git a/test/unit/test_remote_stages.jl b/test/unit/test_remote_stages.jl
+index 508d3c5..bed8915 100644
+--- a/test/unit/test_remote_stages.jl
++++ b/test/unit/test_remote_stages.jl
+@@ -297,6 +297,27 @@ const _R = MetaManifold.DADA2
+         @test isempty(errors)
+     end
+ 
++    @testset "verify_remote_sizes quotes a remote path with an apostrophe" begin
++        # `_sq` escapes the single quote in the name, so `wc -c` sees one path
++        # and the byte count is compared against the right local file.
++        mktempdir() do d
++            staging = mkpath(joinpath(d, "staging"))
++            rel = "sample's reads.fastq.gz"
++            local_path = joinpath(d, rel)
++            write(local_path, "0123456789")
++            write(joinpath(staging, rel), "0123456789")
++            ssh = (_, cmd) -> `bash -c $cmd`
++            emitted = String[]
++            rx = MetaManifold.RemoteExec
++            rx.verify_remote_sizes(ssh, (; host="fixture"), staging,
++                [local_path => rel], msg -> push!(emitted, msg))
++            @test any(m -> occursin("1 uploaded file", m), emitted)
++            write(joinpath(staging, rel), "0123")
++            @test_throws ErrorException rx.verify_remote_sizes(ssh, (; host="fixture"),
++                staging, [local_path => rel], _ -> nothing)
++        end
++    end
++
+     @testset "every offloadable stage has a remote script" begin
+         # REMOTE_STAGES is what a config may name; a stage listed there with no
+         # script behind it would fail only once someone offloaded it.
+-- 
+2.39.5
+
