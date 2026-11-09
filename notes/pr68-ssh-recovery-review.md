@@ -1,3 +1,7 @@
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:19e65c24f754791fdf18bd4b53cda3090ac695ce29aa8b23b7ffd8313f778145 -->
+
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 # PR #68 close-out: the three review findings, the 18 uncovered lines, and CI
 
@@ -8,9 +12,15 @@ recoverable after local interruptions". Read on 2026-11-09 against PR head
 ## Companion patch
 
 - `notes/0004-pr68-ssh-recovery-coverage.patch` — one `git format-patch` commit
-  onto `5115109` (3 test files, +211/−1). It closes the Codecov gaps listed
-  below; it does **not** change production code, because the three review
-  findings are already fixed at this head.
+  onto `5115109` (3 test files, +266/−1). It closes the Codecov gaps listed
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:2ba6458b721dfa6fa059f5528253e331084a6abdc2c45859810cf042e0e84347 -->
+
+  below; it does **not** change production code. The first two review findings
+  are fixed at this head; missing-output close-out remains unresolved.
+
+<!-- /coderabbit-ai-generated:v1 -->
 
 ## What was asked, and what is actually left
 
@@ -18,8 +28,15 @@ The pasted review comments are anchored to an *earlier* head (`f0992480`). Six
 follow-up commits landed after them: `ab576a8`, `a4e2412`, `3cf7c82`, `910eeb7`,
 `e147ba9`, `3295f93`, `ca8ab07` and `5115109`. Six of the PR's nine review
 threads are already resolved; the three still open are exactly the three pasted
-in the request. All three are addressed in the current code. What was genuinely
-outstanding was **coverage**, and the **thread resolution state**.
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:98acff9165c59a1961e0bbe80c5c9e037a41c579db4dee4b7a969759688fe1d8 -->
+
+in the request. The first two are addressed in the current code. Missing-output
+close-out remains **unresolved**; coverage and thread resolution also remain
+outstanding.
+
+<!-- /coderabbit-ai-generated:v1 -->
 
 ### 1. Reclaim superseded attempts that never launched (thread `PRRT_kwDORbJW48606d5b`)
 
@@ -65,7 +82,7 @@ At `5115109`:
   patch's "receipt recovery cleans up a retained attempt", which pins the
   `cleanup` line reached when a live attempt still sits behind a receipt.
 
-### 3. Retry attempts that finish without required outputs (thread `PRRT_kwDORbJW48606lKn`)
+### 3. Retry attempts that finish without required outputs (unresolved) (thread `PRRT_kwDORbJW48606lKn`)
 
 The finding: a zero exit that omits a required file threw before a receipt was
 stored, while the `exit 0` marker and `failed=false` journal made `start`
@@ -79,8 +96,10 @@ At `5115109`:
 - `src/pipeline/remote_worker.sh:173-195` adds a `replay` action that keeps
   both markers so a successful attempt stays retrievable;
   `remote_session.jl:479-491` uses it on the `exit 0` barrier instead of
-  `retry`. The next run fetches the same attempt, checksum-verifies every byte,
-  stores the receipt and then cleans up.
+  `retry`. Replay retains the same attempt and does not rerun the command.
+  Retrieval can recover if the required files exist, but a still-absent required
+  file fails the missing-output check again and yields no receipt. This does
+  not resolve the requested missing-output close-out.
 - Regressions: `:486` ("a completed attempt is retrieved again instead of
   wedging the stage"), `:597` ("a completed attempt without a required output
   stays retrievable"). The new patch adds a direct test of `_fetch_outputs`'s
@@ -123,7 +142,9 @@ fixture injects a transport, and `test/remote_ssh.jl` runs without
   `_refusing_transport` helper (a two-line `ssh`/`scp` on `PATH` inside
   `withenv`), plus six testsets that reach the fetch error, the durable cancel
   request, receipt cleanup, a refused sweep, the own-transport `finally`, and
-  both superseded-journal branches (pending and abandoned).
+  both superseded-journal branches (pending and abandoned). A stateful SSH stub
+  records master creation, the failed old status probe, and closure, and the
+  pending-cancel case also asserts that the original journal is unchanged.
 - `test/unit/test_phylogeny.jl`: one testset that calls `run_workflow` through
   both halves of the new branch with steps whose commands cannot run, asserting
   that a local rerun truncates the log and clears stale outputs while a
@@ -149,7 +170,14 @@ step. No workflow change is needed.
 | codecov/patch | pass (informational, 94.59%) |
 
 `mergeable: true`, `mergeable_state: clean`, `reviewDecision: null`. The PR is
-CI-clean and ready to merge into `JoshuaJewell/MetaManifold-WebUI:main`. A
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:9c591aa22d508dd2a0b1dadbc7b6a3f15f68668ca4f88e4c88c6306c804dcbe8 -->
+
+CI-clean, but the missing-output finding remains unresolved before merge into
+`JoshuaJewell/MetaManifold-WebUI:main`. A
+
+<!-- /coderabbit-ai-generated:v1 -->
 merge is nonetheless a **write** to that repository: this session's GitHub
 token has `admin` on `hyperpolymath/MetaManifold-WebUI` (the fork holding the
 PR head) and on `metadatastician/MetaManifold-Evidence`, but only `pull` on
@@ -168,10 +196,11 @@ repository. The attempt in this session returned:
 FORBIDDEN: Resource not accessible by integration
 ```
 
-For someone with `push`/`triage` on `JoshuaJewell/MetaManifold-WebUI`:
+For someone with `push`/`triage` on `JoshuaJewell/MetaManifold-WebUI`, resolve
+only the first two threads; keep the missing-output thread open:
 
 ```bash
-for id in PRRT_kwDORbJW48606d5b PRRT_kwDORbJW48606d5n PRRT_kwDORbJW48606lKn; do
+for id in PRRT_kwDORbJW48606d5b PRRT_kwDORbJW48606d5n; do
   gh api graphql -f query="mutation { resolveReviewThread(input: {threadId: \"$id\"}) { thread { id isResolved } } }"
 done
 ```
@@ -193,14 +222,32 @@ git fetch https://github.com/JoshuaJewell/MetaManifold-WebUI.git pull/68/head:pr
 git worktree add ../pr68 -b fix/66-resumable-ssh-stages pr68
 cd ../pr68
 git am /path/to/MetaManifold-Evidence/notes/0004-pr68-ssh-recovery-coverage.patch
-# re-run the checks, then push to the fork that owns the PR head:
+# re-run the recovery checks on Linux (other platforms skip the protocol tests),
+# then push to the fork that owns the PR head:
 julia --project=. -t 2 test/runtests.jl test_remote_stages.jl test_phylogeny.jl
 ```
 
 Pushing to the PR head and resolving/merging on the base repository are left to
 the people who own those timelines, as with `0001`–`0003` in this directory.
 
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:fbe34213766f9195640324030a420284a04b07a73bc9ced83eda5adf3fa23f2a -->
+
+## Verification of the review corrections (2026-11-09)
+
+- The revised patch applies to `5115109` with `git apply --check` and `git am`;
+  all three resulting test files match the edited tree.
+- On Linux with Julia 1.12.1 and JSON3 1.14.4, the patched protocol suite passed
+  188 assertions using `test/helpers/remote_protocol_module.jl` (the production
+  runner and logger). Three additional checks passed with `PATH` unset.
+- The full application test command above has not been run; its dependencies
+  are not prepared. The historical verification below describes the original
+  patch, before these corrections.
+
 ## Verification recorded when authoring the patch
+
+<!-- /coderabbit-ai-generated:v1 -->
 
 - `git apply --check` onto a clean `5115109` tree: clean.
 - `git am` in a fresh shallow clone at `5115109`: clean, zero warnings,
@@ -244,8 +291,13 @@ the people who own those timelines, as with `0001`–`0003` in this directory.
 
 **Retry attempts that finish without required outputs**
 
-> Fixed at `5115109`. Missing required outputs are reported before any transfer
-> (`remote_session.jl:231-241, 526-533`), the zero-exit marker is kept, and the
-> worker's new `replay` action lets the next run retrieve the same attempt
-> instead of calling a `start`/`retry` that would refuse. The new patch also
-> covers `_fetch_outputs`' own missing-output error.
+> Unresolved at `5115109`. Missing required outputs are reported before any
+> transfer (`remote_session.jl:231-241, 526-533`). The exit barrier uses
+> `replay`, retaining the same attempt without rerunning the command. If a
+> required file is still absent, retrieval fails again and no receipt is stored.
+> Replay supports retrieval of existing outputs; it does not recover an output
+> the command never produced. The new patch covers `_fetch_outputs`' own
+> missing-output error; keep this thread open.
+
+
+<!-- /coderabbit-ai-generated:v1 -->
