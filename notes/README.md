@@ -11,6 +11,8 @@
 | `0004-pr68-ssh-recovery-coverage.patch` | one `git format-patch` commit onto `MetaManifold-WebUI#68` head `5115109`, closing the last recovery finding and adding regression cases for the 18 changed lines Codecov reported uncovered |
 | `pr68-ssh-recovery-review.md` | close-out audit for `#68` — the three open Codex threads, exact Codecov gaps, CI/merge readiness, thread IDs, commit-signature badges and draft replies |
 | `pr68-parallel-ssh-and-hardening.md` | whether `pssh` fits this subsystem, the parallelism that does fit, and a prioritised security-hardening list for the SSH runner |
+| `pr68-closeout-runbook.md` | conclusive PR #68 status, the exact credential blocker, every attempted write path and its 403, the three things only you can do, and the hand commands / definition of done |
+| `scripts/pr68-apply-and-close.sh` | one-command `--all` driver: verify the patch, push it to the fork head, wait for green CI, reply to and resolve the three threads, then merge PR #68 (needs a write-capable credential) |
 | `pr33-reply.md` | the reply to post on `MetaManifold-WebUI#33` after the rebase and README commit pushed to the fork (2026-10-14) |
 | `webui-issues.md` | the five open WebUI issues: what each waits on, what moved here, and draft comments |
 | the rest | the PR #25 rework, below |

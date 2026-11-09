@@ -23,16 +23,21 @@ check() { printf '  ok: %s\n' "$*"; }
 # 0. Every handoff note must carry its licence header and be indexed. The
 # repository's REUSE compliance check covers source files; this also covers the
 # prose/patch artifacts in notes/.
-for f in "$PATCH" "$AUDIT" "$DESIGN" notes/README.md scripts/check-pr68-handoff.sh; do
+for f in "$PATCH" "$AUDIT" "$DESIGN" notes/pr68-closeout-runbook.md \
+         notes/README.md scripts/check-pr68-handoff.sh scripts/pr68-apply-and-close.sh; do
   head -n 40 "$f" | grep -q 'SPDX-License-Identifier: AGPL-3.0-or-later' || \
     fail "$f has no AGPL-3.0-or-later SPDX header in its first forty lines"
 done
 for f in 0004-pr68-ssh-recovery-coverage.patch \
          pr68-ssh-recovery-review.md \
-         pr68-parallel-ssh-and-hardening.md; do
+         pr68-parallel-ssh-and-hardening.md \
+         pr68-closeout-runbook.md; do
   grep -q "$f" notes/README.md || fail "notes/README.md does not index $f"
 done
-check "SPDX headers and notes/README.md index"
+bash -n scripts/pr68-apply-and-close.sh || fail "close-out driver has a shell syntax error"
+grep -q 'git apply --check' notes/pr68-closeout-runbook.md || \
+  fail "runbook lost its apply instructions"
+check "SPDX headers, index and close-out driver syntax"
 
 # 1. Format and metadata. No malformed headers, no trailing junk commits.
 [[ "$(grep -c '^From ' "$PATCH")" == 1 ]] || fail "expected exactly one format-patch commit"
