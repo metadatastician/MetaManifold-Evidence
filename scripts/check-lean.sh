@@ -130,6 +130,10 @@ if strip_comments "${positive[@]}" |
    grep -vE '^[^:]+:[0-9]+:(theorem|def|abbrev|inductive|structure) '; then
   fail 'declaration form the axiom inventory cannot see (modifier, attribute or indentation)'
 fi
+# A modifier on a line of its own would hide the declaration below it.
+if strip_comments "${positive[@]}" | grep -E '\b(private|protected|noncomputable)\b'; then
+  fail 'visibility or computability modifier in the positive set (the inventory cannot see past it)'
+fi
 echo 'PASS: escape-hatch audit (no sorry/axiom/admit/native_decide/implemented_by/extern; set_option only for elaborator budgets; core Init only)'
 
 # 4. Compile in dependency order; warnings are errors.
@@ -199,6 +203,10 @@ declare_names() {
 }
 declared="$tmpdir/declared"; printed="$tmpdir/printed"
 for m in "${modules[@]}"; do declare_names "lean/$m.lean"; done | sort >"$declared"
+if dups="$(uniq -d "$declared")" && [[ -n "$dups" ]]; then
+  printf '%s\n' "$dups"
+  fail 'a qualified name is declared twice, so one #print axioms line could stand for two declarations'
+fi
 sed -n 's/^#print axioms //p' lean/All.lean | sort >"$printed"
 if ! diff -u "$declared" "$printed"; then
   fail 'lean/All.lean does not print the axioms of exactly the declared names'
