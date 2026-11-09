@@ -368,8 +368,8 @@ only*.
 |Exact. Rocq's `expected` is transcribed mechanically from Agda's (C2 and the
 generator check). `grid`, `cells` and `upto` are matched by reading. Because
 both sides prove equality with the same table, the Rocq `grid 12` and the
-Agda `grid 12` are the same 169 rows (given the Agda theorem; see "Not run
-here").
+Agda `grid 12` are the same 169 rows (given the Agda theorem, which the
+2026-11-09 Agda run in `PROOF-STATUS.adoc` observed to hold).
 |re-proved |Closed
 |===
 
@@ -445,7 +445,8 @@ equal to (169 counts cells; 546 checker configurations). That is not
 equality of definitions.
 . These mechanical matches are transitive. They assume the Agda theorems
 `julia-agrees` and `checker-matches-explorer` hold at the recorded revisions.
-The Agda leg was not run in this environment.
+Both were observed to hold in the 2026-11-09 Agda run recorded in
+`PROOF-STATUS.adoc`; CI re-establishes them on every run.
 . The generated tables trust `scripts/gen-rocq-table.sh` and
 `scripts/gen-rocq-explorer-table.sh` (bash and awk). Both check every token
 against a closed list and check the row count, and the check script

@@ -90,6 +90,31 @@ reads as engineering under PROOF-POLICY §1. It is carried on the theory
 ladder because the owner asked for every theorem to have both recheck legs.
 Outside the 0..12 grid the Julia code is tested, not proved.
 
+== Independent statement review (2026-11-09)
+
+A reviewer who wrote neither leg compared each of the 22 Rocq and Lean
+statements with its Agda statement, after unfolding definitions. It found
+all 22 matching in both legs, none weaker, stronger or vacuous. The checks
+were partly by kernel and partly by reading:
+
+* Kernel: the elaborated statements were printed (`Set Printing All`,
+  `#check`/`#print`).
+* Kernel: `verdict`, `lo`, `hi`, `min`, `span` and `naturals` take the same
+  values in Agda (`refl`), Rocq and Lean over finite domains (y, n up to 25),
+  with a negative control.
+* Kernel: the ported checker's `report` agrees with Agda's on 120
+  configurations outside the 546-row explorer table.
+* Byte comparison: all four generated tables are identical to independent
+  normalisations of the Agda tables.
+* By reading: quantifier structure, premises, the direction of each
+  implication, Σ versus `sig` or subtype, and every ported definition
+  clause by clause.
+
+Only two stale sentences in the correspondence files were found, and both
+are now corrected. This review is an agent's, so it informs the owner's
+decision and does not replace it. The legs stay `BRIDGE-PENDING` until
+the owner records `RECONCILED`.
+
 == The finite checker port
 
 The bridge theorems relate the counts model to the finite checker of

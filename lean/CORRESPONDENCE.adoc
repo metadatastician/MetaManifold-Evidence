@@ -29,8 +29,7 @@ toc::[]
   CountsCertificate `40e28a635dea2010372f38495f41ac7fddd73ef507d4b0e2ba1b2ea752da2125`.
 | Generic vocabulary
 | `hyperpolymath/residual-evidence-types` at `559bba424f1819e4eb7c3104b418c4c5f5a1a22f`
-  (the commit `scripts/fetch-layer-a.sh` pins in the working tree; HEAD of this
-  repository pins `62d749075425ec32a5aa150d8bc64bf05a7e542f`, which this leg did not read):
+  (the commit `scripts/fetch-layer-a.sh` pins):
   `src/ResidualEvidence/{Prelude,Core,Finite/Int,Finite/Row,Finite/Checker}.agda`,
   `tests/correspondence/{Correspondence,ExplorerTable}.agda`. `check-lean.sh`
   refuses a checkout at any other commit, or with `ExplorerTable.agda` modified.
