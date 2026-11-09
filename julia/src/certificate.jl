@@ -33,7 +33,7 @@ The text of `CountsJuliaTable.agda`: `certificate_rows(k)` as an Agda list.
 """
 function certificate_agda(k::Integer = CERTIFICATE_BOUND)
     io = IOBuffer()
-    println(io, "{-# OPTIONS --safe --without-K #-}")
+    println(io, "{-# OPTIONS --safe --without-K --cubical-compatible #-}")
     println(io, "-- SPDX-License-Identifier: AGPL-3.0-or-later")
     println(io, "-- SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell")
     println(io, "--")

@@ -15,13 +15,13 @@ test -f "$ret_src/ResidualEvidence/Core.agda" || {
   exit 1
 }
 "$prover" --version
-flags=(--safe --without-K --no-libraries --ignore-interfaces --double-check -i agda/src -i "$ret_src")
+flags=(--safe --without-K --cubical-compatible --no-libraries --ignore-interfaces --double-check -i agda/src -i "$ret_src")
 
 "$prover" "${flags[@]}" agda/src/MetaManifold/Evidence/All.agda
 
 # Axiom audit. --safe already rejects postulates; this also refuses pragmas
 # and holes that would make a pass mean less than it says.
-if grep -rnE --include='*.agda' 'postulate|TERMINATING|NON_COVERING|NO_POSITIVITY_CHECK|\{!|--type-in-type|--sized-types|--cubical' agda/src; then
+if grep -rnE --include='*.agda' 'postulate|TERMINATING|NON_COVERING|NO_POSITIVITY_CHECK|\{!|--type-in-type|--sized-types|--cubical([^-]|$)' agda/src; then
   echo 'ERROR: escape hatch found in the positive set' >&2
   exit 1
 fi
