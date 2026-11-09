@@ -1,0 +1,451 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell
+= Rocq recheck leg: statement correspondence
+:toc: macro
+
+This file records the Rocq leg that standards `3-practice/PROOF-POLICY.adoc` §2
+requires for the Agda counts theorems. It covers §2.2: the proposition, the
+assumptions, the type and universe discipline, the revisions, the tool versions,
+the invocation, and the result.
+
+Route: *`re-proved`* for every theorem. No Agda→Dedukti→Rocq route is
+available in this environment, so each statement was restated in Rocq by hand
+and proved by hand. Only the Rocq standard library is used (`Init`, `Arith`,
+`List`). No arithmetic decision procedure (`lia`, `omega`, `nia`) appears in
+any proof. The proofs use induction, inversion, rewriting with closed
+standard-library equations, and two small uses of `auto`.
+
+toc::[]
+
+== What was checked, and what was not
+
+[cols="1,3",options="header"]
+|===
+|Item |Value
+
+|Source of truth
+|`agda/src/MetaManifold/Evidence/*.agda` in the working tree on top of commit
+`d2d49aa9c8b838046fbdc228e50b45eb827bef37`. The working tree differs from that
+commit only in the `OPTIONS` pragma (`--cubical-compatible` added, per standards
+PROOF-POLICY §2.1) and in `scripts/fetch-layer-a.sh` pinning residual-evidence-types
+at `559bba42`. The coordinator confirmed both changes are intended, and the port
+was made from this working tree. No statement
+differs. sha256: `Counts.agda` `3f1867bb…83da`, `Bounds.agda` `eea88a6f…4137`,
+`CheckerBridge.agda` `6a3dd157…5574`, `CountsGrid.agda` `414739a1…40aa`,
+`CountsJuliaTable.agda` `17741289…85bb`, `CountsCertificate.agda` `40e28a63…2125`.
+
+|Vocabulary
+|`hyperpolymath/residual-evidence-types` at
+`559bba424f1819e4eb7c3104b418c4c5f5a1a22f` (the `scripts/fetch-layer-a.sh`
+pin): `Prelude`, `Core`, `Finite/Int`, `Finite/Row` and `Finite/Checker`, plus
+`tests/correspondence/ExplorerTable.agda` (sha256 `d6ee664f…aedaea`).
+
+|Rocq
+|The Coq Proof Assistant 8.18.0, compiled with OCaml 4.14.1 (Ubuntu `coq`
+package). No external libraries.
+
+|Invocation
+|`scripts/check-rocq.sh`, which runs `coqc -Q rocq MetaManifoldEvidence rocq/<F>.v`
+for each file of `rocq/_CoqProject` in order.
+
+|Kernel result
+|Every file compiles. `Print Assumptions` reports *Closed under the global
+context* for all 43 names in `rocq/All.v`: the 22 theorems in the table below,
+the definitions `verdict`, `lo` and `hi`, and 18 supporting lemmas, including
+the explorer check. No axioms, no `Admitted`, and no
+`Parameter`/`Hypothesis`/`Variable`. Proofs by computation use the kernel's
+conversion (`reflexivity`), not `vm_compute`/`native_compute`, so neither the
+VM nor native compilation is in the trusted base.
+
+|Not run here
+|Agda is not installed in this environment. The Agda leg was *not* rechecked
+for this record. The two transitive cross-checks below also rely on the Agda
+theorems `julia-agrees` and `checker-matches-explorer` holding at these
+revisions, and that was not re-observed here.
+
+|Correspondence state (§2.2)
+|`COQ-CHECKED`. The statement comparison below was drafted by an LLM agent.
+Under the estate doctrine, equivalence judgements are provisional until
+supervised. So this leg is *`BRIDGE-PENDING`* until the owner reviews this
+comparison. It is not claimed as `RECONCILED`, and no PWG is claimed.
+|===
+
+== Conventions that apply to every row
+
+Each row names only its departures from these conventions.
+
+C1 Names:: Agda `⇒` becomes `_to_`, `-` becomes `_`, and `′` becomes `'`. For
+example, `fibre⇒interval` is `fibre_to_interval`. Constructor names keep
+their spelling (`z≤n` is `z_le_n`, `is-entailed` is `is_entailed`,
+`no-candidate` is `no_candidate`).
+
+C2 Equality:: Agda `_≡_` (in `Set`, under `--without-K`) becomes Rocq `eq`
+(in `Prop`). Every equation in these statements is between elements of
+`nat`, `Verdict`, `list nat`, `list Row` or `list Checker.Row`. These types have
+decidable equality, so identity proofs are unique on both sides and nothing is
+lost. Neither side assumes K or UIP.
+
+C3 Order:: Agda `_≤_` (Prelude, in `Set`, constructors `z≤n`, `s≤s`) becomes
+`Le` (in `Prop`, written `≤`). `Le` has the same two constructors with the same
+implicit arguments. An Agda `m ≤ n` has at most one proof, so moving to `Prop`
+loses nothing. `Prelude.Le_iff` proves `Le m n <-> m <= n` against the standard
+order.
+
+C4 Negation:: Agda `¬ A = A → ⊥`, where `⊥` is an empty datatype in `Set`,
+becomes Rocq `~ A = A -> False`. Both are logically equivalent.
+
+C5 Products:: Agda `A × B` (a non-dependent `Σ` in `Set`) becomes `A /\ B` in
+every theorem statement. Every component is a proposition, so the two are
+inhabited under the same conditions. A Rocq proof of `/\` cannot be eliminated
+into `Type`, but no statement here needs that.
+
+C6 Fibres:: Agda `Candidate observe r E = Σ W (λ w → (observe w ≡ r) × E w)`
+becomes `{ w : W | observe w = r /\ E w }` (`sig`, in `Type`, still a
+computationally relevant pair), with `fst` becoming `proj1_sig`. The
+conclusions `Σ (ReadFibre y n) (λ c → latent (fst c) ≡ x)` become
+`{ c : ReadFibre y n | latent (proj1_sig c) = x }`. These are informative on
+both sides, and the Rocq proofs end in `Defined`, so the witness computes, as
+it does in Agda.
+
+C7 Sorts:: The Agda families in `Set` become propositions in Rocq: `Holds`,
+`Sound`, `VerdictView`, `InInterval`, `InBounds`, `Bounded`, `Present`,
+`Absent`, `PresenceAgrees` and `LatentsAgree`. The data-carrying types stay in
+`Set`/`Type`: `World`, `Direction`, `Candidate`, `ReadFibre`, `Case`, `Int`,
+`Verdict`, `Config` and `Row`.
+
+C8 Universes:: The Agda `Core` is level-polymorphic (`W : Set w`, `O : Set o`,
+`E : W → Set e`, `P : W → Set p`). The Rocq `Core` takes `W O : Type` but
+requires `E P : W -> Prop`. *The ported vocabulary is therefore less general
+than Agda's*: it cannot take proof-relevant evidence or claims. This affects
+no theorem here, because every instance (`Bounded n`, `Present`, `Absent`) is
+propositional. `upto6` likewise takes `P : nat -> Prop` instead of
+`P : Nat → Set p`.
+
+C9 Implicit arguments:: Every theorem has the same implicit and explicit
+binders as in Agda (checked with `About` on all 22). One difference is not part of any
+theorem's type: the parameters `y n` of the `Sound` and `VerdictView`
+constructors are implicit in Agda and explicit in Rocq.
+
+C10 Builtins:: Agda's `_+_` is `Nat.add`, `_-_` (truncated) is `Nat.sub`,
+`_<_` (Boolean) is `Nat.ltb`, and `_==_` is `Nat.eqb`. The checker's own `not`,
+`_∧_` and `_∨_` are `negb`, `andb` and `orb`. Its `length` and `map` are
+`List.length` and `List.map`, which have the same clauses (by reading).
+`Prelude.builtin_nat_clauses` and
+`Checker.bool_clauses` prove that each Rocq function satisfies the defining
+clauses of its Agda counterpart. Those clauses are structurally recursive,
+so they determine the function, and both sides compute the same values.
+
+C11 Integers:: `Agda.Builtin.Int` (`pos n`, `negsuc n`) is ported as an
+inductive of its own with the same two constructors, not as `Z`. `_⊖_`,
+`_+ᵢ_`, `absᵢ`, `signᵢ` and `_==ᵢ_` become `minus_int`, `add_int`, `abs_int`,
+`sign_int` and `eqb_int`, with the same clauses.
+
+== Definitions the theorems mention
+
+These are not theorems. They are listed because the meaning of every statement
+depends on them. "By reading" means a clause-by-clause comparison of the Agda
+and Rocq texts. "Mechanically" means a kernel check against a table that the
+Agda side is proved equal to.
+
+[cols="2,2,4",options="header"]
+|===
+|Agda (file) |Rocq (file) |How it was compared
+
+|`Direction`, `World` (record, constructor `world`, fields `base noise dir`), `latent`, `observed` (Counts)
+|same names (Counts.v)
+|By reading. Same constructors and same clauses.
+
+|`Bounded n w = noise w ≤ n`, `ReadFibre y n = Candidate observed y (Bounded n)`, `Present`, `Absent`, `InInterval` (Counts)
+|same names (Counts.v)
+|By reading. Same bodies, with C3–C7 applied.
+
+|`verdict` (Counts)
+|`verdict` (Counts.v)
+|By reading. The same case split as the Agda `with` chain: `n < y`, then `y`,
+then `n`. *Mechanically on 0..12 × 0..12*: Rocq `julia_agrees` and Agda
+`julia-agrees` check `verdict` against the same Julia table, transcribed
+mechanically.
+
+|`lo y n = y - n`, `hi y n = y + n`, `InBounds`, `VerdictView`, `Sound` (Bounds, Counts)
+|same names (Bounds.v, Counts.v)
+|By reading. `lo` and `hi` are also checked mechanically on 0..12 × 0..12
+through the same Julia table.
+
+|`Candidate`, `Case` (constructor `inhabited`), `Holds` (Core)
+|same names (ResidualEvidence.v, `Module Core`)
+|By reading, with C6–C8. `Holds c P` quantifies over every candidate and
+ignores `c`'s witness, as in Agda.
+
+|`Config`, `asConfig`, `enumerate`, `presence`, `latents` and their helpers (Finite/Checker, CheckerBridge)
+|same names (ResidualEvidence.v, `Module Checker`; CheckerBridge.v)
+|By reading, plus *agreement on the 546-row table*.
+`Correspondence.checker_matches_explorer : Checker.table = expected`
+(Correspondence.v, a port of residual-evidence-types
+`tests/correspondence/Correspondence.agda`) proves by kernel computation
+that the Rocq checker computes exactly the rows of residual-evidence-types'
+`ExplorerTable.agda`, which Agda's `checker-matches-explorer` proves equal to
+the Agda checker's `table`. So the two checkers agree on the same 546-row table,
+for every row's candidate count, `presence`, `identity` and `latents`. *This is
+agreement on that table, not a proof that the two definitions are equal*: a
+configuration outside the table (for example residual 7) is not covered. The
+49 bridge configurations are inside it. One structural difference: Agda's mutually
+recursive `latentsFrom`/`latentsStep` is not accepted by Rocq's guard
+checker, so `latentsFrom` inlines `latentsStep`'s match.
+`Checker.latentsFrom_step` proves the Agda clause by computation.
+
+|`naturals`, `span` (with local `from`), `min`, `checkerLatents` (CheckerBridge)
+|`naturals`, `span` (with `span_from`), `min`, `checkerLatents`
+|By reading only. Same clauses, with `_-_` as `Nat.sub` and `_<_` as
+`Nat.ltb`.
+
+|`Row` (constructor `row`), `cell`, `upto`, `cells` (with local `along`), `grid` (CountsGrid)
+|same names; `upto_go`, and `along` as a nested `fix` (CountsGrid.v)
+|By reading only. Same clauses.
+
+|`expected` (CountsJuliaTable, 169 rows)
+|`expected` (CountsJuliaTable.v)
+|Mechanically. `scripts/gen-rocq-table.sh` transcribes each row after checking
+it against a closed pattern, and `scripts/check-rocq.sh` regenerates it and
+`cmp`s it against the committed file.
+|===
+
+== One row per Agda theorem
+
+All rows: route `re-proved`. Kernel result: *Closed under the global context*.
+Run: `scripts/check-rocq.sh`, 2026-11-09, Rocq 8.18.0. "Exact" means the Rocq
+proposition is the Agda proposition read word for word under conventions
+C1–C11. It is neither weaker nor stronger.
+
+[cols="3,2,4,4,1,1",options="header"]
+|===
+|Agda (file) |Rocq name (file) |Rocq statement |Correspondence |Route |Result
+
+|`noiseless : ∀ y n → ReadFibre y n` (Counts.agda)
+|`noiseless` (Counts.v)
+|`forall y n : nat, ReadFibre y n`
+|Exact. Same witness: `world y 0 under`, `refl`, `z≤n`.
+|re-proved |Closed
+
+|`case : ∀ y n → Case observed y (Bounded n)` (Counts.agda)
+|`case` (Counts.v)
+|`forall y n : nat, Case observed y (Bounded n)`
+|Exact. `inhabited (noiseless y n)`.
+|re-proved |Closed
+
+|`fibre⇒interval : ∀ {y n} (c : ReadFibre y n) → InInterval y n (latent (fst c))` (Counts.agda)
+|`fibre_to_interval` (Counts.v)
+|`forall {y n : nat} (c : ReadFibre y n), InInterval y n (latent (proj1_sig c))`
+|Exact, under C5 and C6 (`InInterval` is `/\`; `fst` is `proj1_sig`).
+|re-proved |Closed
+
+|`interval⇒fibre : ∀ {y n x} → InInterval y n x → Σ (ReadFibre y n) (λ c → latent (fst c) ≡ x)` (Counts.agda)
+|`interval_to_fibre` (Counts.v)
+|`forall {y n x : nat}, InInterval y n x -> { c : ReadFibre y n \| latent (proj1_sig c) = x }`
+|Exact, under C6 (`Σ` becomes `sig` in `Type`, informative). The proof
+differs: the difference is computed as `y - x` (respectively `x - y`), not by
+recursion on `≤`. The statement is the same.
+|re-proved |Closed
+
+|`entailed-sound : ∀ {y n} → suc n ≤ y → Holds (case y n) Present` (Counts.agda)
+|`entailed_sound` (Counts.v)
+|`forall {y n : nat}, S n ≤ y -> Holds (case y n) Present`
+|Exact.
+|re-proved |Closed
+
+|`refuted-sound : Holds (case zero zero) Absent` (Counts.agda)
+|`refuted_sound` (Counts.v)
+|`Holds (case 0 0) Absent`
+|Exact.
+|re-proved |Closed
+
+|`unresolved-sound : ∀ {y n} → y ≤ n → ¬ (y + n ≡ zero) → (¬ Holds (case y n) Present) × (¬ Holds (case y n) Absent)` (Counts.agda)
+|`unresolved_sound` (Counts.v)
+|`forall {y n : nat}, y ≤ n -> ~ (y + n = 0) -> (~ Holds (case y n) Present) /\ (~ Holds (case y n) Absent)`
+|Exact, under C4 and C5. Same two witnesses (`world 0 y over`, `world y n under`).
+|re-proved |Closed
+
+|`verdict-sound : ∀ y n → Sound y n (verdict y n)` (Counts.agda)
+|`verdict_sound` (Counts.v)
+|`forall y n : nat, Sound y n (verdict y n)`
+|Exact. `Sound` has the same three constructors and premises; it is in
+`Prop` (C7), and its constructor parameters are explicit (C9).
+|re-proved |Closed
+
+|`never-inconsistent : ∀ y n → ¬ (verdict y n ≡ inconsistent)` (Counts.agda)
+|`never_inconsistent` (Counts.v)
+|`forall y n : nat, ~ (verdict y n = inconsistent)`
+|Exact.
+|re-proved |Closed
+
+|`lo⇒≤ : ∀ y n x → lo y n ≤ x → y ≤ x + n` (Bounds.agda)
+|`lo_to_le` (Bounds.v)
+|`forall y n x, lo y n ≤ x -> y ≤ x + n`
+|Exact. Explicit `y n x` in both.
+|re-proved |Closed
+
+|`fibre⇒bounds : ∀ {y n} (c : ReadFibre y n) → InBounds y n (latent (fst c))` (Bounds.agda)
+|`fibre_to_bounds` (Bounds.v)
+|`forall {y n : nat} (c : ReadFibre y n), InBounds y n (latent (proj1_sig c))`
+|Exact, under C5 and C6.
+|re-proved |Closed
+
+|`bounds⇒fibre : ∀ {y n x} → InBounds y n x → Σ (ReadFibre y n) (λ c → latent (fst c) ≡ x)` (Bounds.agda)
+|`bounds_to_fibre` (Bounds.v)
+|`forall {y n x : nat}, InBounds y n x -> { c : ReadFibre y n \| latent (proj1_sig c) = x }`
+|Exact, under C6.
+|re-proved |Closed
+
+|`view : ∀ y n → VerdictView y n (verdict y n)` (Bounds.agda)
+|`view` (Bounds.v)
+|`forall y n : nat, VerdictView y n (verdict y n)`
+|Exact. `VerdictView` has the same three constructors and premises
+(`suc zero ≤ n` is `S 0 ≤ n`); it is in `Prop` (C7), and its constructor
+parameters are explicit (C9).
+|re-proved |Closed
+
+|`view-at : ∀ {y n v} → verdict y n ≡ v → VerdictView y n v` (Bounds.agda)
+|`view_at` (Bounds.v)
+|`forall {y n : nat} {v : Verdict}, verdict y n = v -> VerdictView y n v`
+|Exact.
+|re-proved |Closed
+
+|`entailed-anti : ∀ {y n n'} → n' ≤ n → verdict y n ≡ entailed → verdict y n' ≡ entailed` (Bounds.agda)
+|`entailed_anti` (Bounds.v)
+|`forall {y n n' : nat}, n' ≤ n -> verdict y n = entailed -> verdict y n' = entailed`
+|Exact.
+|re-proved |Closed
+
+|`unresolved-mono : ∀ {y n n'} → n ≤ n' → verdict y n ≡ unresolved → verdict y n' ≡ unresolved` (Bounds.agda)
+|`unresolved_mono` (Bounds.v)
+|`forall {y n n' : nat}, n ≤ n' -> verdict y n = unresolved -> verdict y n' = unresolved`
+|Exact.
+|re-proved |Closed
+
+|`refuted-only-at-zero : ∀ {y n} → verdict y n ≡ refuted → (y ≡ zero) × (n ≡ zero)` (Bounds.agda)
+|`refuted_only_at_zero` (Bounds.v)
+|`forall {y n : nat}, verdict y n = refuted -> (y = 0) /\ (n = 0)`
+|Exact, under C5.
+|re-proved |Closed
+
+|`refuted-fragile : ∀ {y n n'} → verdict y n ≡ refuted → suc zero ≤ n' → verdict y n' ≡ unresolved` (Bounds.agda)
+|`refuted_fragile` (Bounds.v)
+|`forall {y n n' : nat}, verdict y n = refuted -> S 0 ≤ n' -> verdict y n' = unresolved`
+|Exact.
+|re-proved |Closed
+
+|`never-strengthens : ∀ {y n n'} → n ≤ n' → (verdict y n' ≡ entailed → verdict y n ≡ entailed) × (verdict y n' ≡ refuted → n' ≡ zero)` (Bounds.agda)
+|`never_strengthens` (Bounds.v)
+|`forall {y n n' : nat}, n ≤ n' -> (verdict y n' = entailed -> verdict y n = entailed) /\ (verdict y n' = refuted -> n' = 0)`
+|Exact, under C5.
+|re-proved |Closed
+
+|`presence-agrees : ∀ {y n} → y ≤ 6 → n ≤ 6 → PresenceAgrees y n`, with `PresenceAgrees y n = presence (asConfig y n) ≡ verdict y n` (CheckerBridge.agda)
+|`presence_agrees` (CheckerBridge.v)
+|`forall {y n : nat}, y ≤ 6 -> n ≤ 6 -> PresenceAgrees y n`, with `PresenceAgrees y n := Checker.presence (asConfig y n) = verdict y n`
+|Exact as a statement. The premises are the `Prop`s `y ≤ 6` and `n ≤ 6` with
+the ported `Le`, not a Boolean test. Its meaning depends on the ported checker,
+which agrees with the Agda checker on the 546-row explorer table (agreement on
+the table, not equality of definitions; see the definitions table). The 49
+cells here are rows of that table. Proved, as in Agda, by
+`upto6` twice and kernel computation in each of the 49 cells.
+|re-proved |Closed
+
+|`latents-agree : ∀ {y n} → y ≤ 6 → n ≤ 6 → LatentsAgree y n`, with `LatentsAgree y n = checkerLatents y n ≡ span (lo y n) (min (hi y n) 6)` (CheckerBridge.agda)
+|`latents_agree` (CheckerBridge.v)
+|`forall {y n : nat}, y ≤ 6 -> n ≤ 6 -> LatentsAgree y n`, with `LatentsAgree y n := checkerLatents y n = span (lo y n) (min (hi y n) 6)`
+|Exact as a statement, with the same `Prop` premises. `Checker.latents` is
+matched by agreement on the 546-row table. `lo` and `hi` are matched by
+agreement on the 0..12 grid. `naturals`, `span` and `min` are matched *by reading
+only*.
+|re-proved |Closed
+
+|`julia-agrees : grid 12 ≡ expected` (CountsCertificate.agda)
+|`julia_agrees` (CountsCertificate.v)
+|`grid 12 = expected`
+|Exact. Rocq's `expected` is transcribed mechanically from Agda's (C2 and the
+generator check). `grid`, `cells` and `upto` are matched by reading. Because
+both sides prove equality with the same table, the Rocq `grid 12` and the
+Agda `grid 12` are the same 169 rows (given the Agda theorem; see "Not run
+here").
+|re-proved |Closed
+|===
+
+=== Supporting lemmas (public in Agda, or added for the port)
+
+Each is closed under the global context, and each is listed in `All.v`.
+`≤⇒lo` (Bounds.agda) is `le_to_lo : forall y n x, y ≤ x + n -> lo y n ≤ x`
+(exact). The Counts.agda helpers `≤-refl`, `≤-trans`, `≤-total`, `≤-+ʳ`,
+`+-monoʳ`, `+-cancelʳ`, `≤-diff`, `<-true` and `<-false` are `le_refl`,
+`le_trans`, `le_total` (a `sum` in `Type`), `le_plus_r`, `plus_mono_r`,
+`plus_cancel_r`, `le_diff` (a `sig` in `Type`), `ltb_true` and `ltb_false`.
+`irrefl` and `le0` are Agda's local `go`/`irrefl` and `le0`/`≤0`. `upto6`
+appears in CheckerBridge.agda, with `P` in `Prop` (C8). Five lemmas were added
+for the port: `Le_iff` (C3), `builtin_nat_clauses` and `bool_clauses` (C10),
+`latentsFrom_step` (definitions table), and
+`Correspondence.checker_matches_explorer`.
+
+Not ported, because no listed theorem mentions them: `Context`, the
+checker's `Evidence`, `InRange`, `FiniteCandidate` and `FiniteCase`,
+`Finite/Soundness`, and Agda's `+-assoc`, `+-zero`, `+-suc`, `+-comm` and
+`subst`. Where a proof needs those, it uses closed standard-library equations
+(`Nat.add_assoc`, `Nat.add_0_r`, `Nat.add_succ_r`).
+
+== Expected rejections
+
+Five files under `rocq/reject/` mirror the Agda files of the same name in
+`agda/reject/`. The sixth, `ExplorerCellChanged.v`, guards `Correspondence.v`.
+`scripts/check-rocq.sh` demands that each one fails to compile
+with a type error ("… while it is expected to have type …") located inside its
+`Definition invalid` declaration, and not with a name, syntax or loading error.
+
+[cols="2,4",options="header"]
+|===
+|File |What it shows cannot be proved
+
+|`EntailedAtBound.v`
+|`entailed_sound` at `y = n = 2`: the premise `3 ≤ 2` has no proof. The
+boundary is strict.
+
+|`RefutedUnderNoise.v`
+|`refuted_sound` at `case 0 1`: under noise 1 a latent of 1 is a candidate.
+
+|`VerdictMislabel.v`
+|`verdict 3 1 = unresolved`: it is `entailed`.
+
+|`BridgeOutOfRange.v`
+|`Checker.presence (asConfig 7 0) = verdict 7 0`: outside `y ≤ 6` the checker
+finds no candidate. The range premise cannot be dropped.
+
+|`BridgeUnclipped.v`
+|`checkerLatents 6 1 = span (lo 6 1) (hi 6 1)`: the cut-off at 6 cannot be
+dropped.
+
+|`ExplorerCellChanged.v`
+|`Checker.table = oneCellChanged`, where `oneCellChanged` is the explorer table
+with the presence verdict of its first row changed from `entailed` to
+`unresolved`. A single changed cell breaks `checker_matches_explorer`, so that
+check is decided row by row and is not vacuous.
+|===
+
+`rocq/gate-selftest/AxiomLeak.v` is a control for the gate itself, not for the
+leg. It compiles, but its theorem rests on an `Axiom`. The check script demands
+that its own `Print Assumptions` parser refuses that theorem.
+
+== Residual assumptions of this leg
+
+. The statement comparison is by reading (C1–C11, tables above). It has not
+been supervised yet, so the state is `BRIDGE-PENDING`, not `RECONCILED`.
+. `naturals`, `span`, `min`, `grid`, `cells` and `upto` are ported by reading
+only. The other definitions the statements depend on are matched
+mechanically, but only as agreement on the tables the Agda side is proved
+equal to (169 counts cells; 546 checker configurations). That is not
+equality of definitions.
+. These mechanical matches are transitive. They assume the Agda theorems
+`julia-agrees` and `checker-matches-explorer` hold at the recorded revisions.
+The Agda leg was not run in this environment.
+. The generated tables trust `scripts/gen-rocq-table.sh` and
+`scripts/gen-rocq-explorer-table.sh` (bash and awk). Both check every token
+against a closed list and check the row count, and the check script
+regenerates and compares both tables.
+. The trusted base is the Rocq 8.18.0 kernel and the standard-library files
+loaded. `Print Assumptions` reports no axioms for any name.

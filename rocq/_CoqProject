@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell
+#
+# Logical path for IDEs opened in rocq/.  The canonical check is
+# scripts/check-rocq.sh (coqc -Q rocq MetaManifoldEvidence), which compiles
+# the files below in this order.
+
+-Q . MetaManifoldEvidence
+
+ResidualEvidence.v
+ExplorerTable.v
+Correspondence.v
+Counts.v
+Bounds.v
+CountsGrid.v
+CountsJuliaTable.v
+CountsCertificate.v
+CheckerBridge.v
+All.v
