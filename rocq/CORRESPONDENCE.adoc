@@ -401,9 +401,16 @@ Five files under `rocq/reject/` mirror the Agda files of the same name in
 with a type error ("… while it is expected to have type …") located inside its
 `Definition invalid` declaration, and not with a name, syntax or loading error.
 
+A rejection shows that the proof term in that file does not check: the
+theorem cannot be applied without its premise, or the computation does not
+reduce to the claimed value. It does not, by itself, show that the stated
+proposition is unprovable by some other proof. Where the proposition is in
+fact false, that follows from the positive theorems (for example
+`view` and `never_inconsistent`), not from the rejection.
+
 [cols="2,4",options="header"]
 |===
-|File |What it shows cannot be proved
+|File |What the rejection shows
 
 |`EntailedAtBound.v`
 |`entailed_sound` at `y = n = 2`: the premise `3 ≤ 2` has no proof. The

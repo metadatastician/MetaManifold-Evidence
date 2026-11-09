@@ -85,6 +85,29 @@ correspondence files map every name.
 
 The census counts each named theorem once: 22 names, some rows grouped.
 
+=== Supporting lemmas
+
+The census counts the 22 theorems above. The Agda modules also define
+helper lemmas that those proofs use, and they are not graded separately:
+`≤-refl`, `≤-trans`, `≤-total`, `≤-+ʳ`, `+-monoʳ`, `+-cancelʳ`, `+-assoc`,
+`+-zero`, `+-suc`, `+-comm`, `subst`, `≤-diff`, `<-true`, `<-false` in
+`Counts.agda`, and `≤⇒lo` with the private `irrefl`, `zero-not-suc`, `≤0`
+and `⊥-elim` in `Bounds.agda`. They are checked wherever the theorems that
+use them are checked. Their counterparts in the recheck legs differ:
+
+* Lean re-proves each of them by hand under the same name, with no axioms.
+* Rocq re-proves the order lemmas (`le_refl`, `le_trans`, `le_total`,
+  `le_plus_r`, `plus_mono_r`, `plus_cancel_r`, `le_diff`, `ltb_true`,
+  `ltb_false`, `irrefl`, `le0`, `le_to_lo`), all closed under the global
+  context.
+* Rocq takes the four addition identities (`+-assoc`, `+-zero`, `+-suc`,
+  `+-comm`) from its standard library (`Nat.add_assoc` and so on). Those
+  are counterparts used inside the Rocq proofs, not rechecks of the Agda
+  lemmas.
+
+If any helper is promoted to a theorem in its own right, it joins the
+census with its own grade.
+
 `julia-agrees` is a certificate about one repository's Julia code, so it
 reads as engineering under PROOF-POLICY §1. It is carried on the theory
 ladder because the owner asked for every theorem to have both recheck legs.
@@ -127,6 +150,22 @@ that table, not a proof that the definitions are equal.
 
 [[receipts]]
 == Receipts
+
+=== Hosted run, 2026-11-09
+
+https://github.com/metadatastician/MetaManifold-Evidence/actions/runs/42643421651[Proofs and tests run 42643421651]
+passed every job on pull request #15 at head
+`3c6bbb3e5d2c3f277bc8fa43ad44aafa77eb4230`, with residual-evidence-types
+pinned at `559bba424f1819e4eb7c3104b418c4c5f5a1a22f`:
+
+* "Counts proofs, expected rejections and mutants" (Agda 2.6.4.3, Debian
+  `agda-bin=2.6.4.3-1+b2` in a digest-pinned container);
+* "Rocq recheck leg" (Rocq 8.18.0);
+* "Lean recheck leg" (Lean 4.24.0, tarball sha256 checked);
+* "Julia tests and grid certificate".
+
+This receipt covers that commit. Later commits need their own run, and the
+pin moves when residual-evidence-types#28 merges.
 
 === Local run, 2026-11-09
 

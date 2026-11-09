@@ -89,11 +89,24 @@ echo "PASS: escape-hatch scan (no Admitted, admit, Axiom, Parameter, Hypothesis,
 mapfile -t names < <(sed -nE 's/^Print Assumptions MetaManifoldEvidence\.([A-Za-z0-9_.]+)\.$/\1/p' rocq/All.v)
 (( ${#names[@]} > 0 )) || fail "All.v prints no assumptions"
 
-# Every Theorem and Lemma of the positive set must be among them.
+# Every Theorem and Lemma of the positive set must be among them, by its
+# fully qualified name: file module, then any nested Modules.
+qualified_decls() {
+  awk '
+    FNR == 1 { d = 0; f = FILENAME; sub(/^.*\//, "", f); sub(/\.v$/, "", f) }
+    /^[[:space:]]*Module[[:space:]]+[A-Za-z0-9_]+[[:space:]]*\.[[:space:]]*$/ {
+      m = $2; sub(/\.$/, "", m); mods[++d] = m; next }
+    /^[[:space:]]*End[[:space:]]+[A-Za-z0-9_]+[[:space:]]*\.[[:space:]]*$/ {
+      if (d > 0) d--; next }
+    /^[[:space:]]*(Theorem|Lemma)[[:space:]]/ {
+      n = $2; sub(/[^A-Za-z0-9_].*$/, "", n)
+      q = f; for (i = 1; i <= d; i++) q = q "." mods[i]
+      print FILENAME, q "." n }' "$@"
+}
 while read -r file decl; do
-  printf '%s\n' "${names[@]}" | grep -qE "(^|\.)${decl}\$" ||
+  printf '%s\n' "${names[@]}" | grep -qxF -- "$decl" ||
     fail "$file: $decl is not given to Print Assumptions in rocq/All.v"
-done < <(grep -oE '^(Theorem|Lemma) [A-Za-z0-9_]+' rocq/*.v | sed -E 's/:(Theorem|Lemma) / /')
+done < <(qualified_decls rocq/*.v)
 
 # Parse coqc output of `Check @X. Print Assumptions X.` blocks: each block
 # must name the expected theorem and say exactly "Closed under the global

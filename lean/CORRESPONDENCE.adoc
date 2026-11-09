@@ -396,6 +396,13 @@ elaborate with a type error located on its `theorem invalid` line, and with
 no unknown name, parse error or resource limit. The first five mirror
 `agda/reject/`.
 
+A rejection shows that the proof attempt in that file does not elaborate:
+the theorem cannot be applied without its premise, or `rfl` does not reduce
+to the claimed value. It does not, by itself, show that the stated
+proposition is unprovable by some other proof. Where the proposition is in
+fact false, that follows from the positive theorems (for example `view` and
+`never-inconsistent`), not from the rejection.
+
 [cols="2,5",options="header"]
 |===
 | File | Invalid statement

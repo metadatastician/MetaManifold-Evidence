@@ -181,4 +181,11 @@ places to change.
 
 AGPL-3.0-or-later, matching MetaManifold. The generic libraries it depends on
 (`residual-evidence-types` for the proofs, `ResidualEvidenceTypes.jl` for the
-server) stay MPL-2.0. They are used, never copied.
+server) stay MPL-2.0. The Agda and Julia code uses them without copying. The
+Rocq and Lean recheck legs translate the parts of `residual-evidence-types`
+their theorems need: the vocabulary, the finite checker and the generated
+explorer table (`rocq/ResidualEvidence.v`, `rocq/ExplorerTable.v`,
+`rocq/Correspondence.v`, `lean/ResidualEvidence.lean`,
+`lean/ExplorerTable.lean`, `lean/Correspondence.lean` and their explorer
+reject controls). Those translated files carry MPL-2.0, as their source
+does.

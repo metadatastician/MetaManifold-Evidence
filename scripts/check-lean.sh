@@ -119,8 +119,16 @@ if strip_comments "${positive[@]}" |
   fail 'escape hatch found in the positive set'
 fi
 import_re="import ($(IFS='|'; echo "${modules[*]}"))\$"
-if grep -nE '^import ' "${positive[@]}" | grep -vE "^[^:]+:[0-9]+:$import_re"; then
+if grep -nE '^[[:space:]]*import ' "${positive[@]}" | grep -vE "^[^:]+:[0-9]+:$import_re"; then
   fail 'import outside the ported modules (Init is implicit; Std, Lean and Mathlib are refused)'
+fi
+# Every declaration must sit at column 0 with no modifier or attribute, so
+# the inventory below sees it and All.lean can print its axioms (a private
+# name cannot be printed from another module).
+if strip_comments "${positive[@]}" |
+   grep -E '^[^:]+:[0-9]+:.*\b(theorem|lemma|def|abbrev|inductive|structure|class|instance|opaque)\b' |
+   grep -vE '^[^:]+:[0-9]+:(theorem|def|abbrev|inductive|structure) '; then
+  fail 'declaration form the axiom inventory cannot see (modifier, attribute or indentation)'
 fi
 echo 'PASS: escape-hatch audit (no sorry/axiom/admit/native_decide/implemented_by/extern; set_option only for elaborator budgets; core Init only)'
 
