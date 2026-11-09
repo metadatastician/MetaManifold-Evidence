@@ -84,7 +84,7 @@ jobs:
     # structure delta of zero. This is the most specific check possible in
     # this repository: WebUI's own Julia/Agda/SSH suites run in WebUI CI on
     # the applied head, not here.
-    name: PR #68 handoff patch integrity
+    name: "PR #68 handoff patch integrity"
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
