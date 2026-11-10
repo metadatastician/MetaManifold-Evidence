@@ -4,6 +4,60 @@ Durable handoff for `JoshuaJewell/MetaManifold-WebUI` PR #70 (`validation/issue-
 "Validation/issue 23 native da"). Authored against `hyperpolymath/MetaManifold-WebUI` at
 `be7792f` — the branch head after #314 — and verified to apply there cleanly.
 
+## Status 2026-11-10: executed, and opened as a pull request
+
+This section replaces "Verified here, and not" below. The earlier text is kept as the record of
+the first draft, which was never run.
+
+- `0004-pr70-native-adapter-test-seam.patch` is now the commit that was run and pushed:
+  `3ed1dfb` on `hyperpolymath/MetaManifold-WebUI`, branch `claude/pr-70-coverage-review-5wvqac`,
+  open as draft [hyperpolymath/MetaManifold-WebUI#319](https://github.com/hyperpolymath/MetaManifold-WebUI/pull/319)
+  into `validation/issue-23-native-da`. A merge there updates upstream PR 70.
+- `0005-pr70-coverage-gates-and-estate-lanes.patch` was **not applied**. It no longer applies on
+  top of the new `0004` without edits. Its codecov gate, sensitivity test and three estate
+  workflows are decisions for the upstream owner. Its workflows pin `hyperpolymath/standards`,
+  which moved to `metadatastician/standards` on 2026-10-25.
+
+Changes against the first draft of `0004`:
+
+- `_native_backend` is one line over a constant (`_DEFAULT_NATIVE_BACKEND`). The first draft had a
+  `return getfield(@__MODULE__, :CompositionalDA)` line that only runs when the package is
+  installed, so it would have been a new uncovered line in CI.
+- The one-argument `_native_methods_available(method)` is gone; nothing needed it.
+- `test/runtests.jl` no longer lists `test_differential_sensitivity.jl`, a file that only `0005`
+  created.
+
+Measured (Julia 1.12.5, R 4.3.3, Ubuntu 24.04):
+
+| check | command | result |
+| --- | --- | --- |
+| patch line coverage, CI flags | `julia --project=. --code-coverage=user --compiled-modules=no test/runtests.jl differential differential_native` | 1159 pass, 13 skipped; 52 of 52 instrumented lines added to `src/analysis/differential.jl` since upstream `89be534` are covered |
+| real package | the same, after `Pkg.develop` of `hyperpolymath/CompositionalDA.jl` at `9903e76` (v0.3.0) in a scratch copy | 1367 pass, 11 skipped; the two real-package testsets ran |
+| full unit suite | `julia --project=. -t 2 test/runtests.jl` | 3618 pass, 25 skipped, 1 error: `test_provenance.jl:479` needs the R package `dada2`, which the sandbox does not have |
+| planted mutants | 12 corruptions of the adapter, each against `test/runtests.jl differential_native` | baseline green; 12 of 12 killed (BH applied twice, wrong estimate column, log10 for log2, structural decisions ignored, contrast reversed, seam bypassed, one-taxon floor, CompositionError not translated, package name hardcoded, non-finite published, wrong aldex_effect column, structural notes swapped) |
+
+Not run: the integration, server and frontend tests, and the upstream CI. Codecov runs only on the
+upstream pull request, so its number is not confirmed until PR 70 runs again.
+
+The mutant runner in `0005` had a defect: it treated `ERROR: LoadError: Some tests did not pass`
+as "the mutant failed to load", and every Julia test failure prints that line. A killed mutant
+would have been reported as an error. The runner used here counts a kill only when the suite
+reaches its `Test Summary` and reports a failure.
+
+### Why PR 70 has no Codex review and no governance comment
+
+- The "Codex Review Summary: Failed" comment is from the ChatGPT Codex connector. The same bot
+  posted "You have reached your Codex usage limits for code reviews" twice (7 and 8 November).
+  The review did not run because the quota was spent. `@codex review` starts it again when the
+  quota resets.
+- The fork-governance comment (DEED, K9, Hypatia grid) comes from `.github/workflows/hypatia-scan.yml`
+  on fork `main`. Upstream-bound branches start at upstream `main` and contain no merges from fork
+  `main`, so they do not carry that file. GitHub then runs only upstream's `ci.yml` for them. The
+  Actions run list for `validation/issue-23-native-da` shows only `CI` runs.
+- There is no `ponsbot`. gitbot-fleet (at `1a9abe8`) has no such member, and standards has no such
+  name. pons asinorum is a built-in row of the Hypatia grid. The word `ponsbot` in the first draft
+  of this note and in `0005` was wrong.
+
 ## Companion patches
 
 | file | what it is |
@@ -150,7 +204,7 @@ reusable files were confirmed to exist through the API, not assumed. (The estate
 log, so the pin and the owner spelling are load-bearing.)
 
 - `hypatia-scan.yml` — `hypatia-scan-reusable.yml`, with `hypatia-ref`, `pons-ref` and `panic-ref`
-  passed explicitly. The grid's pons row is pons-asinorum (the estate's `ponsbot`), its panic row
+  passed explicitly. The grid's pons row is pons-asinorum (a built-in row; no `ponsbot` exists), its panic row
   is panic-attack (the scanner behind the fleet's `panicbot`); the three values equal the
   reusable's declared defaults at the pin, so nothing changes today and the checker cannot move
   tomorrow without a commit here. `block-on-high: false` **for now**: the first run's findings have
