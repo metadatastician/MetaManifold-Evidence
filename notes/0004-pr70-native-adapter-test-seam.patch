@@ -1,95 +1,79 @@
-From d53f850146a5a8122afbbc54191035da68916747 Mon Sep 17 00:00:00 2001
-From: "Jonathan D.A. Jewell" <6759885+hyperpolymath@users.noreply.github.com>
-Date: Mon, 9 Nov 2026 10:05:21 +0000
-Subject: [PATCH 1/2] test(differential): exercise the native adapter against a
- stand-in backend
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From 3ed1dfb51035340f61e319482222d19fdbc91f94 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 10 Nov 2026 19:44:18 +0000
+Subject: [PATCH] test(differential): run the native adapter against a stand-in
+ backend
 
-Codecov reported this branch at 52.38% patch coverage with 30 lines missing,
-all of them in `src/analysis/differential.jl`: the native adapter — the block
-that turns a CompositionalDA `DAResult` into result rows, keeps BH from being
-applied a second time, and maps structural-zero verdicts — was unreachable in
-CI. The reason is real and not going away: CompositionalDA is not in the General
-registry, so `Pkg.instantiate()` cannot install it and no checkout CI can
-produce has the package. Only the refusal path was measured, because only the
-refusal path could run.
+Codecov reported 30 uncovered lines on this branch, all in
+`src/analysis/differential.jl`: the adapter that turns a CompositionalDA
+result into result rows. CompositionalDA is not in the General registry, so
+CI cannot install it, and only the refusal path ran.
 
-The fix is a seam, not a lower bar:
+- `differential_abundance(...; native_backend=nothing)` calls a module. The
+  default is the `CompositionalDA` this session loaded, or the by-name refusal
+  when it loaded none. Production behaviour is unchanged.
+- `_is_composition_error` translates the `CompositionError` of the backend in
+  use.
+- `diagnostics.native_method.package` reports the name of the module that
+  produced the numbers, so a stand-in record cannot read as a package record.
 
-- `differential_abundance(...; native_backend=…)` calls a module rather than the
-  package name. `nothing` (the default) means the `CompositionalDA` this session
-  loaded, or the existing by-name refusal when it did not; a module passed in is
-  used as given. Production behaviour is unchanged.
-- `_is_composition_error` translates the backend's own `CompositionError`, so a
-  stand-in's error type is translated exactly as the package's is.
-- `diagnostics.native_method.package` now reports `nameof(backend)` instead of
-  the literal "CompositionalDA". A record made with a stand-in must not read as
-  one made with the package; this is the field that says which produced it.
+`test/support/native_da_stub.jl` has the two entry points, the column names
+and the verdict strings of the package. Its `qvalue` is not
+`bh_adjust(pvalue)`, so a second BH pass is visible, and its structural rows
+carry NaN as the package leaves them.
 
-`test/support/native_da_stub.jl` is a stand-in with the real package's two entry
-points, column names and verdict strings ("tested", "structural_zero",
-"structural_zero_both"), and deliberately simple arithmetic on the feature's
-position so every assertion can name the number it expects. Its `qvalue` is not
-`bh_adjust(pvalue)`, so a second BH pass cannot pass unnoticed, and its
-structural verdicts carry NaN exactly as the package leaves them, so the adapter
-must branch on the verdict before it looks at finiteness.
+`test/unit/test_differential_native.jl` gains four testsets that run on every
+checkout: the seam, the ALDEx2 wiring, the ANCOM-BC wiring and the refusal
+order. The comparisons against the real package stay, and still skip with a
+message when the package is absent.
 
-`test/unit/test_differential_native.jl` gains four testsets that run everywhere:
-the seam itself, the ALDEx2 wiring (including the BH suppression and the group
-relabelling that makes the contrast direction the user asked for), the ANCOM-BC
-wiring (units, structural decisions, filtered taxa), and the refusals in their
-order (input checks before the dependency probe, `CompositionError` translated,
-other failures rethrown untouched, non-finite statistics refused by name). The
-real-package comparisons stay where they are: they are stronger evidence when
-the package is developed into the environment, and they still skip loudly when
-it is not.
+Measured with Julia 1.12.5, `--code-coverage=user --compiled-modules=no`,
+`test/runtests.jl differential differential_native`: 1159 pass, 13 skipped;
+every instrumented line this branch adds to `differential.jl` is covered
+(52 of 52).
 
 Co-authored-by: arena-agent <297053741+arena-agent@users.noreply.github.com>
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_0136P7ZoTPXfxg1C85rVNx78
 ---
- src/analysis/differential.jl          |  65 ++++++--
- test/runtests.jl                      |   9 +
- test/support/native_da_stub.jl        | 171 +++++++++++++++++++
- test/unit/test_differential_native.jl | 227 ++++++++++++++++++++++++++
- 4 files changed, 462 insertions(+), 10 deletions(-)
+ src/analysis/differential.jl          |  58 +++++--
+ test/runtests.jl                      |   6 +
+ test/support/native_da_stub.jl        | 170 +++++++++++++++++++
+ test/unit/test_differential_native.jl | 224 ++++++++++++++++++++++++++
+ 4 files changed, 448 insertions(+), 10 deletions(-)
  create mode 100644 test/support/native_da_stub.jl
 
 diff --git a/src/analysis/differential.jl b/src/analysis/differential.jl
-index ffdc5ec..c9e3f53 100644
+index ffdc5ec..447a30d 100644
 --- a/src/analysis/differential.jl
 +++ b/src/analysis/differential.jl
-@@ -53,15 +53,44 @@ and start a fresh session.
+@@ -53,13 +53,35 @@ and start a fresh session.
  """
  compositional_da_available() = _COMPOSITIONAL_DA_AVAILABLE
  
 -function _native_methods_available(method::AbstractString)
 -    _COMPOSITIONAL_DA_AVAILABLE || throw(ArgumentError(
++# The module the native methods call when the caller names none: the package
++# where the import above succeeded, `nothing` where it did not.
++const _DEFAULT_NATIVE_BACKEND = _COMPOSITIONAL_DA_AVAILABLE ? CompositionalDA : nothing
++
 +"""
 +    _native_backend(override)
 +
-+The module the native methods call. `nothing` means "the package this session
-+loaded": `CompositionalDA` where the import above succeeded, `nothing` where it
-+did not. A module passed in is returned as given.
++The module the native methods call: `override` when one is given, otherwise the
++`CompositionalDA` this session loaded, or `nothing` when it loaded none.
 +
 +This is the seam that keeps the adapter testable. `CompositionalDA` is not in
-+the General registry, so a checkout CI can install never has it, and without a
-+seam every line of the adapter would be unreachable in CI and reported as
-+uncovered while the refusal path was the only thing measured. The tests pass a
-+stand-in module that offers the same two entry points and the same error type,
-+so the code exercised there is the code that runs in production — only the
-+estimator behind the boundary differs.
++the General registry, so CI never has it, and without a seam the adapter is
++unreachable there. The tests pass a stand-in module with the same two entry
++points and the same error type, so the adapter code they run is the code that
++runs in production; only the estimator behind the boundary differs.
 +"""
-+function _native_backend(override)
-+    override === nothing || return override
-+    _COMPOSITIONAL_DA_AVAILABLE || return nothing
-+    return getfield(@__MODULE__, :CompositionalDA)
-+end
++_native_backend(override) = override === nothing ? _DEFAULT_NATIVE_BACKEND : override
 +
 +"Whether `backend` defines the package's `CompositionError` and `err` is one."
 +_is_composition_error(backend::Module, err) =
-+    isdefined(backend, :CompositionError) &&
-+    err isa getfield(backend, :CompositionError)
++    isdefined(backend, :CompositionError) && err isa backend.CompositionError
 +
 +function _native_methods_available(method::AbstractString, backend)
 +    backend === nothing || return nothing
@@ -101,13 +85,8 @@ index ffdc5ec..c9e3f53 100644
 -    nothing
  end
  
-+_native_methods_available(method::AbstractString) =
-+    _native_methods_available(method, _native_backend(nothing))
-+
  using ..RRuntime: with_r_lock
- using ..Analysis: _palette_hex, R_WAIT_SECONDS
- export DifferentialConfig, ScalingRefusal, MASSUnavailable, ZCompositionsUnavailable,
-@@ -802,7 +831,8 @@ _row(taxon, prevalence, note) = Dict{String,Any}(
+@@ -802,7 +824,8 @@ _row(taxon, prevalence, note) = Dict{String,Any}(
  
  """
      differential_abundance(counts, samples, taxa, groups; reference, contrast,
@@ -117,7 +96,7 @@ index ffdc5ec..c9e3f53 100644
  
  Test every taxon (column) of the samples x taxa read-count matrix for a
  difference in abundance between the samples labelled `contrast` and those
-@@ -838,6 +868,17 @@ family is the fitted taxa that produced a p-value; failed and filtered taxa
+@@ -838,6 +861,17 @@ family is the fitted taxa that produced a p-value; failed and filtered taxa
  carry `padj = nothing`. The result's `effect` names the row key that holds the
  effect size and its label.
  
@@ -135,7 +114,7 @@ index ffdc5ec..c9e3f53 100644
  Throws `ArgumentError` for unusable input (including a zero replacement that
  cannot be made), `ScalingRefusal` when the offset cannot be computed,
  `MASSUnavailable`, `GlmGamPoiUnavailable` or `ZCompositionsUnavailable` when a
-@@ -851,7 +892,8 @@ function differential_abundance(counts::AbstractMatrix{<:Real},
+@@ -851,7 +885,8 @@ function differential_abundance(counts::AbstractMatrix{<:Real},
                                  taxa::AbstractVector{<:AbstractString},
                                  groups::AbstractVector{<:AbstractString};
                                  reference::AbstractString, contrast::AbstractString,
@@ -145,7 +124,7 @@ index ffdc5ec..c9e3f53 100644
      reference == contrast && throw(ArgumentError(
          "the two groups must differ, but both are '$reference'"))
      length(groups) == length(samples) || throw(ArgumentError(
-@@ -898,20 +940,21 @@ function differential_abundance(counts::AbstractMatrix{<:Real},
+@@ -898,20 +933,21 @@ function differential_abundance(counts::AbstractMatrix{<:Real},
          length(tested) >= 2 || throw(ArgumentError("native compositional methods need at least two retained taxa"))
          all(x -> x <= typemax(Int), @view counts[:, tested]) ||
              throw(ArgumentError("native compositional counts must fit the platform's Int range"))
@@ -171,7 +150,7 @@ index ffdc5ec..c9e3f53 100644
              rethrow()
          end
          by_taxon = Dict(String(r.feature) => r for r in eachrow(native.table))
-@@ -959,7 +1002,9 @@ function differential_abundance(counts::AbstractMatrix{<:Real},
+@@ -959,7 +995,9 @@ function differential_abundance(counts::AbstractMatrix{<:Real},
          if config.method == "aldex2"
              merge!(config_echo, Dict("mc_samples" => config.mc_samples, "seed" => config.seed))
          end
@@ -183,27 +162,17 @@ index ffdc5ec..c9e3f53 100644
              "parameters" => Dict(string(k) => v for (k, v) in native.provenance.parameters))
          diagnostics["n_structural_zero"] = count(r -> r["status"] == "structural_zero", rows)
 diff --git a/test/runtests.jl b/test/runtests.jl
-index ebd14c1..c999c03 100644
+index ebd14c1..5413c80 100644
 --- a/test/runtests.jl
 +++ b/test/runtests.jl
-@@ -55,6 +55,7 @@ const UNIT_FILES = [
-     "test_determinism.jl",
-     "test_differential.jl",
-     "test_differential_native.jl",
-+    "test_differential_sensitivity.jl",
-     "test_permanova.jl",
-     "test_write_gates.jl",
-     "test_server_security.jl",
-@@ -85,6 +86,14 @@ using MetaManifold.Tools, MetaManifold.TaxonomyTableTools, MetaManifold.ProjectS
+@@ -85,6 +85,12 @@ using MetaManifold.Tools, MetaManifold.TaxonomyTableTools, MetaManifold.ProjectS
  using MetaManifold.DiversityMetrics, MetaManifold.Analysis
  using MetaManifold.Categories, MetaManifold.CompositionLibrary
  
-+## The stand-in backend for the native differential adapter, and why there is
-+## one: CompositionalDA is not in the General registry, so no checkout CI can
-+## install it has the package, and without a seam the whole adapter in
-+## src/analysis/differential.jl would be unreachable here. `module` is not valid
-+## inside the `@testset` below, so the stand-in is loaded at top level.
-+## test/unit/test_differential_native.jl carries the argument in full.
++## The stand-in backend for the native differential adapter. CompositionalDA is
++## not in the General registry, so CI cannot install it, and without a stand-in
++## the adapter in src/analysis/differential.jl is unreachable here. `module` is
++## not valid inside the `@testset` below, so the stand-in is loaded at top level.
 +include(joinpath(@__DIR__, "support", "native_da_stub.jl"))
 +
  ## Unit tests (always run)
@@ -211,31 +180,30 @@ index ebd14c1..c999c03 100644
  
 diff --git a/test/support/native_da_stub.jl b/test/support/native_da_stub.jl
 new file mode 100644
-index 0000000..9fd052f
+index 0000000..7450c7c
 --- /dev/null
 +++ b/test/support/native_da_stub.jl
-@@ -0,0 +1,171 @@
+@@ -0,0 +1,170 @@
 +# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 +# SPDX-License-Identifier: AGPL-3.0-or-later
 +
 +## A stand-in for CompositionalDA
 +#
 +# `CompositionalDA` is not in the General registry, so it is not a declared
-+# dependency and `Pkg.instantiate()` cannot install it: on every checkout CI can
-+# produce, `compositional_da_available()` is false. Until now that made the whole
-+# adapter in `src/analysis/differential.jl` unreachable in CI — the refusal path
-+# was measured, the sixty lines that turn a `DAResult` into result rows were not,
-+# and Codecov reported them on every pull request.
++# dependency and `Pkg.instantiate()` cannot install it: in CI,
++# `compositional_da_available()` is false, and the adapter in
++# `src/analysis/differential.jl` that turns a `DAResult` into result rows is
++# unreachable through the package.
 +#
-+# `differential_abundance(...; native_backend=…)` is the seam that fixes that:
-+# the adapter calls a module rather than the package name, so a test can supply
-+# this one. The module below offers the two entry points the adapter uses
-+# (`aldex2`, `ancombc`) and the error type it translates (`CompositionError`),
-+# with the column names and the verdict strings of the real package, so the code
-+# under test is the code that runs in production. Only the estimator behind the
-+# boundary differs — and the result records which module produced it under
-+# `diagnostics.native_method.package`, so a record made with this stand-in
-+# cannot be read as one made with the package.
++# `differential_abundance(...; native_backend=…)` is the seam: the adapter calls
++# a module, so a test can supply this one. The module below offers the two entry
++# points the adapter uses (`aldex2`, `ancombc`) and the error type it translates
++# (`CompositionError`), with the column names and the verdict strings of the
++# real package, so the adapter code under test is the code that runs in
++# production. Only the estimator behind the boundary differs, and the result
++# records which module produced it under `diagnostics.native_method.package`,
++# so a record made with this stand-in cannot be read as one made with the
++# package.
 +#
 +# The values are deliberately simple arithmetic on the feature's position, so
 +# every assertion in `test/unit/test_differential_native.jl` can name the number
@@ -255,8 +223,8 @@ index 0000000..9fd052f
 +Base.showerror(io::IO, e::CompositionError) = print(io, "CompositionError: ", e.msg)
 +
 +# Every call the adapter made, in order, with the arguments it used. The tests
-+# read these to check the wiring — which taxa were sent, in what order, with
-+# which labels and settings — rather than inferring it from the result.
++# read these to check the wiring (which taxa were sent, in what order, with
++# which labels and settings) rather than inferring it from the result.
 +const CALLS = Any[]
 +
 +# What the next call should do: `:none` answers normally; `:composition` raises
@@ -335,8 +303,8 @@ index 0000000..9fd052f
 +
 +A feature named `structural_both` is reported as structurally absent in both
 +conditions even when it has reads. Real data cannot produce that verdict through
-+`differential_abundance` — an all-zero column is filtered out before the backend
-+is called — but the adapter still has to map the verdict, and a mapping nobody
++`differential_abundance` (an all-zero column is filtered out before the backend
++is called), but the adapter still has to map the verdict, and a mapping nobody
 +exercises is where a wrong message hides.
 +"""
 +function ancombc(counts::AbstractMatrix{<:Integer}, features::AbstractVector,
@@ -387,25 +355,24 @@ index 0000000..9fd052f
 +
 +end # module NativeDAStub
 diff --git a/test/unit/test_differential_native.jl b/test/unit/test_differential_native.jl
-index 70294eb..c699fc8 100644
+index 70294eb..086b5de 100644
 --- a/test/unit/test_differential_native.jl
 +++ b/test/unit/test_differential_native.jl
-@@ -162,3 +162,230 @@ end
+@@ -162,3 +162,227 @@ end
          @test actual["diagnostics"]["n_tested"] == 40
      end
  end
 +
 +## The adapter, exercised against a stand-in backend
 +#
-+# The testsets above can only run where CompositionalDA is installable, which
-+# CI cannot do: the package is not in the General registry, so the adapter — the
-+# sixty lines that turn a DAResult into result rows, and the branch that keeps
-+# BH from being applied twice — was measured by nothing, and Codecov reported it
-+# as missing patch coverage on every pull request.
++# The two testsets above run only where CompositionalDA is installed, and CI
++# cannot install it: the package is not in the General registry. Without the
++# testsets below, nothing in CI runs the adapter that turns a DAResult into
++# result rows, or the branch that keeps BH from being applied twice.
 +#
-+# `differential_abundance(...; native_backend=…)` closes that hole without
-+# changing what production does (the default is still the CompositionalDA this
-+# session loaded, or the refusal when it did not). The stand-in in
++# `differential_abundance(...; native_backend=…)` makes the adapter reachable
++# without changing what production does (the default is still the CompositionalDA
++# this session loaded, or the refusal when it did not). The stand-in in
 +# `test/support/native_da_stub.jl` offers the real package's entry points,
 +# columns and verdict strings, so what runs below is the code that runs in
 +# production; only the estimator behind the boundary is a stand-in, and the
@@ -416,16 +383,14 @@ index 70294eb..c699fc8 100644
 +    @test isnothing(MetaManifold.Differential._native_backend(nothing)) == !HAVE_COMPOSITIONAL_DA
 +    # An available backend satisfies the guard; an absent one refuses by name.
 +    @test isnothing(MetaManifold.Differential._native_methods_available("aldex2", NativeDAStub))
-+    if !HAVE_COMPOSITIONAL_DA
-+        err = try
-+            MetaManifold.Differential._native_methods_available("ancombc")
-+            nothing
-+        catch e
-+            e
-+        end
-+        @test err isa ArgumentError
-+        @test occursin("CompositionalDA", sprint(showerror, err))
++    err = try
++        MetaManifold.Differential._native_methods_available("ancombc", nothing)
++        nothing
++    catch e
++        e
 +    end
++    @test err isa ArgumentError
++    @test occursin("CompositionalDA", sprint(showerror, err))
 +end
 +
 +@testset "Native ALDEx2 rows are wired from the backend's own columns" begin
@@ -621,3 +586,6 @@ index 70294eb..c699fc8 100644
 +    @test occursin("aldex2", err.msg)
 +    NativeDAStub.reset!()
 +end
+-- 
+2.43.0
+
