@@ -3,7 +3,7 @@
 
 | file | what it is |
 | --- | --- |
-| `0004-pr70-native-adapter-test-seam.patch` | run and pushed 2026-11-10 (`3ed1dfb`, draft hyperpolymath/MetaManifold-WebUI#319): commit onto `MetaManifold-WebUI` `validation/issue-23-native-da` at `be7792f` adding the `native_backend` seam, the stand-in backend and four testsets — the 30 lines Codecov reported as uncovered, made reachable and measured |
+| `0004-pr70-native-adapter-test-seam.patch` | run, pushed and merged 2026-11-10 (hyperpolymath/MetaManifold-WebUI#319, upstream PR 70 head `1832f5c`, Codecov patch 100%): commit onto `MetaManifold-WebUI` `validation/issue-23-native-da` at `be7792f` adding the `native_backend` seam, the stand-in backend and four testsets — the 30 lines Codecov reported as uncovered, made reachable and measured |
 | `0005-pr70-coverage-gates-and-estate-lanes.patch` | NOT applied, never run, and stale against the new `0004` (see the status section of `pr70-coverage-and-cicd.md`): a draft commit with patch coverage as a gate, the sensitivity/specificity measurement and its evidence checker, the mutant gate, and the hypatia / k9-deed / squabble estate lanes |
 | `pr70-coverage-and-cicd.md` | what the 52.38% report was actually saying, what the two patches change, what is verified and what is not, and the follow-ups |
 | `0003-fix-post-merge-conflict-regressions-prs-195-208.patch` | unified `git format-patch` commit onto `MetaManifold-WebUI` `c06c0d4` repairing all five merge-conflict regression areas across PRs `#195`–`#208` |
