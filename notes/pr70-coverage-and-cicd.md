@@ -11,8 +11,8 @@ the first draft, which was never run.
 
 - `0004-pr70-native-adapter-test-seam.patch` is now the commit that was run and pushed:
   `3ed1dfb` on `hyperpolymath/MetaManifold-WebUI`, branch `claude/pr-70-coverage-review-5wvqac`,
-  open as draft [hyperpolymath/MetaManifold-WebUI#319](https://github.com/hyperpolymath/MetaManifold-WebUI/pull/319)
-  into `validation/issue-23-native-da`. A merge there updates upstream PR 70.
+  merged 2026-11-10 as [hyperpolymath/MetaManifold-WebUI#319](https://github.com/hyperpolymath/MetaManifold-WebUI/pull/319)
+  into `validation/issue-23-native-da`. The head of upstream PR 70 is now `1832f5c`.
 - `0005-pr70-coverage-gates-and-estate-lanes.patch` was **not applied**. It no longer applies on
   top of the new `0004` without edits. Its codecov gate, sensitivity test and three estate
   workflows are decisions for the upstream owner. Its workflows pin `hyperpolymath/standards`,
@@ -36,8 +36,11 @@ Measured (Julia 1.12.5, R 4.3.3, Ubuntu 24.04):
 | full unit suite | `julia --project=. -t 2 test/runtests.jl` | 3618 pass, 25 skipped, 1 error: `test_provenance.jl:479` needs the R package `dada2`, which the sandbox does not have |
 | planted mutants | 12 corruptions of the adapter, each against `test/runtests.jl differential_native` | baseline green; 12 of 12 killed (BH applied twice, wrong estimate column, log10 for log2, structural decisions ignored, contrast reversed, seam bypassed, one-taxon floor, CompositionError not translated, package name hardcoded, non-finite published, wrong aldex_effect column, structural notes swapped) |
 
-Not run: the integration, server and frontend tests, and the upstream CI. Codecov runs only on the
-upstream pull request, so its number is not confirmed until PR 70 runs again.
+Upstream result at `1832f5c` (2026-11-10 20:25 UTC): the upstream `CI` run passed, and Codecov
+reports patch coverage 100% (66 of 66 lines, 0 missing; it was 33 of 63) and project coverage
+75.88% (base 75.73%).
+
+Not run locally: the integration, server and frontend tests. The upstream CI ran them.
 
 The mutant runner in `0005` had a defect: it treated `ERROR: LoadError: Some tests did not pass`
 as "the mutant failed to load", and every Julia test failure prints that line. A killed mutant
