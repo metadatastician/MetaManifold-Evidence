@@ -68,13 +68,15 @@ says the lockfile belongs in it, so that every commit instantiates on its own
 git add Manifest.toml
 git status --short            # Manifest.toml only
 git commit -S --fixup=<sha of the "Declare CompositionalDA" commit>
-git rebase -i --autosquash --exec 'git commit --amend --no-edit -S' upstream/main
+GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash upstream/main
 ```
 
-The rebase re-signs every commit with your own key (rule 3). Then reword the
-first commit's subject to "Declare and lock CompositionalDA" and drop the last
-paragraph of its message, which only explains the staging order. No commit
-message names a pull request or CI.
+Then reword the first commit's subject to "Declare and lock CompositionalDA"
+and drop the sentence that says the Manifest comes later. No commit message
+names a pull request or CI. Rerun the tests on the registry build (step 5),
+because the registered package and its resolved dependencies may draw
+differently from the local checkout the staging tests used. Then the owner
+re-signs every commit with his own key: see `pr70-sign.md`.
 
 ## 5. Run what CI runs, then fill in the versions
 
@@ -92,8 +94,8 @@ julia --project=. test/fixtures/native_da/generate_reference.jl
 julia --project=. test/runtests.jl differential_native
 ```
 
-and run `reuse lint`. ALDEx2 is not in `renv.lock`; see the description's Scope section. Finally check
-`git log --format='%h %G? %s' upstream/main..HEAD` shows no `N`.
+and run `reuse lint`. ALDEx2 is not in `renv.lock`; see the description's Scope section. Then push with `--force-with-lease` to `validation/issue-23-native-da` (the
+owner chose a force-push over a new PR) and hand over to `pr70-sign.md`.
 
 ## 6. These notes are not in any commit
 
