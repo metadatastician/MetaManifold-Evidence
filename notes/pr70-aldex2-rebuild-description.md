@@ -22,8 +22,9 @@ raw counts, with no R session. It sits beside the existing `nb_glm` and
   and `seed` (0 to 2147483647, default 1), validated in the constructor and at
   the config route.
 - Refusals are explicit: counts that do not fit `Int`, fewer than two retained
-  taxa, a package error (reported with its message), a missing taxon or a
-  non-finite statistic. A sample with no reads is left out and named. Nothing
+  taxa, a missing taxon or a non-finite statistic. The package's own refusals,
+  such as a group with one sample, are reported as invalid input (HTTP 400,
+  `invalid_input`) with its message. A sample with no reads is left out and named. Nothing
   substitutes another method.
 - The differential route accepts a per-request `method` override; the panel
   has a method selector, the CSV export records the posterior settings, and
@@ -52,8 +53,8 @@ Staging checks so far, stated exactly:
 | Check | Result |
 |---|---|
 | `test/unit/test_differential_native.jl` (74 assertions) | passed, Julia 1.12.5, CompositionalDA 0.1.0 developed from a local checkout; `differential.jl` loaded with R stubbed out, not through `MetaManifold` |
-| `test/unit/test_differential.jl` | passed, 1200 of 1200, R 4.5.0 with MASS and glmGamPoi, Julia 1.12.5, CompositionalDA developed from a local checkout |
-| `test/unit/test_differential_native_reference.jl` | passed, 23 of 23, against fixtures from R 4.5.0, Bioconductor 3.22, ALDEx2 1.42.0 (see Scope) |
+| `test/unit/test_differential.jl` | passed, 1203 of 1203, R 4.5.0 with MASS and glmGamPoi, Julia 1.12.5, CompositionalDA developed from a local checkout |
+| `test/unit/test_differential_native_reference.jl` | passed, 47 of 47, against two fixture sets from R 4.5.0, Bioconductor 3.22, ALDEx2 1.42.0 (see Scope) |
 | Server routes (`--integration --server`) | not run yet |
 | `bun run typecheck` | passed, bun 1.4.4 |
 | `bun run test` | passed, 66 tests, bun 1.4.4 |
@@ -66,19 +67,27 @@ Staging checks so far, stated exactly:
 - **Left out: ANCOM-BC.** The package's own launch-readiness notes list its
   small-unbalanced-design FDR inflation as a release blocker, so it comes in a
   separate PR when that is resolved.
-- **R reference fixtures.** `test/fixtures/native_da/` holds a small synthetic
-  count table (`counts.tsv`, 12 samples, 10 taxa, one planted difference), the
-  generator (`generate_reference.jl`) and the R output it wrote
-  (`reference_aldex2.tsv`, `reference_meta.json`). The generator calls
-  `ALDEx2::aldex(reads, conds, mc.samples = 512, test = "t", effect = TRUE,
-  denom = "all")` through RCall with seed 1, and again with seeds 2, 3 and 4 to
-  measure R's own Monte Carlo spread. It ran with R 4.5.0, Bioconductor 3.22
-  and ALDEx2 1.42.0, matching `renv.lock`. The test holds each native column to
-  twice R's seed-to-seed spread plus a small floor, the rule CompositionalDA's
-  own oracle uses, because both sides are Monte Carlo with different
-  generators. Every native-vs-R gap is smaller than R's own spread, for
-  example effect 0.187 against a spread of 0.212, and q-value 0.0096 against
-  0.0159. The exact values are in the fixture commit message.
+- **R reference fixtures.** `test/fixtures/native_da/` holds two synthetic
+  12-sample, 10-taxon tables with a planted difference, made by
+  `make_counts.jl`: `counts.tsv` has no zeros, and `counts_zeros.tsv` has
+  structural and chance zeros so that ALDEx2's prior and zero handling are
+  exercised. `generate_reference.jl` calls `ALDEx2::aldex(reads, conds,
+  mc.samples = 512, test = "t", effect = TRUE, denom = "all")` through RCall
+  with seed 1, and with seeds 2 to 20 to measure R's own Monte Carlo spread.
+  It ran with R 4.5.0, Bioconductor 3.22 and ALDEx2 1.42.0, matching
+  `renv.lock`; no value was edited by hand.
+- **Tolerance.** Each native column must lie within 2 x R's largest
+  seed-to-seed spread plus a small floor, and each taxon's 0.05 call must
+  agree. With 19 spread seeds, an identical method exceeds 1 x the spread with
+  probability 1/20 per column; the factor 2 and the floor are a margin on top,
+  not a calibrated test. On `counts.tsv` every gap is below 1 x R's spread
+  (for example effect 0.187 against 0.212). On `counts_zeros.tsv` two columns
+  exceed 1 x spread and stay inside the bound (`wi_qvalue` 0.070 against
+  0.051, `diff_btw` 0.168 against 0.152). The rule catches a missing or
+  misapplied BH step, the wrong logarithm base, a sign flip and a
+  Welch/Wilcoxon swap; it would not catch the effect computed as a ratio of
+  means instead of ALDEx2's median. Exact values are in the fixture commit
+  message. A missing fixture is a failure, not a skip.
   Note that ALDEx2 is not in `renv.lock`; the generator is a developer script
   and nothing in the product loads it, but CONTRIBUTING asks that R packages
   used are pinned there, so please say whether it should be.
@@ -91,7 +100,10 @@ Staging checks so far, stated exactly:
 - **Licensing.** New and changed files carry the licence for their path:
   `test/unit/test_differential_native.jl` and the fixture scripts are MPL-2.0,
   the changes to `test/unit/test_differential.jl` stay AGPL-3.0-or-later, and
-  the fixture data are CC0-1.0 through `REUSE.toml`. `LICENSE`, `LICENSES/`,
+  the fixture data are CC0-1.0 through `REUSE.toml`, which names their real
+  source: the count tables come from `make_counts.jl`, and the reference files
+  are output of ALDEx2 1.42.0 (Gloor et al., GPL-3.0-or-later; no ALDEx2 code
+  is included). `LICENSE`, `LICENSES/`,
   `CITATION.cff` and `README.md` are unchanged.
 - **Dependency policy.** CONTRIBUTING asks that a dependency on a package the
   contributor maintains be registered, independently useful and agreed in an
