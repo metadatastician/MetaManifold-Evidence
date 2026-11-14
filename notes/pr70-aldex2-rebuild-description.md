@@ -41,7 +41,7 @@ Run as CI does:
 
 ```
 julia --project=. -t 2 test/runtests.jl --integration --server
-cd frontend && bun run test
+(cd frontend && bun run test)
 ```
 
 Native tests only: `julia --project=. test/runtests.jl differential_native`.
@@ -52,11 +52,12 @@ Staging checks so far, stated exactly:
 | Check | Result |
 |---|---|
 | `test/unit/test_differential_native.jl` (74 assertions) | passed, Julia 1.12.5, CompositionalDA 0.1.0 developed from a local checkout; `differential.jl` loaded with R stubbed out, not through `MetaManifold` |
-| `test/unit/test_differential.jl` and the server routes | not run (needs R and the full package) |
-| Reference comparison with R ALDEx2 | pending, see Scope |
+| `test/unit/test_differential.jl` | passed, 1200 of 1200, R 4.5.0 with MASS and glmGamPoi, Julia 1.12.5, CompositionalDA developed from a local checkout |
+| `test/unit/test_differential_native_reference.jl` | passed, 23 of 23, against fixtures from R 4.5.0, Bioconductor 3.22, ALDEx2 1.42.0 (see Scope) |
+| Server routes (`--integration --server`) | not run yet |
 | `bun run typecheck` | passed, bun 1.4.4 |
 | `bun run test` | passed, 66 tests, bun 1.4.4 |
-| R | not tested; no R version has been run against this change |
+| R versions other than 4.5.0 | not tested |
 | `reuse lint` | not run (tool not installed) |
 | Julia versions other than 1.12.5, other platforms, browsers | not tested |
 
@@ -65,16 +66,19 @@ Staging checks so far, stated exactly:
 - **Left out: ANCOM-BC.** The package's own launch-readiness notes list its
   small-unbalanced-design FDR inflation as a release blocker, so it comes in a
   separate PR when that is resolved.
-- **R reference fixtures are pending.** `test/fixtures/native_da/` holds the
-  small synthetic count table (`counts.tsv`), the generator
-  (`generate_reference.jl`, which calls Bioconductor ALDEx2 through RCall under
-  a fixed seed, plus three other seeds to measure R's own Monte Carlo spread,
-  and records the R, ALDEx2 and Bioconductor versions) and the comparison test
-  (`test_differential_native_reference.jl`). The fixtures have not been
-  generated, because R and Bioconductor were not available where this was
-  written. Until they are committed that test reports one broken test, not a
-  pass. Generate them with
-  `julia --project=. test/fixtures/native_da/generate_reference.jl`.
+- **R reference fixtures.** `test/fixtures/native_da/` holds a small synthetic
+  count table (`counts.tsv`, 12 samples, 10 taxa, one planted difference), the
+  generator (`generate_reference.jl`) and the R output it wrote
+  (`reference_aldex2.tsv`, `reference_meta.json`). The generator calls
+  `ALDEx2::aldex(reads, conds, mc.samples = 512, test = "t", effect = TRUE,
+  denom = "all")` through RCall with seed 1, and again with seeds 2, 3 and 4 to
+  measure R's own Monte Carlo spread. It ran with R 4.5.0, Bioconductor 3.22
+  and ALDEx2 1.42.0, matching `renv.lock`. The test holds each native column to
+  twice R's seed-to-seed spread plus a small floor, the rule CompositionalDA's
+  own oracle uses, because both sides are Monte Carlo with different
+  generators. Every native-vs-R gap is smaller than R's own spread, for
+  example effect 0.187 against a spread of 0.212, and q-value 0.0096 against
+  0.0159. The exact values are in the fixture commit message.
   Note that ALDEx2 is not in `renv.lock`; the generator is a developer script
   and nothing in the product loads it, but CONTRIBUTING asks that R packages
   used are pinned there, so please say whether it should be.

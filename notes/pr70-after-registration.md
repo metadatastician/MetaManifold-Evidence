@@ -34,8 +34,9 @@ Julia: a different one rewrites the header and may reformat the file.
 julia --project=. -e 'using Pkg; Pkg.Registry.update(); Pkg.resolve()'
 ```
 
-`Pkg.resolve()` writes the entries without building anything. Run
-`Pkg.instantiate()` only on a machine with R, since RCall's build step needs it.
+Run this on a machine with R: on a fresh depot, `Pkg.resolve()` can download
+and build new packages, and RCall's build step needs R. `Pkg.instantiate()`
+needs R for the same reason.
 Do not run `Pkg.update()`: it moves unrelated packages.
 
 ## 3. Check that only CompositionalDA and what it pulls in changed
@@ -79,18 +80,16 @@ message names a pull request or CI.
 
 ```
 julia --project=. -t 2 test/runtests.jl --integration --server
-cd frontend && bun run test
+(cd frontend && bun run test)
 ```
 
 Record the Julia, R and bun versions in the description's Validation section.
-Then generate the R reference fixtures if the third commit on this branch still
-reports them as pending (see the header of
-`test/unit/test_differential_native_reference.jl`):
+The R reference fixtures are already committed (R 4.5.0, Bioconductor 3.22,
+ALDEx2 1.42.0). If you regenerate them, rerun the comparison before committing:
 
 ```
 julia --project=. test/fixtures/native_da/generate_reference.jl
-git add test/fixtures/native_da/reference_aldex2.tsv test/fixtures/native_da/reference_meta.json
-git commit -S -m "Add the R ALDEx2 reference fixtures for the native comparison"
+julia --project=. test/runtests.jl differential_native
 ```
 
 and run `reuse lint`. ALDEx2 is not in `renv.lock`; see the description's Scope section. Finally check
