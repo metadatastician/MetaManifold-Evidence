@@ -23,12 +23,14 @@
 --   * with nlo = nhi = n it is the verdict of Counts.agda;
 --   * presence depends only on nlo, absence only on nhi;
 --   * zooming out keeps presence: if C is inside C′ then y ≤ y′, and an
---     entailed verdict for C is an entailed verdict for C′;
+--     entailed verdict for C is an entailed verdict for C′ PROVIDED the
+--     same nlo bounds C′ (containment alone is not enough);
 --   * zooming in keeps absence: a refuted verdict for C′ is a refuted
---     verdict for every clade inside it.
+--     verdict for a clade C inside it PROVIDED y ≤ y′ and nhi ≤ nhi′.
 --
 -- Not proved here: that any particular placement method meets a stated nlo
--- or nhi.  Those bounds are assumptions supplied by measurement.
+-- or nhi, or that the bounds of two nested clades stand in the relation a
+-- zoom law needs.  Those are assumptions supplied by measurement.
 
 module MetaManifold.Evidence.TwoSided where
 

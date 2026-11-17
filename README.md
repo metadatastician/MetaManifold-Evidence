@@ -75,13 +75,20 @@ only so far (no Rocq or Lean leg, so `ungraded`), for all natural numbers:
   `y = nhi = 0`, and `unresolved` otherwise, and it is sound in each case.
   Presence depends only on `nlo`; absence only on `nhi`.
 - With `nlo = nhi = n` it is the verdict of `Counts.agda` (`symmetric-agrees`).
-- **`entailed-up`.** Zooming out keeps presence: an entailed verdict for a clade
-  is entailed for every clade that contains it.
-- **`refuted-down`.** Zooming in keeps absence: a refuted verdict for a clade is
-  refuted for every clade inside it.
+- **`entailed-up`.** Zooming out keeps presence, given two premises: the larger
+  clade counts at least as many reads (`y ≤ y′`, which containment gives), and
+  the same `nlo` bounds its wrongly counted reads. Containment alone is not
+  enough: `(y, nlo) = (2, 0)` is entailed, but a containing clade at `(3, 3)`
+  is unresolved.
+- **`refuted-down`.** Zooming in keeps absence, given two premises: the smaller
+  clade counts no more reads (`y ≤ y′`), and its `nhi` is no larger than the
+  outer one (`nhi ≤ nhi′`). A looser inner bound is still a valid bound, but
+  the verdict under it is not refuted: the outer clade at `(y, nhi) = (0, 0)`
+  is refuted, an inner one at `(0, 1)` is unresolved.
 
 The converse directions are false and `agda/reject/TwoSidedZoomInKeepsPresence`
-shows one failing. The module assumes `nlo` and `nhi`. It does not show that
+shows one failing. The module assumes `nlo` and `nhi`, and for the zoom laws it
+assumes the premises on them above. It does not show that
 any placement method meets them; a measurement on reference sequences is in
 `hyperpolymath/MetaManifold-WebUI`, `docs/cladistics/issue-303/`.
 
