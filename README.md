@@ -61,6 +61,30 @@ it by noise `d` in either direction. The evidence is `d ≤ n`.
 
 These hold for all natural numbers. They are not a sampled grid.
 
+### What `TwoSided.agda` proves
+
+Counts that come from placing reads on a tree are not symmetric. For a clade,
+`y` reads are placed inside it with a decided verdict; at most `nlo` of those
+are wrongly counted; at most `nhi` reads that belong to the clade were not
+counted (undecided placements plus reads wrongly excluded). **Proved** in Agda
+only so far (no Rocq or Lean leg, so `ungraded`), for all natural numbers:
+
+- The candidate latents are exactly the `x` with `y ≤ x + nlo` and
+  `x ≤ y + nhi`.
+- The verdict is `entailed` exactly when `nlo < y`, `refuted` exactly when
+  `y = nhi = 0`, and `unresolved` otherwise, and it is sound in each case.
+  Presence depends only on `nlo`; absence only on `nhi`.
+- With `nlo = nhi = n` it is the verdict of `Counts.agda` (`symmetric-agrees`).
+- **`entailed-up`.** Zooming out keeps presence: an entailed verdict for a clade
+  is entailed for every clade that contains it.
+- **`refuted-down`.** Zooming in keeps absence: a refuted verdict for a clade is
+  refuted for every clade inside it.
+
+The converse directions are false and `agda/reject/TwoSidedZoomInKeepsPresence`
+shows one failing. The module assumes `nlo` and `nhi`. It does not show that
+any placement method meets them; a measurement on reference sequences is in
+`hyperpolymath/MetaManifold-WebUI`, `docs/cladistics/issue-303/`.
+
 ### What `CheckerBridge.agda` proves
 
 `residual-evidence-types` has its own certified finite checker

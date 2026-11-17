@@ -33,9 +33,11 @@ receipt CI keeps.
 on any axioms". §2.2 state: `LEAN-CHECKED`, `BRIDGE-PENDING`.
 
 |Proof Witness Grade
-|`PWG-3` for every theorem below. Census: 22 of 22 theorems at `PWG-3`; 0 at
-`PWG-2i`, 0 at `PWG-2ii`, 0 at `PWG-1`, 0 `ungraded`. No theorem rests on an
-axiom in any prover.
+|`PWG-3` for the 22 theorems of Counts, Bounds, CheckerBridge and
+CountsCertificate. The 17 theorems of TwoSided have an Agda leg only and are
+`ungraded`. Census: 22 of 39 theorems at `PWG-3`; 0 at `PWG-2i`, 0 at
+`PWG-2ii`, 0 at `PWG-1`, 17 `ungraded`. No theorem rests on an axiom in any
+prover.
 
 |Why not `PWG-2ii`
 |A leg counts towards a grade only when its §2.2 state is `RECONCILED`. The
@@ -81,9 +83,27 @@ correspondence files map every name.
 
 5+|*CountsCertificate* (`CountsCertificate.agda`)
 |`julia-agrees` |`grid 12 ≡ expected`: Agda's verdict and bounds equal the 169-row table the Julia code generates |PROVEN |PROVEN |PROVEN
+
+5+|*TwoSided* (`TwoSided.agda`): separate bounds `nlo` (reads wrongly counted) and `nhi` (reads missed)
+|`noiseless₂`, `case₂` |every observation has a candidate world under two bounds |PROVEN |not started |not started
+|`fibre₂⇒interval`, `interval⇒fibre₂` |the candidate latents are exactly the `x` with `y ≤ x + nlo` and `x ≤ y + nhi` |PROVEN |not started |not started
+|`entailed₂-sound` |`nlo < y` entails presence, whatever `nhi` is |PROVEN |not started |not started
+|`refuted₂-sound` |`y = nhi = 0` entails absence, whatever `nlo` is |PROVEN |not started |not started
+|`unresolved-pos-sound`, `unresolved-zero-sound` |otherwise neither presence nor absence holds |PROVEN |not started |not started
+|`verdict₂-sound`, `never-inconsistent₂` |the closed-form verdict is sound for every constructor it returns and is never `inconsistent` |PROVEN |not started |not started
+|`symmetric-agrees` |with `nlo = nhi = n` it is the verdict of `Counts.agda` |PROVEN |not started |not started
+|`entailed⇒lt`, `lt⇒entailed` |entailed exactly when `nlo < y` |PROVEN |not started |not started
+|`refuted⇒zero`, `zero⇒refuted` |refuted exactly when `y = nhi = 0` |PROVEN |not started |not started
+|`entailed-up` |an entailed verdict for a clade is entailed for any clade with at least as many counted reads and the same `nlo` (zooming out keeps presence) |PROVEN |not started |not started
+|`refuted-down` |a refuted verdict for a clade is refuted for any clade with no more counted reads and no larger `nhi` (zooming in keeps absence) |PROVEN |not started |not started
 |===
 
-The census counts each named theorem once: 22 names, some rows grouped.
+The census counts each named theorem once: 39 names, some rows grouped. The 22
+names above the TwoSided rows are at `PWG-3`. The 17 TwoSided names have no
+Rocq or Lean leg yet, so they are `ungraded`; their Agda leg was checked locally
+with Agda 2.6.3 on 2026-11-17 and a hosted run at the pinned 2.6.4.3 is the
+receipt CI keeps. TwoSided assumes the bounds `nlo` and `nhi`: it does not show
+that any placement method meets them.
 
 === Supporting lemmas
 
