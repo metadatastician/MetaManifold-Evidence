@@ -1,0 +1,11 @@
+UNPOSTED DRAFT
+
+Apply the 3-page wiki patch from #340 on your own computer (your signing key is set up as in pr70-sign.md):
+
+git clone https://github.com/hyperpolymath/MetaManifold-WebUI.wiki.git
+cd MetaManifold-WebUI.wiki
+git am -S /path/to/wiki-3-pages.patch
+git log --show-signature -1
+git push origin master
+
+The patch applies cleanly to wiki master at ddf2b01 (checked with git apply --check).

@@ -1,0 +1,266 @@
+UNPOSTED DRAFT (this line is not part of the patch; delete it before git am)
+From 044f79af997af6a50242153239e7a10118c47eb6 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 13 Nov 2026 19:59:30 +0000
+Subject: [PATCH] docs(wiki): bring status, testing and operator pages to
+ 2026-11-13
+
+Status and roadmap: mark the differential-abundance, zero-handling and
+constrained-ordination rows that the repository now ships, record that
+SSH stage recovery is proposed upstream and not on this fork's main, add
+the open upstream pull requests (none merged) and the SonarCloud and
+Codecov results.
+
+Testing and benchmarks: replace lanes that referred to files this
+repository does not have (justfile, mise, docs/testing) with the commands
+CI actually runs, note the bc/awk reference oracles, and describe the
+SonarCloud and Codecov services.
+
+Operator track: list the real pinned artefacts and describe the apiBase
+validation for split deployments.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_0136P7ZjoMTmdce1zuwSJWdN
+---
+ Developers--Testing-and-Benchmarks.md | 75 ++++++++++++++-------------
+ Maintainers--Operator-Track.md        | 19 +++++--
+ Status-and-Roadmap.md                 | 48 ++++++++++++++---
+ 3 files changed, 93 insertions(+), 49 deletions(-)
+
+diff --git a/Developers--Testing-and-Benchmarks.md b/Developers--Testing-and-Benchmarks.md
+index 7e4c435..5e1c229 100644
+--- a/Developers--Testing-and-Benchmarks.md
++++ b/Developers--Testing-and-Benchmarks.md
+@@ -13,23 +13,38 @@ archived: false
+ 
+ # Testing and benchmarks
+ 
+-**Status: IN PLACE** (with two deliberate COMING gates named below). Test
+-inventory and metrics: `docs/testing/coverage.md`; infrastructure:
+-`docs/testing/infrastructure.md`; facet taxonomy: `docs/testing/taxonomy-facets.md`.
++**Checked against the repository on 2026-11-13.** The repository is the final
++arbiter: `.github/workflows/ci.yml`, `README.md` ("Running tests") and
++`docs/sonar-quality-gate.md`.
+ 
+ ## The lanes
+ 
+ | Lane | Command | Gate? | Notes |
+ |---|---|---|---|
+-| Frontend unit + integration | `bun test` (in `frontend/`) | yes | DOM-less lane; type-level assertions included |
+-| Frontend combined | `bun run check` | yes (pre-push) | typecheck + tests + bench invocation |
+-| Julia unit/integration | `just` test recipes | yes | fixtures under `test/fixtures/` |
+-| e2e | `just test-e2e` | opt-in | fails loudly without browsers (by design) |
+-| Benchmarks | `bun run bench/`, `bench/` | **informational** | compares vs `bench/*/baseline.json`; no gate |
+-| Repo hygiene | `just ci` | yes | SPDX, format, lint, pins drift |
++| Julia unit tests | `julia --project=. test/runtests.jl` | yes (CI job `Julia tests`) | name files to run only those: `test/runtests.jl routes trees` |
++| Julia integration | `julia --project=. test/runtests.jl --integration` | yes | adds the MiSeq SOP pipeline run; `CI_SKIP_TAXONOMY=1` skips taxonomy |
++| Server smoke tests | `julia --project=. test/runtests.jl --server` | yes | HTTP server end to end |
++| Frontend unit tests | `bun run test` (in `frontend/`) | yes | bun pinned in `config/defaults/tool_versions.yml` (1.3.10) |
++| Frontend typecheck and build | `bun run typecheck`, `bun run build` | yes (build) | `bun audit --audit-level high` also runs in CI |
++| Sonar reliability guard | `bash scripts/lint-sonar-reliability.sh` | yes (first step of `Julia tests`) | local reproduction of the Sonar rules that have failed the required check |
++| Independent reference oracles | `test/references/*.sh`, `*.bc`, `*.awk` | yes | GNU `bc` and awk, sharing no maths code with Julia |
++| Benchmarks | `bench/` | informational | null calibration, compositional methods, validated statistics, cladistics and more; no gate |
+ 
+-Everything CI runs is `just ci`. If a lane is missing its tool it fails
+-loudly rather than skipping — silence would be a lie about coverage.
++## Quality services
++
++- **SonarCloud** (`hyperpolymath_MetaManifold-WebUI`, Automatic Analysis, the
++  Sonar way gate) is a required check. It fails on a single bug or
++  vulnerability in the changed lines, whatever its severity; read
++  `docs/sonar-quality-gate.md` before a frontend change. On 2026-11-13 the 25
++  findings that had accumulated on `main` (3 vulnerabilities, 22 bugs) were
++  fixed in the code rather than suppressed, except one R finding that is not a
++  defect (the renv discovery block). Re-read the numbers from SonarCloud
++  rather than trusting this line.
++- **Codecov** measures the Julia backend only (`codecov.yml`); the frontend is
++  not instrumented. Patch coverage is informational, project coverage may dip
++  by 1%. Upstream reports to Codecov; on 2026-11-13 this fork's Codecov
++  repository was not activated, so the fork has no coverage number of its own.
++  A coverage *gate* is deliberately not in place.
+ 
+ ## The four test idioms that matter most
+ 
+@@ -37,9 +52,9 @@ loudly rather than skipping — silence would be a lie about coverage.
+    outcomes in the counts; the test reads the fit against the planted truth
+    — never a snapshot read-back of whatever the fit produced.
+ 2. **Independent reference comparison.** The same fixtures fitted directly
+-   in R (coefficients, then BH against `p.adjust`), or exact summaries
+-   compared against Python's `fractions.Fraction` (skipping loudly by name
+-   when `python3` is absent).
++   in R (coefficients, then BH against `p.adjust`), or exact and
++   high-precision summaries compared against GNU `bc` and awk oracles in
++   `test/references/`, which share no maths code with Julia.
+ 3. **Negative controls for every refusal path.** Each unsuccessful state has
+    a test that *provokes* it. A refusal path without a test is a rumour.
+ 4. **Guards against regression to dishonesty.** Source-level guard: the
+@@ -52,37 +67,23 @@ Boundary values are **measured, not assumed** — the numeric-boundary suite
+ (#52's lesson) asserts where Float64/int behaviour actually breaks (counts
+ beyond 2⁵³−1, denominator budgets, rounding).
+ 
+-## Type-level assertions
+-
+-20+ assertions pin the frontend domain model (`frontend/tests/`). They are
+-tests of *shape* — the compiler-adjacent half of the honesty contract. The
+-DOM-less lane's blind spot is bounded and known: Plotly-chain modules
+-(`PlotlyChart`, `ChartCustomiser`, `ChartEditorInner`, `AnnotationPanel`,
+-`RunView`) are import-blocked there; `TODO(tests/e2e-lane)` marks the spot.
+-
+ ## Benchmarks
+ 
+-`bench/` carries baselines for: table loading, duckdb aggregation, tree
+-rendering, PERMANOVA/NMDS, epistemic parsing, analysis config — plus a
+-comprehensive lane and a layer-1 mock-recovery harness (fetch/evaluate/
+-report over `datasets.yml`). Comparison output is informational; promotion
+-to a non-gating regression **alert** waits for a multi-week stability window
+-(deliberate, per the roadmap).
+-
+-**COMING (gates, deliberately deferred):** the **DOM test lane** decision
+-(playwright vs a DOM harness — queued at the e2e-lane TODO) and the
+-**coverage gate** (lands against a recorded baseline in
+-`docs/testing/coverage.md`, never an arbitrary percentage).
++`bench/` holds informational benchmarks and calibration studies, among them
++`null_calibration` (the evidence behind the differential-abundance calibration
++caveats), `compositional_differential`, `compositional_scaling`,
++`advanced_zero_handling`, `constrained_ordination`, `layer1_mock_recovery`,
++`validated_statistics.jl` and `cladistics.jl`. None of them gates a merge.
+ 
+ ## Writing a test for this repo (cheat sheet)
+ 
+ - Julia statistical code → idioms 1–4 above; if you cannot plant a known
+   answer, the method is not ready for a test, which usually means its
+   conditions document is not ready either.
+-- Frontend → DOM-less lane first; if the module touches Plotly chains, it
+-  joins the import-blocked list *explicitly* (with a TODO) rather than
+-  quietly skipping.
+-- Fixtures stay small (`test/fixtures/`, `frontend/tests/fixtures/`) — the
++- Frontend → a `*.test.ts` file next to the module, run by `bun test`.
++  Before pushing, run `bash scripts/lint-sonar-reliability.sh`: one bug in
++  the changed lines fails the required SonarCloud check.
++- Fixtures stay small (`test/fixtures/`) — the
+   MiSeq SOP sample data is for runs, not unit tests.
+ - CI names failing assertions since #65 — write assertions you would want
+   named in red.
+diff --git a/Maintainers--Operator-Track.md b/Maintainers--Operator-Track.md
+index afec16d..9e4c3ca 100644
+--- a/Maintainers--Operator-Track.md
++++ b/Maintainers--Operator-Track.md
+@@ -40,11 +40,22 @@ Source install is the supported lane (see
+ 
+ | Artefact | You operate | Notes |
+ |---|---|---|
+-| `mise.toml` | exact toolchain pins | source of truth; `.bun-version` is generated from it (`just sync-pins`) |
+-| `guix.scm` + `channels.scm` | the peer dev lane | time-machine-pinned; functional equivalents for tools, not binary identity |
++| `Project.toml` + `Manifest.toml` | exact Julia package set | `install.jl` instantiates it |
+ | `renv.lock` | exact R package set | restore via `renv::restore()`; `.Rprofile` activates the project library |
+-| `config/defaults/tool_versions.yml` | sha256-pinned tool downloads | `install.sh` fetches byte-exact; preflight asserts |
+-| `config/tools.yml` | resolved tool paths | including SSH-hosted binaries for vsearch etc. |
++| `config/defaults/tool_versions.yml` | pinned tool and runtime downloads (bun 1.3.10 among them) | `install.sh` / `install.jl` fetch byte-exact |
++| `config/defaults/tools.yml` | tool paths | including SSH-hosted binaries for vsearch etc. |
++| `frontend/public/config.json` | `apiBase` for a split deployment | see below |
++
++### Split deployment
++
++Serving the frontend from another origin than the API needs two settings:
++`apiBase` in `frontend/public/config.json` (the API's address) and
++`JULIA_METAMANIFOLD_ALLOWED_ORIGINS` (the frontend's address) when starting the
++server. Since 2026-11-13 the frontend validates `apiBase`: it must be an
++absolute `http://` or `https://` URL, optionally with a path prefix, and no
++user name, password, query or fragment. A refused value is reported in the
++browser console and the frontend falls back to its own origin. The README's
++"Split deployment" section is the reference.
+ 
+ ## Reference databases (the real operational load)
+ 
+diff --git a/Status-and-Roadmap.md b/Status-and-Roadmap.md
+index 62e8869..ac09b06 100644
+--- a/Status-and-Roadmap.md
++++ b/Status-and-Roadmap.md
+@@ -18,6 +18,11 @@ PLACE, PARTIAL, COMING or BLOCKED (legend on [Home](Home)). Dates are
+ Europe/London. The repository tree is the final arbiter; where this page and
+ the code disagree, the code has moved and this page owes an update.
+ 
++**Last checked: 2026-11-13**, for the rows changed on that date (the remote
++SSH row, the differential-abundance, ordination and zero-handling rows, and the
++two new sections at the end). The dated record behind them is
++`docs/release-notes/2026-11-13-current-state.md` in the repository.
++
+ ## Pipeline — raw reads to tables
+ 
+ | Capability | Status | Notes |
+@@ -30,7 +35,7 @@ the code disagree, the code has moved and this page owes an update.
+ | Per-run DuckDB results store | **IN PLACE** | `src/core/duckdb_store.jl` |
+ | Stage freshness skipping (mtime for files, content hash for config) | **IN PLACE** | stale stages flagged with the exact changed keys |
+ | FastQC + MultiQC prefilter QC | **PARTIAL** | implemented and CI-exercised since #44; reports embed in the run view |
+-| Remote (SSH) offload of the taxonomy step | **PARTIAL** | works; authorisation is solely the operator's responsibility |
++| Remote (SSH) offload of the taxonomy step | **PARTIAL** | works; authorisation is solely the operator's responsibility. Recovery after a local interruption is **not** on this fork's `main`: it is proposed upstream as JoshuaJewell/MetaManifold-WebUI#68 (open, not merged) |
+ | DADA2 single-end / forward / reverse modes | **IN PLACE** | `file_patterns.mode` |
+ 
+ ## Analysis and statistics
+@@ -43,18 +48,20 @@ the code disagree, the code has moved and this page owes an update.
+ | NMDS + PERMANOVA (vegan, locked R) | **IN PLACE** | permutation exchangeability is the standing caveat |
+ | Normalisation: none, rarefaction | **IN PLACE** | |
+ | TSS/CSS/RSS size-factor **offsets** (exact, not aliases) | **IN PLACE** | issues #16, #61, #62 — conditions in `docs/statistics/method-conditions/scaling-and-offsets.md` |
+-| Exact descriptive summaries (counts, rational proportions) | **IN PLACE** | catalogue item 1; `src/analysis/exact_summaries.jl` |
++| Exact descriptive summaries (counts, rational proportions) | **IN PLACE** | catalogue item 1; `src/analysis/exact_summaries.jl`. This fork's catalogue is `approved` in scope by the fork owner (fork issue #1); the upstream proposal (#69, open) carries it as `pending_review` |
++| High-precision (MPFR) Shannon and Gini–Simpson | **IN PLACE** | `src/analysis/high_precision.jl`; marked approximate with achieved precision. Upstream proposal #72 is a draft |
+ | Numeric policy: exact / approximate / rounded, explicit modes | **IN PLACE** | `src/analysis/numeric_policy.jl` |
+ | Parametric fits — NB-GLM, CLR/ILR-LM, logistic (ML with refusal states) | **PARTIAL** | implemented with R-reference tests; **independent statistical review (#1) outstanding** |
+ | Zero-depth sample healing before transforms | **IN PLACE** | #58 |
+ | Nonparametric tests (permutation/bootstrap) | **COMING** | catalogue item 3, approved scope only |
+ | Exact statistical tests (Fisher, exact NB, permutation PERMANOVA) | **COMING** | issue #3, catalogue item 4 |
+-| Multinomial / Dirichlet-Multinomial regression | **COMING** | issue #17 |
+-| Occupancy models, ZINB, hurdle | **COMING** | issue #18 |
+-| Constrained ordinations (RDA/CCA/CAP/dbRDA) | **COMING** | issue #19 |
++| Multinomial / Dirichlet-Multinomial regression | **IN PLACE** | `multinomial` and `dirichlet_multinomial` differential methods (README, "Differential abundance"); `mn_backend: mglm` fits them with MGLM through R |
++| ZINB, hurdle NB | **IN PLACE** | `zinb` and `hurdle_nb` in the differential config and UI (`ROADMAP.md`) |
++| Occupancy models | **PARTIAL** | low-level estimator `fit_occupancy` only; not selectable as an analysis; issue #205 (`ROADMAP.md`) |
++| Constrained ordinations (RDA/CCA/CAP/dbRDA) | **IN PLACE** | README, "Overview"; `docs/statistics/constrained-ordinations.md` |
+ | PhILR / SBP ILR bases, balance dendrograms | **COMING** | issue #20 |
+-| Advanced zero handling (glmGamPoi dispersion, Bayesian multiplicative) | **COMING** | issue #21 |
+-| ANCOM-BC, ALDEx2, Songbird-style methods | **COMING** | issue #5 |
++| Advanced zero handling (glmGamPoi dispersion, Bayesian multiplicative) | **IN PLACE** | `nb_glm` `dispersion: glmGamPoi`; `clr_welch` GBM/CZM replacement (README; `docs/statistics/zero-handling.md`) |
++| ANCOM-BC, ALDEx2, Songbird-style methods | **IN PLACE** | `ancom_bc`, `aldex2`, `songbird` on this fork. Native estimators for upstream are proposed in #70 (draft), waiting on `CompositionalDA` in the Julia General registry (JuliaRegistries/General#175952) |
+ | Symbolic formula engine | **BLOCKED** | issue #2 — waits on real-data validation of the numeric layer |
+ 
+ ## Workbench and application
+@@ -83,7 +90,8 @@ the code disagree, the code has moved and this page owes an update.
+ | Julia + frontend test suites, type-level assertions | **IN PLACE** | DOM-lane for Plotly-chain modules **COMING** (decision queued) |
+ | Benchmarks with baselines (informational lane) | **IN PLACE** | promotion to non-gating regression alert after a stability window |
+ | CI: hygiene, pinned tools, commit gate, Dependabot auto-merge-on-green | **IN PLACE** | |
+-| Coverage gate | **COMING** | deliberate: gates on a recorded baseline, not an arbitrary number |
++| Coverage gate | **COMING** | deliberate: gates on a recorded baseline, not an arbitrary number. Codecov is informational today (see below) |
++| SonarCloud required check | **IN PLACE** | Sonar way gate on new code; `docs/sonar-quality-gate.md`; local guard `scripts/lint-sonar-reliability.sh` |
+ | OpenSSF Best Practices / Scorecard badges | **COMING** | enrolment first, badges on the day (never before) |
+ | Independent statistical review of the analysis layer | **COMING** | issue #1's acceptance gate; the reason PARTIAL marks exist above |
+ 
+@@ -106,3 +114,27 @@ the code disagree, the code has moved and this page owes an update.
+   `docs/milestones/02-deferred-issues.md` and `docs/issues/milestone3/`.
+ - Issues #1 and #2 are the two that must never be closed prematurely (the
+   owner-review record makes this explicit).
++
++## Open upstream pull requests (2026-11-13)
++
++Work from this fork proposed to JoshuaJewell/MetaManifold-WebUI. **None of
++these is merged upstream.**
++
++| PR | State | What |
++|---|---|---|
++| #68 | open | Recoverable SSH stages (upstream issue #66) |
++| #69 | open | Exact descriptive statistics with independent pipeline evidence (upstream issue #65); catalogue `pending_review` |
++| #70 | draft | Native ALDEx2 and ANCOM-BC through `CompositionalDA`; waits on its General registration (#175952) |
++| #71 | open | Multinomial and Dirichlet-multinomial differential abundance |
++| #72 | draft | High-precision Shannon and Gini–Simpson, split out of #69 |
++
++## Quality signals (2026-11-13)
++
++- **SonarCloud, this fork's `main`:** before that day's fix, 22 bugs and 3
++  vulnerabilities were open (reliability and security ratings C), all older
++  than the new-code window, so the gate was green. All 25 were fixed in code,
++  except one R finding that is not a defect. Re-read the current numbers from
++  SonarCloud.
++- **Codecov:** Julia backend only. Upstream `main` 80.72%; upstream #69 has
++  99.53% patch coverage (5 of 1,063 changed lines uncovered, check green). This
++  fork's Codecov repository is not activated.
+-- 
+2.43.0

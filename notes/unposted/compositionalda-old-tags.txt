@@ -1,0 +1,20 @@
+UNPOSTED DRAFT
+
+Old tags on hyperpolymath/CompositionalDA.jl, recorded 2026-11-14 before the owner-approved delete and re-tag.
+Rollback: recreate each as an annotated, SSH-signed tag by the original tagger is NOT possible for us; recreate as a lightweight or new annotated tag on the object below.
+
+v0.1.0
+  tag object: 74bc188fc6b975043cf2f1b6fcbdf381222b7234 (annotated, SSH-signed, Verified)
+  points at commit: 320513d61e482dd300ba30938edffde96d9284d1  (Prove BH step-up (P5); gate self-test covers every audit check (#2), 2026-10-02)
+  tagger: Jonathan D.A. Jewell, 2026-10-02T14:55:50Z
+  message: CompositionalDA v0.1.0: Core (closure, CLR, BH) with P1 and P5 proved in Agda 2.7.0.1
+
+v0.2.0
+  tag object: b7482eaffbb376cd5281fea08070432512d0fb28 (annotated, SSH-signed, Verified)
+  points at commit: fec009a94785b90cbcf5d5f369b685793ce9e8e9  (CI: restore the Debian proofs job (#5), 2026-10-02)
+  tagger: Jonathan D.A. Jewell, 2026-10-02T18:22:43Z
+  message: v0.2.0: two-group ALDEx2, native Julia, agreeing with Bioconductor ALDEx2 1.42.0 within Monte-Carlo noise on mock, gut and soil (oracle 13/13, CI run 37045967213)
+
+GitHub releases on the repo: none (list_releases returned []).
+New tag to create after the registry merge: v0.1.0 at bb3cf54576622f9819199048a7c4ef9c56f47444, annotated and SSH-signed.
+Not checked: links from other repos or docs to the old tags.
