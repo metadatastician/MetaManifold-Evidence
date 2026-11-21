@@ -84,15 +84,16 @@ upstream PR 70 (fork branch `validation/issue-23-native-da`).
 
 ### Drafted (nothing in these has happened)
 
-- `general-175952-reply.md` (in `/home/user/drafts` of that session, not in this repository): package fixes and a reply for
+- `general-175952-reply-draft-2026-11-19.md` (in this folder): package fixes and a reply for
   the General reviewer. **The reply is in the past tense, but none of it is
   true yet.**
-- `pr70-replies.md` (15 Nov, lost from disk at the 19 Nov restart; text is in
-  my transcript): replies to Joshua and to the Codex threads. To post only after
+- `pr70-replies-draft-2026-11-15.md` (15 Nov; lost from disk at the 19 Nov restart,
+  recovered into this folder): replies to Joshua and to the Codex threads. To post only after
   the force-push and re-signing. Point 4 says "Every commit is signed with my own
   key and shows Verified".
-- `issue-23-comment.md`, `sign-pr70.md`, `upstream-prs-audit-2026-11-15.md`
-  (also lost from disk; text in my transcript).
+- `issue-23-comment-draft-2026-11-12.md` and `upstream-prs-audit-2026-11-15.md`
+  (also lost from disk, recovered into this folder). `sign-pr70.md` is the same
+  text as `pr70-sign.md`.
 
 ### Handed over to the #22 thread (session_0136P7ZpWuto1gvzJmE9snCY), not checked
 
