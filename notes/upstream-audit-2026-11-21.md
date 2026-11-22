@@ -78,7 +78,7 @@ More defects:
 More defects:
 
 1. The reply of 13 Nov said: "please treat the PR as not ready; I will mark it as a draft". It was marked as a draft that day. On 15 Nov it was marked ready again. Items 1, 2 and 6 were still open. It is ready now.
-2. `docs/guide/web-interface.md` tells the user to install the package with `Pkg.develop(path=...)`. His rule on issue 23 is "No URL-pinned dependencies". This text invites the exact thing he refused.
+2. `docs/guide/web-interface.md` tells the user to install the package with `Pkg.develop(path=...)`. His full rule on issue 23 is "No URL-pinned dependencies: anything added must be registered and pinnable in Manifest.toml." A local path is not a URL pin, but it installs a package that is not registered and cannot be pinned in `Manifest.toml`. That breaks the second half of his rule.
 3. The check box "CI has run and passes" counts tests that skip the real estimators. He said CI must run the real estimators.
 4. The reply of 13 Nov has a numbering error. It says "Item 3 is not done" for the R comparison (his item 2) and "Item 7 (the description)". He wrote 6 items.
 5. The registry reviewer found that the package README says "v0.3 development", that its launch document says registration is on hold, and that the ANCOM-BC calibration is a release blocker. The registration cannot merge until the package repository is corrected and the registration is started again.
@@ -155,8 +155,8 @@ It is better than the pull request, but it is not ready either.
 3. Issue 73: close it as a duplicate of the issue 22 comment, with one sentence of apology. Do not repost the text.
 4. PR 71: convert to a draft and say it waits for his answer on issue 22.
 5. PR 70: convert to a draft. Correct the reply numbering in one short comment. Tell him ANCOM-BC is dropped, if that is the decision.
-6. CompositionalDA: correct the package README and launch document, then start the registration again. Nothing on pull request 70 can move before this.
-7. PR 69: one rebuild. Remove the stale text from the 2 statistics documents, the title and the description. Remove the new CI steps or justify them. Rebuild the history so that each commit passes the tests. Then the owner signs.
+6. CompositionalDA: correct the package README and launch document, delete the existing version tags `v0.1.0` and `v0.2.0`, and install TagBot, as the registry reviewer asked. Then update the open registration from the new commit with `@JuliaRegistrator register`. Do not open a new registration pull request. Nothing on pull request 70 can move before this.
+7. PR 69: one rebuild. Remove the stale text from the 2 statistics documents, the title and the description. Remove the new CI steps or justify them. Review has started, so add commits (rule 8). Ask him before any rebuild of the history, as for PR 68. Then the owner signs.
 8. PR 68: correct the description (CI run and bun version). Ask him if he wants the history squashed. Do not rebase without his request (rule 8).
 9. All: the owner's signing identity on every commit, no model names, and a check of the Verified badge in the browser after each push.
 10. Turn off the Codex connector for his repository, or stop the automatic trigger.
