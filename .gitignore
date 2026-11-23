@@ -2,3 +2,7 @@ _build/
 *.agdai
 node_modules/
 julia/Manifest.toml
+
+# Python bytecode
+__pycache__/
+*.pyc
