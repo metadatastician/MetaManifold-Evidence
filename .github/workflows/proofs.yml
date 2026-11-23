@@ -144,3 +144,50 @@ jobs:
           sudo apt-get install --no-install-recommends -y ca-certificates git python3-pip
       - name: Verify the handoff patch, its notes and the Julia structure
         run: bash scripts/check-pr68-handoff.sh
+
+  # The account ruleset "Branch-Floor" requires a status check named exactly
+  # `CI/gate`. The check context is this job's `name:`, so it stays a fixed
+  # string. It waits for every other job in this workflow and runs even when
+  # one fails, is skipped or is cancelled. No job here is skipped by design, so
+  # every one must be `success`; a skipped, cancelled, failed, missing or
+  # unknown result fails the gate. Only `run:` shell is used: nothing to pin.
+  ci-status:
+    name: CI/gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    needs: [proofs, rocq, lean, julia, pr68-handoff]
+    if: always()
+    steps:
+      - name: Require every job to succeed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          summary="${GITHUB_STEP_SUMMARY:-/dev/null}"
+          jobs=(proofs rocq lean julia pr68-handoff)
+          failures=0
+          {
+            echo '### CI/gate'
+            echo
+            echo 'Each result below is the aggregate result of that job. This workflow has no matrix jobs.'
+            echo
+            echo '| job | result | verdict |'
+            echo '| --- | --- | --- |'
+          } >> "$summary"
+          for job in "${jobs[@]}"; do
+            actual="$(jq -r --arg j "$job" '.[$j].result // "missing"' <<< "$NEEDS_JSON")"
+            verdict=ok
+            if [[ "$actual" != success ]]; then
+              verdict=FAIL
+              failures=$((failures + 1))
+              echo "::error::$job result is '$actual', expected 'success'"
+            fi
+            printf '%-14s %-10s %s\n' "$job" "$actual" "$verdict"
+            echo "| $job | $actual | $verdict |" >> "$summary"
+          done
+          if [[ "$failures" -ne 0 ]]; then
+            echo "CI/gate FAILED: $failures of ${#jobs[@]} jobs did not succeed." | tee -a "$summary"
+            exit 1
+          fi
+          echo "CI/gate passed: all ${#jobs[@]} jobs succeeded." | tee -a "$summary"
