@@ -4,8 +4,8 @@ Its reply is in the past tense, but none of the package fixes it describes are d
 # CompositionalDA registration (JuliaRegistries/General#175952): fixes and reply
 
 The General reviewer goerz blocked the automatic merge on 15 Nov. Do the
-package fixes first, then post the reply, then re-trigger Registrator with the
-same version (0.1.0).
+package fixes first, then re-trigger Registrator with the same version
+(0.1.0), then post the reply (it says the re-trigger has happened).
 
 ## Package fixes (in hyperpolymath/CompositionalDA.jl, a session with push access)
 
@@ -21,7 +21,7 @@ same version (0.1.0).
    plus an upload), and a README example that runs `aldex2` and `ancombc` on a
    small table.
 6. Commit with your own key, then comment `@JuliaRegistrator register` on the
-   commit that has all of this.
+   commit that has all of this. Only after that, post the reply below.
 
 ## Reply to post on General#175952 (you post it; fill the bracket yourself)
 

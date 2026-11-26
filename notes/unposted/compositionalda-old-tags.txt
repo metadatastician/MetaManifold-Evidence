@@ -16,5 +16,5 @@ v0.2.0
   message: v0.2.0: two-group ALDEx2, native Julia, agreeing with Bioconductor ALDEx2 1.42.0 within Monte-Carlo noise on mock, gut and soil (oracle 13/13, CI run 37045967213)
 
 GitHub releases on the repo: none (list_releases returned []).
-New tag to create after the registry merge: v0.1.0 at bb3cf54576622f9819199048a7c4ef9c56f47444, annotated and SSH-signed.
+New tag to create after the registry merge: v0.1.0 at the commit General accepted (the one that carries the package fixes, named in the registration PR; bb3cf54576622f9819199048a7c4ef9c56f47444 is the earlier registered commit with the stale wording, so do not tag it), annotated and SSH-signed.
 Not checked: links from other repos or docs to the old tags.

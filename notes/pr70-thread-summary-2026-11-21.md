@@ -57,7 +57,7 @@ upstream PR 70 (fork branch `validation/issue-23-native-da`).
     `[compat] "0.1"`; Manifest still to come).
   - 6fffe37 Add native ALDEx2 differential abundance.
   - 52135fc Compare native ALDEx2 with the R package on committed fixtures.
-- **PR 70 is not changed**: its head is still 647f8ba (not mine, see section 5).
+- **PR 70 head not verified today**: the last recorded head is 647f8ba. Joshua's repository was not read directly (see the limits above). Its origin is unknown (section 5).
 
 ### Done (checked when done, not rechecked today)
 
@@ -133,10 +133,11 @@ upstream PR 70 (fork branch `validation/issue-23-native-da`).
 | 1 | Other session gives its account of the audit findings | other session | owner relays |
 | 2 | Convert PRs 71 and 72 to drafts; close issue 73 | a session with access to Joshua's repo, or the owner | ruling 9 |
 | 3 | Fix CompositionalDA.jl: README, LAUNCH-READINESS, About text, delete tags v0.1.0 and v0.2.0, add TagBot, coverage in CI, README example | **not assigned** | owner assigns a session with push access |
-| 4 | Post the General reply, with his own true review statement; comment `@JuliaRegistrator register` | owner only | step 3 |
+| 4 | Comment `@JuliaRegistrator register`, then post the General reply with his own true review statement | owner only | step 3 |
 | 5 | Registration merges | General | step 4 |
 | 6 | Fold Manifest.toml into commit 1 of the rebuild; rerun all tests on the registry build; reuse lint; check 0 behind | this session or its successor | step 5 |
-| 7 | Force-push 52135fc (plus Manifest) over 647f8ba | needs the owner's go | step 6 |
+| 6a | Re-read the PR 70 head and its source branch; record the head and the date in this file | this session or its successor | step 6 |
+| 7 | Force-push 52135fc (plus Manifest) over 647f8ba; not before the step 6a record exists | needs the owner's go | steps 6 and 6a |
 | 8 | Re-sign the commits with his own key (`notes/pr70-sign.md`) | owner only | step 7 |
 | 9 | Check CI and the Verified badge on every commit | this session or its successor | step 8 |
 | 10 | Post the PR 70 replies (after making them true) | owner | step 9 |

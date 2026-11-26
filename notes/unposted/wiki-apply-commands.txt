@@ -4,7 +4,8 @@ Apply the 3-page wiki patch from #340 on your own computer (your signing key is 
 
 git clone https://github.com/hyperpolymath/MetaManifold-WebUI.wiki.git
 cd MetaManifold-WebUI.wiki
-git am -S /path/to/wiki-3-pages.patch
+tail -n +2 /path/to/wiki-3-pages.patch > /tmp/wiki-3-pages.patch   # drop the UNPOSTED DRAFT banner line
+git am -S /tmp/wiki-3-pages.patch
 git log --show-signature -1
 git push origin master
 

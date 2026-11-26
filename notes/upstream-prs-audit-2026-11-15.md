@@ -78,8 +78,11 @@ PR 69 (and so 72):
   code to remove, not to test. Verify before choosing.
 - `src/analysis/derived_analyses.jl:127`: the race path where `hardlink` fails
   because a concurrent publisher already wrote the same record, and
-  `_existing(final, id)` checks it. Test it by creating the final file with the
-  identical record before publishing.
+  `_existing(final, id)` checks it. Creating the final file before publishing does
+  not reach it: `persist_derived_analysis` returns at the `isfile(final)` check
+  before `hardlink`. The race test needs the destination to appear after that
+  check and before `hardlink` runs. Keep the pre-existing-file case as a
+  separate test.
 
 PR 71: `differential.jl:1236` is the branch where MGLM returns no refusal
 reason but a missing or non-positive standard error, estimate or p-value. It
