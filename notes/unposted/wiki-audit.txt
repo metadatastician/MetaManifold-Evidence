@@ -1,0 +1,45 @@
+UNPOSTED DRAFT
+
+Wiki audit, 2026-11-15. Wiki clone at ddf2b01; fork main at 6bb2ad2.
+Files named in the wiki that do not exist in the fork repo (nor on JoshuaJewell upstream main), with the pages naming them:
+
+Justfile -> Deep-Dives--Design-Progression.md Maintainers--Compliance-and-Estate.md Maintainers.md 
+channels.scm -> Maintainers--Operator-Track.md Users--Install-and-First-Run.md 
+docs/compliance/fixme-index.md -> Developers--Type-System.md Maintainers--Compliance-and-Estate.md Status-and-Roadmap.md 
+docs/compliance/rsr-alignment.md -> Maintainers--Compliance-and-Estate.md 
+docs/compliance/standards-alignment.md -> Maintainers--Compliance-and-Estate.md 
+docs/compliance/vendored-archives.md -> Maintainers--Releases-and-Distribution.md 
+docs/integration/autolink-references.md -> Maintainers--Compliance-and-Estate.md Maintainers--Steward-Track.md 
+docs/migration/STATUS.md -> Developers--Extending-the-Pipeline.md Developers--REST-API.md Developers.md Maintainers--Operator-Track.md Maintainers--Releases-and-Distribution.md Status-and-Roadmap.md Users--Exploring-Results.md Users--For-Lab-Professionals.md Users--Install-and-First-Run.md Users--Your-First-Study.md Users.md 
+docs/milestones/01-project-board-graphql.md -> Maintainers--Steward-Track.md 
+docs/milestones/02-deferred-issues.md -> Deep-Dives--Advanced-Functionality.md Maintainers--Steward-Track.md Status-and-Roadmap.md 
+docs/owner-review-2026-09-25.md -> Maintainers--Steward-Track.md 
+docs/reproducibility.md -> Users--For-Academics.md Users--Install-and-First-Run.md 
+docs/statistics/behaviour-change-zero-depth-samples.md -> Users--Troubleshooting.md 
+docs/statistics/method-conditions/exact-descriptive-summaries.md -> Developers--Statistics-Internals.md 
+docs/statistics/method-conditions/parametric-fits.md -> Deep-Dives--Maximum-Likelihood.md Developers--Statistics-Internals.md 
+docs/statistics/method-conditions/scaling-and-offsets.md -> Deep-Dives--Compositional-Statistics.md Developers--Statistics-Internals.md Status-and-Roadmap.md 
+docs/testing/coverage.md -> Developers--Testing-and-Benchmarks.md Maintainers--Steward-Track.md 
+docs/testing/infrastructure.md -> Developers--Testing-and-Benchmarks.md 
+docs/testing/taxonomy-facets.md -> Developers--Testing-and-Benchmarks.md 
+docs/type-system/category-d-e-closure.md -> Developers--Type-System.md 
+docs/type-system/strict-mode-foundation.md -> Developers--Type-System.md 
+docs/types/architecture.md -> Developers--Architecture-Tour.md Developers--Type-System.md 
+docs/wikis/README.md -> Home.md Maintainers--Steward-Track.md 
+guix.scm -> Maintainers--Operator-Track.md Users--Install-and-First-Run.md 
+method-conditions/scaling-and-offsets.md -> Deep-Dives--Compositional-Statistics.md Developers--Extending-the-Pipeline.md Developers--Statistics-Internals.md Status-and-Roadmap.md 
+mise.toml -> Maintainers--Operator-Track.md Users--For-Academics.md Users--Install-and-First-Run.md 
+scripts/check-format.sh -> Maintainers--Steward-Track.md 
+scripts/check-lint.sh -> Maintainers--Steward-Track.md 
+scripts/check-spdx.sh -> Maintainers--Compliance-and-Estate.md Maintainers--Steward-Track.md 
+src/analysis/estimation.jl -> Deep-Dives--Maximum-Likelihood.md Users--Analysis-and-Statistics-Today.md 
+src/analysis/scaling.jl -> Deep-Dives--Compositional-Statistics.md Users--Analysis-and-Statistics-Today.md 
+test/unit/test_estimation.jl -> Deep-Dives--Maximum-Likelihood.md 
+tsconfig.build.json -> Developers--Type-System.md 
+
+Wrong path but file exists (config/*.yml live in config/defaults/ or config/ci/):
+config/composition.yml
+config/databases.yml
+config/pipeline.yml
+config/primers.yml
+config/tools.yml

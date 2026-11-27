@@ -7,6 +7,12 @@
 | `pr70-after-registration.md` | the steps that add `Manifest.toml` to the rebuild once CompositionalDA 0.1.0 is in General (General PR 175952) |
 | `pr70-sign.md` | the owner-only last step: re-sign the PR 70 commits with his own SSH signing key, check, force-push and confirm Verified on GitHub. Run only after the after-registration steps are pushed |
 | `upstream-audit-2026-11-21.md` | audit of upstream PRs 68 to 72 and issues 22, 23, 65, 66 and 73 against each of Joshua's review requests and his CONTRIBUTING (2026-11-21). A record of findings, not a record of fixes |
+| `pr70-thread-summary-2026-11-21.md` | whole-thread summary of the issue 23 / PR 70 session at 2026-11-21: owner rulings, what is done, drafted or only handed over, status, and the ordered steps still to come |
+| `pr70-audit-answer-2026-11-21.md` | that session's answer to the 2026-11-21 audit of upstream PRs 68-72: what it did and did not do on Joshua's repository, finding by finding, and the pattern that caused the misses |
+| `general-175952-reply-draft-2026-11-19.md` | unposted draft: CompositionalDA.jl fixes and a reply for the General reviewer (JuliaRegistries/General#175952); none of the fixes are done |
+| `pr70-replies-draft-2026-11-15.md` | unposted draft: replies to Joshua and the Codex threads on upstream PR 70, to post only after the force-push and the owner re-signing |
+| `issue-23-comment-draft-2026-11-12.md` | unposted draft for upstream issue 23; out of date since 2026-11-12 |
+| `upstream-prs-audit-2026-11-15.md` | branch audit of upstream PRs 68-72 as of 2026-11-15 (superseded by the 2026-11-21 audit and answer) |
 | `0004-pr70-native-adapter-test-seam.patch` | run, pushed and merged 2026-11-10 (hyperpolymath/MetaManifold-WebUI#319, upstream PR 70 head `1832f5c`, Codecov patch 100%): commit onto `MetaManifold-WebUI` `validation/issue-23-native-da` at `be7792f` adding the `native_backend` seam, the stand-in backend and four testsets — the 30 lines Codecov reported as uncovered, made reachable and measured |
 | `0005-pr70-coverage-gates-and-estate-lanes.patch` | NOT applied, never run, and stale against the new `0004` (see the status section of `pr70-coverage-and-cicd.md`): a draft commit with patch coverage as a gate, the sensitivity/specificity measurement and its evidence checker, the mutant gate, and the hypatia / k9-deed / squabble estate lanes |
 | `pr70-coverage-and-cicd.md` | what the 52.38% report was actually saying, what the two patches change, what is verified and what is not, and the follow-ups |
