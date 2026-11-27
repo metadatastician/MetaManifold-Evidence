@@ -137,7 +137,7 @@ upstream PR 70 (fork branch `validation/issue-23-native-da`).
 | 5 | Registration merges | General | step 4 |
 | 6 | Fold Manifest.toml into commit 1 of the rebuild; rerun all tests on the registry build; reuse lint; check 0 behind | this session or its successor | step 5 |
 | 6a | Re-read the PR 70 head and its source branch; record the head and the date in this file | this session or its successor | step 6 |
-| 7 | Force-push 52135fc (plus Manifest) over 647f8ba; not before the step 6a record exists | needs the owner's go | steps 6 and 6a |
+| 7 | Force-push 52135fc (plus Manifest) over 647f8ba with `git push --force-with-lease=validation/issue-23-native-da:<head recorded in 6a>`. If 6a finds a head other than 647f8ba, stop: review the new commits and get the owner's go again before any push | needs the owner's go | steps 6 and 6a |
 | 8 | Re-sign the commits with his own key (`notes/pr70-sign.md`) | owner only | step 7 |
 | 9 | Check CI and the Verified badge on every commit | this session or its successor | step 8 |
 | 10 | Post the PR 70 replies (after making them true) | owner | step 9 |

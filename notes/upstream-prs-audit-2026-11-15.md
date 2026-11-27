@@ -70,15 +70,20 @@ PR 69 (and so 72):
   `catch` that rewraps a failure inside `_body_filter_params` as "invalid
   filter parameters". No test sends filters that pass normalisation and then
   make `_body_filter_params` throw.
-- `src/server/routes/validated_statistics.jl:286` (296 on 72): an **integer**
-  `time_limit_seconds` (for example 30). Tests send only floats or wrong types.
+- `src/server/routes/validated_statistics.jl:286` (296 on 72): a **float**
+  `time_limit_seconds` (for example 30.5), the `AbstractFloat` branch. An
+  integer takes the branch at line 284, and `test_validated_statistics.jl:251`
+  already sends 30. No test sends a float. (Corrected 2026-11-27 against the
+  Codecov line report for c198b8b, which marks 286 as uncovered.)
 - `src/canonical.jl:220`: the `else` branch when `repr(x)` has no `.`. For a
   finite `Float64`, `repr` always has a `.` ("1.0", "1.5e-10"), so this branch
   is reachable only for `Inf`/`NaN`. If those are refused earlier, it is dead
   code to remove, not to test. Verify before choosing.
 - `src/analysis/derived_analyses.jl:127`: the race path where `hardlink` fails
   because a concurrent publisher already wrote the same record, and
-  `_existing(final, id)` checks it. Creating the final file before publishing does
+  `_existing(final, id)` checks it. The Codecov line report for c198b8b marks
+  127 as the uncovered line (checked 2026-11-27). At the PR 69 head 7d016aa
+  the same check is line 144, and Codecov reports no uncovered line in the file. Creating the final file before publishing does
   not reach it: `persist_derived_analysis` returns at the `isfile(final)` check
   before `hardlink`. The race test needs the destination to appear after that
   check and before `hardlink` runs. Keep the pre-existing-file case as a
