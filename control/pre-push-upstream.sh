@@ -21,7 +21,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     ce=$(git log -1 --format=%ce "$c")
     case " $allowed " in *" $ce "*) ;; *) say "$s committer $ce is not allowed";; esac
     msg=$(git log -1 --format=%B "$c")
-    grep -qiE 'claude-session:|co-authored-by:.*(claude|anthropic)' <<<"$msg" && say "$s has a Claude trailer (SR-008)"
+    grep -qiE '^(claude-session|co-authored-by):' <<<"$msg" && say "$s has a Co-Authored-By or session trailer (R-5, SR-008)"
     grep -qiE '\b(opus|sonnet|haiku|fable|mythos) [0-9]' <<<"$msg" && say "$s names a model (SR-008)"
     grep -qE '#[0-9]{3,}' <<<"$msg" && say "$s cites a fork PR number (his review of PR 69)"
     grep -qiE 'review (thread|finding)s?|address(es)? the' <<<"$(head -1 <<<"$msg")" && say "$s subject describes the review, not the change (his review of PR 70)"

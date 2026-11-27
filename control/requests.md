@@ -19,7 +19,7 @@ No head changed after the audit of 21 Nov.
 
 | # | Request | State | Open point |
 | --- | --- | --- | --- |
-| a | Sign every commit | done | Committer is HoTT-stuff, not the contributor. Head `85ea5a1` has a `Co-authored-by: Claude` trailer. R-3: HoTT-stuff is the signer. R-5: the trailer must go, so `85ea5a1` needs a reword. |
+| a | Sign every commit | done | Committer is HoTT-stuff, not the contributor. Head `85ea5a1` has a `Co-authored-by: Claude` trailer. R-3: HoTT-stuff is the signer. R-5: every Co-Authored-By trailer must go. That is the Claude trailer on `85ea5a1` and the `arena-agent` trailer on the other 8 commits checked, so all 9 need a reword. |
 | b | Reword `78a6c7b`, no fork PR numbers | done and checked, `85ea5a1`, 21 Nov | none |
 | c | CI passes on the new SHAs | done and checked, `85ea5a1`, 21 Nov | The description cites `776952f`, which is not in the branch. |
 
