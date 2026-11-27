@@ -17,6 +17,7 @@ commit ok@x -S "Add a clean change";                     accept "clean signed co
 fresh; commit ok@x "" "Unsigned change";                 refuse "unsigned commit refused"
 fresh; commit bad@x -S "Wrong committer";                refuse "wrong committer refused"
 fresh; commit ok@x -S $'Change\n\nCo-Authored-By: Claude <noreply@anthropic.com>'; refuse "Claude trailer refused"
+fresh; commit ok@x -S $'Change\n\nCo-authored-by: arena-agent <a@x>'; refuse "any co-author trailer refused"
 fresh; commit ok@x -S "Port the Sonnet 5 notes";         refuse "model name refused"
 fresh; commit ok@x -S "Fix the parser (#312)";           refuse "fork PR number refused"
 fresh; commit ok@x -S "Address the review findings";     refuse "review-shaped subject refused"

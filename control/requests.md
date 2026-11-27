@@ -19,7 +19,7 @@ No head changed after the audit of 21 Nov.
 
 | # | Request | State | Open point |
 | --- | --- | --- | --- |
-| a | Sign every commit | done | Committer is HoTT-stuff, not the contributor. Head `85ea5a1` has a `Co-authored-by: Claude` trailer. Owner ruling OPEN (R-2, R-3). |
+| a | Sign every commit | done | Committer is HoTT-stuff, not the contributor. Head `85ea5a1` has a `Co-authored-by: Claude` trailer. R-3: HoTT-stuff is the signer. R-5: every Co-Authored-By trailer must go. That is the Claude trailer on `85ea5a1` and the `arena-agent` trailer on the other 8 commits checked, so all 9 need a reword. |
 | b | Reword `78a6c7b`, no fork PR numbers | done and checked, `85ea5a1`, 21 Nov | none |
 | c | CI passes on the new SHAs | done and checked, `85ea5a1`, 21 Nov | The description cites `776952f`, which is not in the branch. |
 
@@ -39,8 +39,8 @@ No head changed after the audit of 21 Nov.
 
 | # | Request | State | Open point |
 | --- | --- | --- | --- |
-| 1 | Register in General; `[deps]`, `[compat]`, Manifest; no optional loading | drafted | Only on fork branch `marina/trusting-hopper-sz1eiz` `52135fc`. Registry PR 175952 blocked. `647f8ba` makes optional loading stronger. |
-| 2 | R comparison; fixtures; tolerance, seed and spread | drafted | Only on `52135fc`. |
+| 1 | Register in General; `[deps]`, `[compat]`, Manifest; no optional loading | drafted | Only on fork branch `rebuild/pr70-native-da` `7bd131b` (R-4), without the Manifest. Registry PR 175952 blocked. `647f8ba` makes optional loading stronger. |
+| 2 | R comparison; fixtures; tolerance, seed and spread | drafted | Only on `7bd131b`. The ANCOM-BC FDR calibration is open (R-4 puts it in scope). |
 | 3 | No merge commit | done and checked, `647f8ba`, 21 Nov | none |
 | 4 | Sign every commit | drafted | `647f8ba` committer is `Claude <noreply@anthropic.com>`. |
 | 5 | Messages describe the change | drafted | `647f8ba` body says "Addresses the four review findings". |
